@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screw Your Neighbor - Test Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button.danger {
+            background: #f44336;
+        }
+        
+        button.danger:hover {
+            background: #da190b;
+        }
+        
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            color: black;
+        }
+        
+        .status {
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .players {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .player {
+            background: rgba(0,0,0,0.4);
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+        }
+        
+        .player.current {
+            border-color: #FFD700;
+        }
+        
+        .player.eliminated {
+            opacity: 0.5;
+            border-color: #ff4444;
+        }
+        
+        .card {
+            width: 60px;
+            height: 80px;
+            background: #fff;
+            color: #000;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+        }
+        
+        .card:hover {
+            transform: scale(1.1);
+        }
+        
+        .card.hidden {
+            background: #8B0000;
+            color: white;
+        }
+        
+        .card.red {
+            color: #ff0000;
+        }
+        
+        .lives {
+            display: flex;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        
+        .life {
+            width: 12px;
+            height: 12px;
+            background: #ff4444;
+            border-radius: 50%;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .connected {
+            background: #4CAF50;
+        }
+        
+        .disconnected {
+            background: #f44336;
+        }
+        
+        .game-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .chat-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        #chatMessage {
+            flex: 1;
+        }
+        
+        .alert {
+            background: rgba(255, 255, 0, 0.2);
+            border: 1px solid #ffff00;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">Disconnected</div>
+    
+    <h1>🎮 Screw Your Neighbor - Test Client</h1>
+    
+    <div class="container">
+        <h2>Connection & Game Setup</h2>
+        <div>
+            <input type="text" id="playerName" placeholder="Your Name" value="Player1">
+            <input type="text" id="gameId" placeholder="Game ID (leave empty for new game)">
+            <button onclick="connectToServer()">Connect to Server</button>
+            <button onclick="joinGame()">Join Game</button>
+            <button onclick="leaveGame()" class="danger">Leave Game</button>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <h3>Create New Game</h3>
+            <div style="margin: 10px 0;">
+                <label><strong>Game Type:</strong></label><br>
+                <input type="radio" id="gameTypePublic" name="gameType" value="public" checked>
+                <label for="gameTypePublic">🌐 Public Game (Anyone can join)</label><br>
+                
+                <input type="radio" id="gameTypePrivate" name="gameType" value="private">
+                <label for="gameTypePrivate">🔒 Private Game (Invite only)</label><br>
+                
+                <input type="radio" id="gameTypeFriends" name="gameType" value="friends">
+                <label for="gameTypeFriends">👥 Friends Only</label>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <input type="text" id="gamePassword" placeholder="Password (optional for private games)" style="display: none;">
+                <div id="inviteSection" style="display: none;">
+                    <button onclick="showContacts()">📱 Invite from Contacts</button>
+                    <button onclick="copyGameLink()">🔗 Copy Invite Link</button>
+                </div>
+            </div>
+            
+            <button onclick="createGame()" class="danger">Create Game</button>
+        </div>
+        
+        <div style="margin-top: 10px;">
+            <label>Starting Lives:</label>
+            <select id="startingLives">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+            
+            <label>Deck Count:</label>
+            <select id="deckCount">
+                <option value="1" selected>1 Deck</option>
+                <option value="2">2 Decks</option>
+                <option value="3">3 Decks</option>
+                <option value="4">4 Decks</option>
+            </select>
+            
+            <button onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Game Status</h2>
+        <div id="gameInfo">No game connected</div>
+        <div class="status" id="statusLog"></div>
+    </div>
+    
+    <div class="container">
+        <h2>Players</h2>
+        <div class="players" id="playersContainer"></div>
+    </div>
+    
+    <div class="container">
+        <h2>Game Controls</h2>
+        <div class="game-controls">
+            <button onclick="flipMyCard()">Flip My Card</button>
+            <button onclick="endRound()">End Round (Reveal All)</button>
+            
+            <div id="dealerControls" style="margin-top: 10px; display: none;">
+                <h4>Dealer Actions:</h4>
+                <button onclick="dealerTradeWithDeck()">Trade with Deck</button>
+                <button onclick="dealerSkipTrade()">Skip Trade</button>
+            </div>
+        </div>
+        
+        <h3>Trade Actions</h3>
+        <div id="tradeControls">
+            <p>Select a player below to trade with them</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Chat</h2>
+        <div class="chat-container">
+            <input type="text" id="chatMessage" placeholder="Type message..." onkeypress="handleChatKeyPress(event)">
+            <button onclick="sendChatMessage()">Send</button>
+            <button onclick="joinAsSpectator()">Join as Spectator</button>
+        </div>
+        <div class="status" id="chatLog"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script>
+        let socket = null;
+        let currentGame = null;
+
+        const AGORA_APP_ID = "cfef8101dcc14802a8f97d8805b3ebc9";
+
+        let myPlayerId = null;
+        let isConnected = false;
+        let myFriendCode = null;
+
+        function log(message) {
+            const statusLog = document.getElementById('statusLog');
+            const timestamp = new Date().toLocaleTimeString();
+            statusLog.innerHTML += '<div>[' + timestamp + '] ' + message + '</div>';
+            statusLog.scrollTop = statusLog.scrollHeight;
+            console.log(message);
+        }
+
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const status = document.getElementById('connectionStatus');
+            status.textContent = connected ? 'Connected' : 'Disconnected';
+            status.className = 'connection-status ' + (connected ? 'connected' : 'disconnected');
+        }
+
+        function connectToServer() {
+            if (socket) {
+                socket.disconnect();
+            }
+
+            log('🔄 Attempting to connect to server...');
+            socket = io('http://localhost:3001');
+            
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            socket.on('connect', function() {
+                log('✅ Connected to server!');
+                updateConnectionStatus(true);
+                
+                const playerName = document.getElementById('playerName').value || 'Player1';
+                socket.emit('get-friend-code', { 
+                    userId: myPlayerId, 
+                    userName: playerName 
+                });
+            });
+
+            socket.on('disconnect', function() {
+                log('❌ Disconnected from server');
+                updateConnectionStatus(false);
+            });
+
+            socket.on('error', function(data) {
+                log('❌ Error: ' + data.message);
+                alert('Error: ' + data.message);
+            });
+
+            socket.on('friend-code-generated', function(data) {
+                myFriendCode = data.friendCode;
+                log('📱 Your friend code: ' + myFriendCode);
+            });
+
+            socket.on('game-created', function(data) {
+                log('🎮 Game created successfully!');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('player-joined', function(data) {
+                log('👋 Player joined: ' + data.player.name);
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('game-started', function(data) {
+                log('🎮 Game started!');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('trade-requested', function(data) {
+                log('🔄 Trade requested from player ' + data.from + ' to ' + data.to);
+                if (data.to === myPlayerId) {
+                    const accept = confirm('Player ' + data.from + ' wants to trade cards with you. Accept?');
+                    socket.emit('trade-response', {
+                        gameId: currentGame.id,
+                        accepted: accept,
+                        fromPlayerId: data.from
+                    });
+                }
+            });
+
+            socket.on('trade-completed', function(data) {
+                log('✅ Trade completed: ' + (data.result.traded ? 'Accepted' : 'Blocked'));
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('turn-skipped', function(data) {
+                log('⏭️ Player ' + data.playerId + ' kept their King and skipped turn');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('dealer-traded-deck', function(data) {
+                log('🎴 Dealer traded with deck');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('dealer-skipped-trade', function(data) {
+                log('⏭️ Dealer skipped trade');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('card-flipped', function(data) {
+                log('🎴 Player ' + data.playerId + ' flipped their card');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('round-ended', function(data) {
+                log('🏁 Round ' + data.result.round + ' ended. Losers: ' + data.result.losers.map(function(l) { return l.name; }).join(', '));
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('game-finished', function(data) {
+                log('🏆 Game finished! Winner: ' + (data.winner ? data.winner.name : 'No winner'));
+                alert('Game Over! Winner: ' + (data.winner ? data.winner.name : 'No winner'));
+            });
+
+            socket.on('chat-message', function(data) {
+                const chatLog = document.getElementById('chatLog');
+                const isSpectator = data.isSpectator ? '[SPECTATOR] ' : '';
+                chatLog.innerHTML += '<div>' + isSpectator + 'Player ' + data.playerId + ': ' + data.message + '</div>';
+                chatLog.scrollTop = chatLog.scrollHeight;
+            });
+
+            socket.on('spectator-joined', function(data) {
+                log('👁️ Spectator joined: ' + data.spectator.name);
+            });
+
+            socket.on('player-disconnected', function(data) {
+                log('👋 Player ' + data.playerId + ' disconnected');
+            });
+        }
+
+        function createGame() {
+            if (!isConnected) {
+                alert('Please connect to server first!');
+                return;
+            }
+
+            if (currentGame) {
+                alert('Please leave current game first!');
+                return;
+            }
+
+            const playerName = document.getElementById('playerName').value || 'Player1';
+            const gameType = document.querySelector('input[name="gameType"]:checked').value;
+            const password = document.getElementById('gamePassword').value;
+            const gameId = 'game_' + Math.random().toString(36).substr(2, 9);
+            
+            document.getElementById('gameId').value = gameId;
+
+            const gameSettings = {
+                type: gameType,
+                password: password || null,
+                maxPlayers: 8,
+                isPublic: gameType === 'public'
+            };
+
+            socket.emit('create-game', {
+                gameId: gameId,
+                userId: myPlayerId,
+                token: 'demo_token_' + myPlayerId,
+                settings: gameSettings
+            });
+
+            log('🎯 Creating ' + gameType + ' game: ' + gameId);
+        }
+
+        function joinGame() {
+            if (!isConnected) {
+                alert('Please connect to server first!');
+                return;
+            }
+
+            if (currentGame) {
+                log('⚠️ Already in a game! Leave current game first.');
+                return;
+            }
+
+            const playerName = document.getElementById('playerName').value || 'Player1';
+            const gameId = document.getElementById('gameId').value;
+
+            if (!gameId) {
+                alert('Please enter a Game ID to join!');
+                return;
+            }
+
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            log('🎯 Attempting to join game: ' + gameId + ' as ' + playerName);
+
+            socket.emit('join-game', {
+                gameId: gameId,
+                userId: myPlayerId,
+                token: 'demo_token_' + myPlayerId
+            });
+        }
+
+        function leaveGame() {
+            if (currentGame) {
+                socket.disconnect();
+                currentGame = null;
+                log('👋 Left the game');
+                updateGameDisplay();
+                
+                setTimeout(function() {
+                    connectToServer();
+                }, 1000);
+            } else {
+                log('ℹ️ Not in any game');
+            }
+        }
+
+        function startGame() {
+            if (!currentGame) {
+                alert('Please join a game first!');
+                return;
+            }
+
+            const settings = {
+                startingLives: parseInt(document.getElementById('startingLives').value),
+                deckCount: parseInt(document.getElementById('deckCount').value),
+                tournamentMode: 'single',
+                cardStyle: 'classic'
+            };
+
+            socket.emit('start-game', {
+                gameId: currentGame.id,
+                settings: settings
+            });
+
+            log('🚀 Starting game with settings: ' + JSON.stringify(settings));
+        }
+
+        function flipMyCard() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            socket.emit('flip-card', {
+                gameId: currentGame.id
+            });
+        }
+
+        function endRound() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            if (currentGame.turnPhase !== 'revealing') {
+                alert('Cannot end round yet - still in trading phase!');
+                return;
+            }
+
+            socket.emit('end-round', {
+                gameId: currentGame.id
+            });
+        }
+
+        function dealerTradeWithDeck() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            socket.emit('dealer-trade-deck', {
+                gameId: currentGame.id
+            });
+        }
+
+        function dealerSkipTrade() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            socket.emit('dealer-skip-trade', {
+                gameId: currentGame.id
+            });
+        }
+
+        function tradeWithPlayer(targetPlayerId) {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            if (currentGame.currentPlayerId !== myPlayerId) {
+                alert('It\'s not your turn!');
+                return;
+            }
+
+            if (currentGame.turnPhase !== 'trading') {
+                alert('Not in trading phase!');
+                return;
+            }
+
+            socket.emit('trade-request', {
+                gameId: currentGame.id,
+                targetPlayerId: targetPlayerId,
+                direction: 'right'
+            });
+
+            log('🔄 Requesting trade with player ' + targetPlayerId);
+        }
+
+        function keepCard() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            socket.emit('skip-turn', {
+                gameId: currentGame.id
+            });
+
+            log('⏭️ Keeping card and ending turn');
+        }
+
+        function sendChatMessage() {
+            const messageInput = document.getElementById('chatMessage');
+            const message = messageInput.value.trim();
+            
+            if (!message || !currentGame) return;
+
+            socket.emit('game-chat', {
+                gameId: currentGame.id,
+                message: message
+            });
+
+            messageInput.value = '';
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function joinAsSpectator() {
+            if (!currentGame) {
+                alert('Please join a game first!');
+                return;
+            }
+
+            const spectatorId = 'spectator_' + Math.random().toString(36).substr(2, 9);
+            
+            socket.emit('join-as-spectator', {
+                gameId: currentGame.id,
+                userId: spectatorId,
+                name: 'Spectator_' + spectatorId.substr(-4)
+            });
+        }
+
+        function showContacts() {
+            alert('Contact system coming soon!');
+        }
+
+        function copyGameLink() {
+            alert('Game link feature coming soon!');
+        }
+
+        function updateGameDisplay() {
+            if (!currentGame) {
+                document.getElementById('gameInfo').innerHTML = 'No game connected';
+                document.getElementById('playersContainer').innerHTML = '';
+                document.getElementById('tradeControls').innerHTML = '<p>Join a game to start playing</p>';
+                document.getElementById('dealerControls').style.display = 'none';
+                return;
+            }
+
+            const gameInfo = document.getElementById('gameInfo');
+            const currentPlayerName = currentGame.players.find(function(p) { return p.id === currentGame.currentPlayerId; });
+            const dealerName = currentGame.players.find(function(p) { return p.id === currentGame.dealerId; });
+            
+            let phaseDescription = '';
+            if (currentGame.turnPhase === 'trading') {
+                phaseDescription = 'Players taking turns to trade';
+            } else if (currentGame.turnPhase === 'dealer-turn') {
+                phaseDescription = 'Dealer can trade with deck or skip';
+            } else if (currentGame.turnPhase === 'revealing') {
+                phaseDescription = 'Ready to reveal all cards';
+            }
+            
+            gameInfo.innerHTML = 
+                '<strong>Game ID:</strong> ' + currentGame.id + '<br>' +
+                '<strong>State:</strong> ' + currentGame.state + '<br>' +
+                '<strong>Round:</strong> ' + currentGame.round + '<br>' +
+                '<strong style="color: #FFD700;">🎯 Dealer:</strong> <span style="color: #FFD700; font-weight: bold;">' + (dealerName ? dealerName.name : 'Unknown') + '</span><br>' +
+                '<strong style="color: #00FF00;">⭐ Current Turn:</strong> <span style="color: #00FF00; font-weight: bold;">' + (currentPlayerName ? currentPlayerName.name : 'Unknown') + '</span><br>' +
+                '<strong>Phase:</strong> ' + phaseDescription + '<br>' +
+                '<strong>Cards Remaining:</strong> ' + currentGame.cardsRemaining + '<br>' +
+                '<strong>Players:</strong> ' + currentGame.players.length;
+
+            const dealerControls = document.getElementById('dealerControls');
+            const isDealer = currentGame.dealerId === myPlayerId;
+            const isDealerTurn = currentGame.turnPhase === 'dealer-turn';
+            
+            if (isDealer && isDealerTurn) {
+                dealerControls.style.display = 'block';
+            } else {
+                dealerControls.style.display = 'none';
+            }
+
+            const playersContainer = document.getElementById('playersContainer');
+            playersContainer.innerHTML = '';
+
+            if (currentGame.players && currentGame.players.length > 0) {
+                for (let i = 0; i < currentGame.players.length; i++) {
+                    const player = currentGame.players[i];
+                    const isMe = player.id === myPlayerId;
+                    const isCurrent = player.id === currentGame.currentPlayerId;
+                    const isDealer = player.id === currentGame.dealerId;
+                    const isEliminated = player.lives <= 0;
+
+                    const playerDiv = document.createElement('div');
+                    playerDiv.className = 'player' + (isCurrent ? ' current' : '') + (isEliminated ? ' eliminated' : '');
+                    
+                    let lives = '';
+                    for (let j = 0; j < player.lives; j++) {
+                        lives += '<div class="life"></div>';
+                    }
+                    
+                    let card = '';
+                    if (player.card) {
+                        const isRed = player.card.suit === '♥' || player.card.suit === '♦';
+                        card = '<div class="card ' + (!player.cardRevealed ? 'hidden' : '') + (isRed ? ' red' : '') + '" onclick="' + (isMe ? 'flipMyCard()' : '') + '">' +
+                               (player.cardRevealed ? '<div>' + player.card.value + '</div><div>' + player.card.suit + '</div>' : '<div>?</div>') +
+                               '</div>';
+                    } else {
+                        card = '<div class="card hidden"><div>-</div></div>';
+                    }
+
+                    const isMyTurn = currentGame.currentPlayerId === myPlayerId;
+                    const activePlayers = currentGame.players.filter(function(p) { return p.lives > 0; });
+                    const myIndex = activePlayers.findIndex(function(p) { return p.id === myPlayerId; });
+                    const playerIndex = activePlayers.findIndex(function(p) { return p.id === player.id; });
+                    
+                    const isNextPlayer = isMyTurn && (myIndex + 1) % activePlayers.length === playerIndex;
+                    const canTradeWith = isNextPlayer && currentGame.turnPhase === 'trading' && !isEliminated;
+
+                    playerDiv.innerHTML = 
+                        '<h4>' +
+                        player.name + (isMe ? ' (You)' : '') + 
+                        (isDealer ? ' <span style="color: #FFD700; font-weight: bold;">🎯 DEALER</span>' : '') + 
+                        (isCurrent ? ' <span style="color: #00FF00; font-weight: bold;">⭐ YOUR TURN</span>' : '') +
+                        '</h4>' +
+                        '<div class="lives">' + lives + '</div>' +
+                        card +
+                        '<div>' +
+                        (player.hasTraded ? '✅ Traded' : '⏳ Can Trade') +
+                        (!player.connected ? ' 🔴 Offline' : ' 🟢 Online') +
+                        '</div>' +
+                        (canTradeWith ? '<button onclick="tradeWithPlayer(\'' + player.id + '\')">Trade →</button>' : '');
+
+                    playersContainer.appendChild(playerDiv);
+                }
+            }
+
+            const tradeControls = document.getElementById('tradeControls');
+            const activePlayers = currentGame.players.filter(function(p) { return p.lives > 0; });
+            const isMyTurn = currentGame.currentPlayerId === myPlayerId;
+            const canTrade = isMyTurn && currentGame.turnPhase === 'trading';
+            
+            if (canTrade) {
+                const myIndex = activePlayers.findIndex(function(p) { return p.id === myPlayerId; });
+                const nextPlayerIndex = (myIndex + 1) % activePlayers.length;
+                const nextPlayer = activePlayers[nextPlayerIndex];
+                
+                const myPlayer = activePlayers.find(function(p) { return p.id === myPlayerId; });
+                const hasKing = myPlayer && myPlayer.card && myPlayer.card.value === 'K';
+                const isDealer = currentGame.dealerId === myPlayerId;
+                
+                if (hasKing) {
+                    tradeControls.innerHTML = 
+                        '<div style="background: rgba(255, 215, 0, 0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                        '<p><strong>🎴 It\'s your turn!</strong> ' + (isDealer ? '(You are the DEALER)' : '') + '</p>' +
+                        '<p><strong>You have a King!</strong> Choose your action:</p>' +
+                        '<button onclick="tradeWithPlayer(\'' + nextPlayer.id + '\')">Pass King to ' + nextPlayer.name + ' →</button>' +
+                        '<button onclick="keepCard()">Keep King (End Turn)</button>' +
+                        '<p><em>Kings give you a choice - pass it along or keep it safe!</em></p>' +
+                        '</div>';
+                } else {
+                    tradeControls.innerHTML = 
+                        '<div style="background: rgba(0, 255, 0, 0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                        '<p><strong>🎴 It\'s your turn!</strong> ' + (isDealer ? '(You are the DEALER)' : '') + '</p>' +
+                        '<p>Trade with the next player:</p>' +
+                        '<button onclick="tradeWithPlayer(\'' + nextPlayer.id + '\')">Trade with ' + nextPlayer.name + ' →</button>' +
+                        '<p><em>You must trade unless they have a Jack (which blocks)!</em></p>' +
+                        '</div>';
+                }
+            } else if (currentGame.turnPhase === 'dealer-turn' && currentGame.dealerId === myPlayerId) {
+                tradeControls.innerHTML = 
+                    '<div style="background: rgba(255, 215, 0, 0.3); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                    '<p><strong>🎯 DEALER\'S SPECIAL TURN!</strong></p>' +
+                    '<p>As the dealer, you get the final action. Use the dealer controls above to:</p>' +
+                    '<ul style="margin: 5px 0; padding-left: 20px;">' +
+                    '<li><strong>Trade with Deck</strong> - Swap your card with the top deck card</li>' +
+                    '<li><strong>Skip Trade</strong> - Keep your current card</li>' +
+                    '</ul>' +
+                    '</div>';
+            } else if (currentGame.turnPhase === 'revealing') {
+                tradeControls.innerHTML = 
+                    '<div style="background: rgba(255, 0, 0, 0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                    '<p><strong>🎴 REVEALING PHASE</strong></p>' +
+                    '<p>All trading is complete. Click "End Round" to reveal all cards and find the losers!</p>' +
+                    '</div>';
+            } else {
+                const currentPlayerName = currentGame.players.find(function(p) { return p.id === currentGame.currentPlayerId; });
+                const isCurrentDealer = currentGame.dealerId === currentGame.currentPlayerId;
+                tradeControls.innerHTML = 
+                    '<div style="background: rgba(128, 128, 128, 0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                    '<p><strong>⏳ Waiting...</strong></p>' +
+                    '<p>It\'s <strong>' + (currentPlayerName ? currentPlayerName.name : 'Unknown') + '\'s</strong> turn ' + (isCurrentDealer ? '(DEALER)' : '') + '</p>' +
+                    '<p><em>Turn order: Player after dealer goes first, dealer goes last</em></p>' +
+                    '</div>';
+            }
+        }
+
+        window.onload = function() {
+            log('🎮 Test client loaded. Click "Connect to Server" to begin!');
+        };
+    </script>
+</body>
+</html>
