@@ -1716,10 +1716,18 @@
         }
 
         function startGame() {
+            console.log('=== START GAME DEBUG ===');
+            console.log('startGame() function called');
+            console.log('currentGame:', currentGame);
+            
             if (!currentGame) {
+                console.log('ERROR: No current game!');
                 alert('Please join a game first!');
                 return;
             }
+
+            console.log('currentGame.id:', currentGame.id);
+            console.log('Creating settings...');
 
             const settings = {
                 startingLives: parseInt(document.getElementById('startingLives').value),
@@ -1728,10 +1736,16 @@
                 cardStyle: 'classic'
             };
 
+            console.log('Settings:', settings);
+            console.log('Emitting start-game event...');
+
             socket.emit('start-game', {
                 gameId: currentGame.id,
                 settings: settings
             });
+
+            console.log('start-game event emitted');
+            console.log('=== END START GAME DEBUG ===');
 
             log('🚀 Starting game with settings: ' + JSON.stringify(settings));
         }
