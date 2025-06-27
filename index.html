@@ -895,7 +895,7 @@
             }
 
             log('🔄 Attempting to connect to server...');
-            socket = io('http://localhost:3001');
+            socket = io();
             
             if (!myPlayerId) {
                 myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
