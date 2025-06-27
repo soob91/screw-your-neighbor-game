@@ -8,6 +8,14 @@ const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
+// Serve static files
+app.use(express.static('.'));
+
+// Serve the game at root path
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
