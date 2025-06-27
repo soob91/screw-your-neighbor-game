@@ -724,6 +724,11 @@
         let isMuted = false;
         let isVideoOff = false;
 
+        // Add these variables with your other declarations
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let gameStateBackup = null;
+
         function log(message) {
             const statusLog = document.getElementById('statusLog');
             if (statusLog) {
@@ -1354,21 +1359,35 @@
             }
 
             socket.on('connect', function() {
-                log('✅ Connected to server!');
-                updateConnectionStatus(true);
-                
-                const playerName = document.getElementById('playerName')?.value || 
-                                 document.getElementById('player-name')?.value || 'Player1';
-                socket.emit('get-friend-code', { 
-                    userId: myPlayerId, 
-                    userName: playerName 
-                });
-            });
+    log('✅ Connected to server!');
+    reconnectAttempts = 0; // Reset counter on successful connection
+    updateConnectionStatus(true);
+    
+    // Existing code stays the same...
+    const playerName = document.getElementById('playerName').value || 'Player1';
+    socket.emit('get-friend-code', { 
+        userId: myPlayerId, 
+        userName: playerName 
+    });
+});
 
-            socket.on('disconnect', function() {
-                log('❌ Disconnected from server');
-                updateConnectionStatus(false);
-            });
+            socket.on('disconnect', function(reason) {
+    log('❌ Disconnected: ' + reason);
+    updateConnectionStatus(false);
+    
+    // Auto-reconnect with exponential backoff
+    if (reconnectAttempts < maxReconnectAttempts) {
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
+        log(`🔄 Reconnecting in ${delay/1000} seconds...`);
+        
+        setTimeout(() => {
+            reconnectAttempts++;
+            connectToServer();
+        }, delay);
+    } else {
+        log('❌ Max reconnection attempts reached. Please refresh page.');
+    }
+});
 
             socket.on('error', function(data) {
                 log('❌ Error: ' + data.message);

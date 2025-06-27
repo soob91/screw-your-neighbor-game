@@ -27,7 +27,12 @@ const io = socketIo(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
-  }
+  },
+  // Mobile-optimized settings:
+  pingTimeout: 60000,      // 60 seconds (mobile networks are slow)
+  pingInterval: 25000,     // 25 seconds (check connection)
+  upgradeTimeout: 30000,   // 30 seconds for mobile upgrades
+  allowEIO3: true          // Backwards compatibility
 });
 
 // Security middleware
