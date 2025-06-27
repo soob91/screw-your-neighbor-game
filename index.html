@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Screw Your Neighbor - With Video</title>
+    <title>Screw Your Neighbor - DEBUG TEST VERSION</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -888,9 +888,18 @@
             });
 
             socket.on('player-joined', function(data) {
+                console.log('=== PLAYER JOINED DEBUG ===');
+                console.log('Received data:', data);
+                console.log('Current game before update:', currentGame);
+                console.log('New game data:', data.game);
+                console.log('Player count in new data:', data.game ? data.game.players.length : 'NO GAME DATA');
+                
                 log('👋 Player joined: ' + (data.newPlayer ? data.newPlayer.name : 'Unknown'));
                 currentGame = data.game;
                 updateGameDisplay();
+                
+                console.log('Current game after update:', currentGame);
+                console.log('=== END DEBUG ===');
             });
 
             socket.on('game-started', function(data) {
