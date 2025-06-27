@@ -724,10 +724,11 @@
         let isMuted = false;
         let isVideoOff = false;
 
-        // Add these variables with your other declarations
+        // MOBILE CONNECTION VARIABLES
         let reconnectAttempts = 0;
-        const maxReconnectAttempts = 5;
+        const maxReconnectAttempts = 10;
         let gameStateBackup = null;
+        let heartbeatInterval;
 
         function log(message) {
             const statusLog = document.getElementById('statusLog');
@@ -744,6 +745,256 @@
             const status = document.getElementById('connectionStatus');
             status.textContent = connected ? 'Connected' : 'Disconnected';
             status.className = 'connection-status ' + (connected ? 'connected' : 'disconnected');
+        }
+
+        // =====================================================================
+        // MOBILE-OPTIMIZED CONNECTION FUNCTION
+        // =====================================================================
+
+        function connectToServer() {
+            if (socket) {
+                socket.disconnect();
+            }
+
+            log('🔄 Attempting to connect to server...');
+            
+            // MOBILE-OPTIMIZED Socket.IO settings
+            socket = io({
+                timeout: 60000,
+                pingTimeout: 120000,
+                pingInterval: 30000,
+                reconnection: true,
+                reconnectionAttempts: 10,
+                reconnectionDelay: 2000,
+                reconnectionDelayMax: 10000,
+                transports: ['websocket', 'polling'],
+                upgrade: true,
+                rememberUpgrade: true,
+                forceNew: true,
+                autoConnect: true
+            });
+            
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            socket.on('connect', function() {
+                log('✅ Connected to server! Transport: ' + socket.io.engine.transport.name);
+                reconnectAttempts = 0; // Reset counter on successful connection
+                updateConnectionStatus(true);
+                
+                const playerName = document.getElementById('playerName').value || 'Player1';
+                socket.emit('get-friend-code', { 
+                    userId: myPlayerId, 
+                    userName: playerName 
+                });
+                
+                if (isMobileDevice()) {
+                    startMobileHeartbeat();
+                }
+            });
+
+            socket.on('disconnect', function(reason) {
+                log('❌ Disconnected: ' + reason);
+                updateConnectionStatus(false);
+                
+                // Only auto-reconnect on certain disconnect reasons (not user-initiated)
+                const autoReconnectReasons = [
+                    'transport close',
+                    'transport error', 
+                    'ping timeout',
+                    'server namespace disconnect'
+                ];
+                
+                if (autoReconnectReasons.includes(reason) && reconnectAttempts < maxReconnectAttempts) {
+                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
+                    log(`🔄 Auto-reconnecting in ${delay/1000} seconds... (attempt ${reconnectAttempts + 1})`);
+                    
+                    setTimeout(() => {
+                        reconnectAttempts++;
+                        socket.connect(); // Use socket.connect() instead of creating new socket
+                    }, delay);
+                } else if (reconnectAttempts >= maxReconnectAttempts) {
+                    log('❌ Max reconnection attempts reached. Please refresh page.');
+                }
+            });
+
+            socket.on('error', function(data) {
+                log('❌ Error: ' + data.message);
+                alert('Error: ' + data.message);
+            });
+
+            socket.on('friend-code-generated', function(data) {
+                myFriendCode = data.friendCode;
+                log('📱 Your friend code: ' + myFriendCode);
+            });
+
+            // NEW: Handle modern game creation
+            socket.on('public-game-created', function(data) {
+                log('🎮 Public game created! Waiting for players...');
+                currentGame = data.game;
+                showGameContent();
+                updateGameDisplay();
+            });
+
+            socket.on('private-game-created', function(data) {
+                log('🎮 Private game created successfully!');
+                currentGame = data.game;
+                
+                document.getElementById('main-menu').innerHTML = `
+                    <div class="container">
+                        <h2>👥 Private Game Created!</h2>
+                        <div class="share-section">
+                            <h4>Share with Friends:</h4>
+                            <div class="share-options">
+                                <div class="share-link">
+                                    <label>Direct Link:</label>
+                                    <input type="text" value="${data.shareableLink}" readonly onclick="this.select()">
+                                    <button onclick="copyToClipboard('${data.shareableLink}')">📋 Copy</button>
+                                </div>
+                                <div class="share-code">
+                                    <label>Game Code:</label>
+                                    <input type="text" value="${data.friendCode}" readonly onclick="this.select()">
+                                    <button onclick="copyToClipboard('${data.friendCode}')">📋 Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="game-info">
+                            <p><strong>Players:</strong> ${data.game.players.length}/4</p>
+                            <div class="player-list">
+                                ${data.game.players.map(p => `<span class="player-badge">${p.name}</span>`).join('')}
+                            </div>
+                        </div>
+                        <button onclick="startGame()" ${data.game.players.length < 2 ? 'disabled' : ''}>
+                            Start Game (Need 2+ players)
+                        </button>
+                        <button onclick="location.reload()">Cancel Game</button>
+                    </div>
+                `;
+            });
+
+            socket.on('game-created', function(data) {
+                log('🎮 Game created successfully!');
+                currentGame = data.game;
+                showGameContent();
+                updateGameDisplay();
+            });
+
+            socket.on('game-joined', function(data) {
+                log('🎮 Successfully joined game!');
+                currentGame = data.game;
+                showGameContent();
+                updateGameDisplay();
+            });
+
+            socket.on('player-joined', function(data) {
+                log('👋 Player joined: ' + (data.newPlayer ? data.newPlayer.name : 'Unknown'));
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('game-started', function(data) {
+                log('🎮 Game started!');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('trade-completed', function(data) {
+                const result = data.result;
+                if (result.tradedWithDeck) {
+                    log('🎴 SPECIAL RULE: Dealer had King - traded with deck instead!');
+                } else if (result.traded) {
+                    log('✅ Cards swapped successfully!');
+                } else if (result.blocked) {
+                    log('🚫 Trade BLOCKED by Jack - "Screw You!"');
+                } else if (result.kingRevealed) {
+                    if (result.roundEnded) {
+                        log('👑 King revealed but Jack blocks pass-through - Round ends!');
+                    } else {
+                        log('👑 King revealed - can pass to next player!');
+                    }
+                }
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('turn-skipped', function(data) {
+                const action = data.result.wasKing ? 'kept their King' : 'kept their card';
+                log('⏭️ Player ' + data.playerId + ' ' + action + ' and ended turn');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('dealer-traded-deck', function(data) {
+                log('🎴 Dealer traded with deck');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('dealer-skipped-trade', function(data) {
+                log('⏭️ Dealer skipped trade');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('card-flipped', function(data) {
+                log('🎴 Player ' + data.playerId + ' flipped their card');
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('round-ended', function(data) {
+                log('🏁 Round ' + data.result.round + ' ended. Losers: ' + data.result.losers.map(function(l) { return l.name; }).join(', '));
+                currentGame = data.game;
+                updateGameDisplay();
+            });
+
+            socket.on('game-finished', function(data) {
+                log('🏆 Game finished! Winner: ' + (data.winner ? data.winner.name : 'No winner'));
+                alert('Game Over! Winner: ' + (data.winner ? data.winner.name : 'No winner'));
+            });
+
+            socket.on('chat-message', function(data) {
+                const chatLog = document.getElementById('chatLog');
+                if (chatLog) {
+                    const isSpectator = data.isSpectator ? '[SPECTATOR] ' : '';
+                    chatLog.innerHTML += '<div>' + isSpectator + 'Player ' + data.playerId + ': ' + data.message + '</div>';
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                }
+            });
+
+            socket.on('spectator-joined', function(data) {
+                log('👁️ Spectator joined: ' + data.spectator.name);
+            });
+
+            socket.on('player-disconnected', function(data) {
+                log('👋 Player ' + data.playerId + ' disconnected');
+            });
+        }
+
+        // =====================================================================
+        // MOBILE DETECTION AND HEARTBEAT FUNCTIONS
+        // =====================================================================
+
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function startMobileHeartbeat() {
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            
+            heartbeatInterval = setInterval(() => {
+                if (socket && socket.connected) {
+                    socket.emit('heartbeat', { timestamp: Date.now() });
+                }
+            }, 25000); // Send heartbeat every 25 seconds
+        }
+
+        function stopMobileHeartbeat() {
+            if (heartbeatInterval) {
+                clearInterval(heartbeatInterval);
+                heartbeatInterval = null;
+            }
         }
 
         // =====================================================================
@@ -1340,206 +1591,6 @@
             delete remoteUsers[uid];
             removeRemoteVideo(uid);
             log(`👋 ${uid} left video call`);
-        }
-
-        // =====================================================================
-        // SOCKET.IO CONNECTION (UPDATED)
-        // =====================================================================
-
-        function connectToServer() {
-            if (socket) {
-                socket.disconnect();
-            }
-
-            log('🔄 Attempting to connect to server...');
-            socket = io();
-            
-            if (!myPlayerId) {
-                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
-            }
-
-            socket.on('connect', function() {
-    log('✅ Connected to server!');
-    reconnectAttempts = 0; // Reset counter on successful connection
-    updateConnectionStatus(true);
-    
-    // Existing code stays the same...
-    const playerName = document.getElementById('playerName').value || 'Player1';
-    socket.emit('get-friend-code', { 
-        userId: myPlayerId, 
-        userName: playerName 
-    });
-});
-
-            socket.on('disconnect', function(reason) {
-    log('❌ Disconnected: ' + reason);
-    updateConnectionStatus(false);
-    
-    // Auto-reconnect with exponential backoff
-    if (reconnectAttempts < maxReconnectAttempts) {
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
-        log(`🔄 Reconnecting in ${delay/1000} seconds...`);
-        
-        setTimeout(() => {
-            reconnectAttempts++;
-            connectToServer();
-        }, delay);
-    } else {
-        log('❌ Max reconnection attempts reached. Please refresh page.');
-    }
-});
-
-            socket.on('error', function(data) {
-                log('❌ Error: ' + data.message);
-                alert('Error: ' + data.message);
-            });
-
-            socket.on('friend-code-generated', function(data) {
-                myFriendCode = data.friendCode;
-                log('📱 Your friend code: ' + myFriendCode);
-            });
-
-            // NEW: Handle modern game creation
-            socket.on('public-game-created', function(data) {
-                log('🎮 Public game created! Waiting for players...');
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-            });
-
-            socket.on('private-game-created', function(data) {
-                log('🎮 Private game created successfully!');
-                currentGame = data.game;
-                
-                document.getElementById('main-menu').innerHTML = `
-                    <div class="container">
-                        <h2>👥 Private Game Created!</h2>
-                        <div class="share-section">
-                            <h4>Share with Friends:</h4>
-                            <div class="share-options">
-                                <div class="share-link">
-                                    <label>Direct Link:</label>
-                                    <input type="text" value="${data.shareableLink}" readonly onclick="this.select()">
-                                    <button onclick="copyToClipboard('${data.shareableLink}')">📋 Copy</button>
-                                </div>
-                                <div class="share-code">
-                                    <label>Game Code:</label>
-                                    <input type="text" value="${data.friendCode}" readonly onclick="this.select()">
-                                    <button onclick="copyToClipboard('${data.friendCode}')">📋 Copy</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="game-info">
-                            <p><strong>Players:</strong> ${data.game.players.length}/4</p>
-                            <div class="player-list">
-                                ${data.game.players.map(p => `<span class="player-badge">${p.name}</span>`).join('')}
-                            </div>
-                        </div>
-                        <button onclick="startGame()" ${data.game.players.length < 2 ? 'disabled' : ''}>
-                            Start Game (Need 2+ players)
-                        </button>
-                        <button onclick="location.reload()">Cancel Game</button>
-                    </div>
-                `;
-            });
-
-            socket.on('game-created', function(data) {
-                log('🎮 Game created successfully!');
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-            });
-
-            socket.on('game-joined', function(data) {
-                log('🎮 Successfully joined game!');
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-            });
-
-            socket.on('player-joined', function(data) {
-                log('👋 Player joined: ' + (data.newPlayer ? data.newPlayer.name : 'Unknown'));
-                currentGame = data.game;
-                updateGameDisplay();
-            });
-
-            socket.on('game-started', function(data) {
-                log('🎮 Game started!');
-                currentGame = data.game;
-                updateGameDisplay();
-            });
-
-            socket.on('trade-completed', function(data) {
-                const result = data.result;
-                if (result.tradedWithDeck) {
-                    log('🎴 SPECIAL RULE: Dealer had King - traded with deck instead!');
-                } else if (result.traded) {
-                    log('✅ Cards swapped successfully!');
-                } else if (result.blocked) {
-                    log('🚫 Trade BLOCKED by Jack - "Screw You!"');
-                } else if (result.kingRevealed) {
-                    if (result.roundEnded) {
-                        log('👑 King revealed but Jack blocks pass-through - Round ends!');
-                    } else {
-                        log('👑 King revealed - can pass to next player!');
-                    }
-                }
-                currentGame = data.game;
-                updateGameDisplay();
-            });
-
-            socket.on('turn-skipped', function(data) {
-                const action = data.result.wasKing ? 'kept their King' : 'kept their card';
-                log('⏭️ Player ' + data.playerId + ' ' + action + ' and ended turn');
-                currentGame = data.game;
-                updateGameDisplay();
-            });
-
-            socket.on('dealer-traded-deck', function(data) {
-                log('🎴 Dealer traded with deck');
-                currentGame = data.game;
-                updateGameDisplay();
-            });
-
-            socket.on('dealer-skipped-trade', function(data) {
-                log('⏭️ Dealer skipped trade');
-                currentGame = data.game;
-                updateGameDisplay();
-            });
-
-            socket.on('card-flipped', function(data) {
-                log('🎴 Player ' + data.playerId + ' flipped their card');
-                currentGame = data.game;
-                updateGameDisplay();
-            });
-
-            socket.on('round-ended', function(data) {
-                log('🏁 Round ' + data.result.round + ' ended. Losers: ' + data.result.losers.map(function(l) { return l.name; }).join(', '));
-                currentGame = data.game;
-                updateGameDisplay();
-            });
-
-            socket.on('game-finished', function(data) {
-                log('🏆 Game finished! Winner: ' + (data.winner ? data.winner.name : 'No winner'));
-                alert('Game Over! Winner: ' + (data.winner ? data.winner.name : 'No winner'));
-            });
-
-            socket.on('chat-message', function(data) {
-                const chatLog = document.getElementById('chatLog');
-                if (chatLog) {
-                    const isSpectator = data.isSpectator ? '[SPECTATOR] ' : '';
-                    chatLog.innerHTML += '<div>' + isSpectator + 'Player ' + data.playerId + ': ' + data.message + '</div>';
-                    chatLog.scrollTop = chatLog.scrollHeight;
-                }
-            });
-
-            socket.on('spectator-joined', function(data) {
-                log('👁️ Spectator joined: ' + data.spectator.name);
-            });
-
-            socket.on('player-disconnected', function(data) {
-                log('👋 Player ' + data.playerId + ' disconnected');
-            });
         }
 
         // UPDATED: Create game function with game type support

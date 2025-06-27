@@ -171,6 +171,10 @@ function sendGameUpdateToAll(gameId, eventName, data = {}) {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  socket.on('heartbeat', (data) => {
+    socket.emit('heartbeat-ack', { timestamp: Date.now() });
+});
+
   // Generate friend code for new connections
   socket.on('get-friend-code', (data) => {
     const { userId, userName } = data;
