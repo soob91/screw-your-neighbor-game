@@ -564,6 +564,8 @@ io.on('connection', (socket) => {
         gameType: targetGame.settings.type
       });
       
+      socket.join(targetGame.id);
+      
       // Notify other players
       socket.to(targetGame.id).emit('player-joined', {
         game: targetGame.getPublicState(),
