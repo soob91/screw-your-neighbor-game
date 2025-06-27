@@ -405,10 +405,10 @@ io.on('connection', (socket) => {
         // Create new public game
         const gameId = uuidv4();
         
-        const game = gameManager.createGame(gameId, userId, {
-          isPublic: true,
-          type: 'public',
-          maxPlayers: 4
+        const game = gameManager.createGame(gameId, userId, {           
+          isPublic: true,           
+          type: 'public',           
+          maxPlayers: 30  // ← Changed from 4 to 30
         });
         
         // Add to public games
@@ -467,7 +467,7 @@ io.on('connection', (socket) => {
         ...settings,
         isPublic: false,
         type: 'private',
-        maxPlayers: 4
+        maxPlayers: settings.maxPlayers || 8  // ← Use custom or default to 8
       });
       
       // Add creator as first player
@@ -565,7 +565,7 @@ io.on('connection', (socket) => {
       });
       
       socket.join(targetGame.id);
-      
+
       // Notify other players
       socket.to(targetGame.id).emit('player-joined', {
         game: targetGame.getPublicState(),

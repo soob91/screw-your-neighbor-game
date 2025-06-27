@@ -801,6 +801,16 @@
             document.getElementById('main-menu').innerHTML = `
                 <div class="container">
                     <h2>👥 Private Games</h2>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="maxPlayers" style="display: block; margin-bottom: 8px; font-weight: bold;">Max Players:</label>
+                        <select id="maxPlayers" name="maxPlayers" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                            <option value="4">4 Players</option>
+                            <option value="6" selected>6 Players</option>
+                            <option value="8">8 Players</option>
+                            <option value="10">10 Players</option>
+                            <option value="12">12 Players</option>
+                        </select>
+                </div>
                     
                     <button onclick="createPrivateGame('${playerName}')" class="create-btn">
                         🎯 Create Private Game
