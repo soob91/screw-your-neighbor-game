@@ -1122,6 +1122,7 @@ class Game {
       // Card is simply discarded - no need to track it
       
       tradedWithDeck = true;
+      kingRevealed = true;
       toPlayer.cardRevealed = true; // Reveal the dealer's King
       fromPlayer.cardRevealed = true; // Auto-reveal the new deck card
       fromPlayer.stats.tradesInitiated++;
