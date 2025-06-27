@@ -896,6 +896,31 @@
                 currentGame = data.game;
                 updateGameDisplay();
                 
+                // Update private game creation screen if we're still on it
+                if (document.getElementById('main-menu').style.display !== 'none') {
+                    const gameInfo = document.querySelector('.game-info p');
+                    if (gameInfo && currentGame) {
+                        gameInfo.innerHTML = `<strong>Players:</strong> ${currentGame.players.length}/4`;
+                    }
+                    
+                    const playerList = document.querySelector('.player-list');
+                    if (playerList && currentGame) {
+                        playerList.innerHTML = currentGame.players.map(p => `<span class="player-badge">${p.name}</span>`).join('');
+                    }
+                    
+                    // Enable/disable start button based on player count
+                    const startButton = document.querySelector('button[onclick="startGame()"]');
+                    if (startButton && currentGame) {
+                        if (currentGame.players.length >= 2) {
+                            startButton.disabled = false;
+                            startButton.textContent = `Start Game (${currentGame.players.length} players ready!)`;
+                        } else {
+                            startButton.disabled = true;
+                            startButton.textContent = 'Start Game (Need 2+ players)';
+                        }
+                    }
+                }
+                
                 console.log('Current game players after update:', currentGame ? currentGame.players.map(p => p.name) : 'NO PLAYERS');
                 console.log('=== END DEBUG ===');
             });
