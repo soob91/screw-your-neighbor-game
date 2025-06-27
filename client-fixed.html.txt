@@ -343,7 +343,7 @@
             });
 
             socket.on('player-joined', function(data) {
-                log('👋 Player joined: ' + data.player.name);
+                log('👋 Player joined: ' + data.newPlayer.name);  // ✅ Matches server
                 currentGame = data.game;
                 updateGameDisplay();
             });
