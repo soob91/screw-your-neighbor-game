@@ -889,16 +889,14 @@
 
             socket.on('player-joined', function(data) {
                 console.log('=== PLAYER JOINED DEBUG ===');
-                console.log('Received data:', data);
-                console.log('Current game before update:', currentGame);
-                console.log('New game data:', data.game);
                 console.log('Player count in new data:', data.game ? data.game.players.length : 'NO GAME DATA');
+                console.log('Players in new data:', data.game ? data.game.players.map(p => p.name) : 'NO PLAYERS');
                 
                 log('👋 Player joined: ' + (data.newPlayer ? data.newPlayer.name : 'Unknown'));
                 currentGame = data.game;
                 updateGameDisplay();
                 
-                console.log('Current game after update:', currentGame);
+                console.log('Current game players after update:', currentGame ? currentGame.players.map(p => p.name) : 'NO PLAYERS');
                 console.log('=== END DEBUG ===');
             });
 
