@@ -928,6 +928,7 @@
             socket.on('game-started', function(data) {
                 log('🎮 Game started!');
                 currentGame = data.game;
+                showGameContent();  // ← ADD THIS LINE
                 updateGameDisplay();
             });
 
