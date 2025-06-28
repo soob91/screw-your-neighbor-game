@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screw Your Neighbor - DEBUG TEST VERSION</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+            margin-bottom: 70px; /* Space for banner ad */
+        }
+        
+        .container {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button.danger {
+            background: #f44336;
+        }
+        
+        button.danger:hover {
+            background: #da190b;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            color: black;
+        }
+
+        /* Modern Game Joining Styles */
+        .main-menu {
+            background: rgba(0,0,0,0.4);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .menu-section {
+            margin: 25px 0;
+        }
+
+        .quick-match-btn {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .quick-match-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .private-game-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .private-game-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .quick-match-btn small, .private-game-btn small {
+            display: block;
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .divider {
+            margin: 20px 0;
+            color: #ccc;
+            font-style: italic;
+        }
+
+        .join-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .create-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .back-btn {
+            background: #666;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .share-section {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 2px solid #FFD700;
+        }
+
+        .share-options {
+            margin: 10px 0;
+        }
+
+        .share-link, .share-code {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+
+        .share-link input, .share-code input {
+            width: 70%;
+            margin-right: 10px;
+        }
+
+        .game-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .player-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .player-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Banner Ad Styles */
+        .ad-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            border-top: 2px solid #3a6ea5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+        }
+
+        .ad-content {
+            color: white;
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .ad-content:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .ad-banner.hidden {
+            display: none;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .ad-banner {
+                height: 50px;
+                font-size: 12px;
+            }
+            
+            body {
+                margin-bottom: 50px;
+            }
+
+            .quick-match-btn, .private-game-btn {
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+        }
+        
+        .game-type-container {
+            background: rgba(255, 165, 0, 0.1);
+            border: 2px solid #ffa500;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .password-container {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .password-container.show {
+            display: block;
+        }
+        
+        .game-type-help {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .status {
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .players {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .player {
+            background: rgba(0,0,0,0.4);
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+        }
+        
+        .player.current {
+            border-color: #FFD700;
+        }
+        
+        .player.eliminated {
+            opacity: 0.5;
+            border-color: #ff4444;
+        }
+        
+        .card {
+            width: 60px;
+            height: 80px;
+            background: #fff;
+            color: #000;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+            border: 2px solid #333;
+        }
+        
+        .card:hover {
+            transform: scale(1.05);
+        }
+        
+        .card.face-down {
+            background: linear-gradient(45deg, #8B0000, #A0522D);
+            color: white;
+            font-size: 10px;
+            position: relative;
+        }
+        
+        .card.face-down:before {
+            content: "🂠";
+            font-size: 24px;
+            color: #FFD700;
+        }
+        
+        .card.face-down.clickable {
+            cursor: pointer;
+            border-color: #FFD700;
+        }
+        
+        .card.face-down.clickable:hover {
+            background: linear-gradient(45deg, #A0522D, #8B0000);
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        
+        .card.revealed {
+            background: #fff;
+            color: #000;
+            animation: flipCard 0.6s ease-in-out;
+        }
+        
+        .card.red {
+            color: #ff0000;
+        }
+        
+        @keyframes flipCard {
+            0% { transform: rotateY(180deg); }
+            100% { transform: rotateY(0deg); }
+        }
+        
+        .lives {
+            display: flex;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        
+        .life {
+            width: 12px;
+            height: 12px;
+            background: #ff4444;
+            border-radius: 50%;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .connected {
+            background: #4CAF50;
+        }
+        
+        .disconnected {
+            background: #f44336;
+        }
+        
+        .game-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .chat-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        #chatMessage {
+            flex: 1;
+        }
+        
+        .alert {
+            background: rgba(255, 255, 0, 0.2);
+            border: 1px solid #ffff00;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        /* Video Chat Styles */
+        .video-controls {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+            max-width: 800px;
+        }
+
+        .video-container {
+            position: relative;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .video-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .video-controls button.active {
+            background: #45a049;
+        }
+
+        .video-controls button.inactive {
+            background: #f44336;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .video-status {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-size: 10px;
+        }
+
+        .setup-section {
+            background: rgba(255, 165, 0, 0.2);
+            border: 2px solid #ffa500;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .config-step {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ffa500;
+        }
+
+        code {
+            background: rgba(0,0,0,0.5);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">Disconnected</div>
+    
+    <h1>🎮 Screw Your Neighbor - With Video Chat</h1>
+
+    <!-- Main Menu (Modern Game Joining) -->
+    <div class="main-menu" id="main-menu">
+        <div class="container">
+            <h1>🎮 Screw Your Neighbor</h1>
+            <div class="menu-section">
+                <h3>Join a Game</h3>
+                <input type="text" id="player-name" placeholder="Enter your name" maxlength="20">
+                
+                <button onclick="quickMatch()" class="quick-match-btn">
+                    ⚡ Quick Match
+                    <small>Join any available game instantly</small>
+                </button>
+                
+                <div class="divider">or</div>
+                
+                <button onclick="showPrivateOptions()" class="private-game-btn">
+                    👥 Play with Friends
+                    <small>Create or join a private game</small>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Instructions -->
+    <div class="setup-section" id="setupInstructions">
+        <h3>📹 Video Chat Setup Required</h3>
+        <p><strong>Follow these steps to enable video:</strong></p>
+        
+        <div class="config-step">
+            <strong>STEP 1:</strong> Find line that says:<br>
+            <code>const AGORA_APP_ID = "cfef8101dcc14802a8f97d8805b3ebc9";</code><br>
+            Replace with your Agora App ID from console
+        </div>
+        
+        <div class="config-step">
+            <strong>STEP 2:</strong> Find line that says:<br>
+            <code>const tempToken = "YOUR_GENERATED_TOKEN_HERE";</code><br>
+            Replace with your generated temp token for channel "test123"
+        </div>
+        
+        <div class="config-step">
+            <strong>STEP 3:</strong> Save and refresh the page
+        </div>
+        
+        <p><em>This setup box will disappear once both are configured!</em></p>
+    </div>
+    
+    <!-- Game Content (Hidden initially) -->
+    <div id="gameContent" class="hidden">
+        <div class="container">
+            <h2>Connection & Game Setup</h2>
+            <div>
+                <input type="text" id="playerName" placeholder="Your Name" value="Player1">
+                <input type="text" id="gameId" placeholder="Game ID (leave empty for new game)">
+                <button onclick="connectToServer()">Connect to Server</button>
+                <button onclick="joinGame()">Join Game</button>
+                <button onclick="leaveGame()" class="danger">Leave Game</button>
+            </div>
+
+            <!-- Video Controls -->
+            <div class="video-controls" id="videoControls" style="display: none;">
+                <h3>📹 Video Chat</h3>
+                <button id="joinVideoBtn" onclick="joinVideoCall()">📹 Join Video Call</button>
+                <button id="leaveVideoBtn" onclick="leaveVideoCall()" class="hidden">📹 Leave Video</button>
+                <button id="muteBtn" onclick="toggleMute()" class="hidden">🔇 Mute</button>
+                <button id="videoToggleBtn" onclick="toggleVideo()" class="hidden">📷 Video Off</button>
+            </div>
+
+            <!-- Video Grid -->
+            <div id="videoGrid" class="hidden">
+                <h3>🎥 Players Video</h3>
+                <div class="video-grid" id="videosContainer">
+                    <!-- Videos will be added dynamically -->
+                </div>
+            </div>
+            
+            <!-- OLD GAME TYPE SELECTION (for backward compatibility) -->
+            <div class="game-type-container" style="display: none;">
+                <h3>🎮 Create New Game</h3>
+                
+                <div style="margin: 10px 0;">
+                    <label><strong>Game Type:</strong></label>
+                    <select id="gameType" onchange="handleGameTypeChange()">
+                        <option value="public">🌐 Public - Anyone can join</option>
+                        <option value="private">🔒 Private - Password required</option>
+                        <option value="friends">👥 Friends Only</option>
+                    </select>
+                    <div class="game-type-help" id="gameTypeHelp">
+                        Public games appear in the lobby for anyone to join
+                    </div>
+                </div>
+                
+                <div class="password-container" id="passwordContainer">
+                    <label><strong>Game Password:</strong></label>
+                    <input type="password" id="gamePassword" placeholder="Enter password (required for private games)" maxlength="20">
+                    <div class="game-type-help">
+                        Players will need this password to join your game
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <button onclick="createGame()" style="background: #ff6b35; font-weight: bold;">🎯 Create Game</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 10px;">
+                <label>Starting Lives:</label>
+                <select id="startingLives">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+                
+                <label>Deck Count:</label>
+                <select id="deckCount">
+                    <option value="1" selected>1 Deck</option>
+                    <option value="2">2 Decks</option>
+                    <option value="3">3 Decks</option>
+                    <option value="4">4 Decks</option>
+                </select>
+                
+                <button onclick="startGame()">Start Game</button>
+            </div>
+        </div>
+        
+        <div class="container">
+            <h2>Game Status</h2>
+            <div id="gameInfo">No game connected</div>
+            <div class="status" id="statusLog"></div>
+        </div>
+        
+        <div class="container">
+            <h2>Players</h2>
+            <div class="players" id="playersContainer"></div>
+        </div>
+        
+        <div class="container">
+            <h2>Game Controls</h2>
+            <div class="game-controls">
+                <button onclick="flipMyCard()">Flip My Card</button>
+                <button onclick="endRound()">End Round (Reveal All)</button>
+                
+                <div id="dealerControls" style="margin-top: 10px; display: none;">
+                    <h4>Dealer Actions:</h4>
+                    <button onclick="dealerTradeWithDeck()">Trade with Deck</button>
+                    <button onclick="dealerSkipTrade()">Skip Trade</button>
+                </div>
+            </div>
+            
+            <h3>Trade Actions</h3>
+            <div id="tradeControls">
+                <p>Select a player below to trade with them</p>
+            </div>
+        </div>
+        
+        <div class="container">
+            <h2>Chat</h2>
+            <div class="chat-container">
+                <input type="text" id="chatMessage" placeholder="Type message..." onkeypress="handleChatKeyPress(event)">
+                <button onclick="sendChatMessage()">Send</button>
+                <button onclick="joinAsSpectator()">Join as Spectator</button>
+            </div>
+            <div class="status" id="chatLog"></div>
+        </div>
+    </div>
+
+    <!-- Banner Ad -->
+    <div class="ad-banner" id="bottomBanner">
+        <div class="ad-content" onclick="handleAdClick()">
+            🎯 Advertise Your Business Here | Contact: ads@screwgame.com | Click for Info
+        </div>
+    </div>
+
+    <!-- Agora SDK -->
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.19.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script>
+        // =====================================================================
+        // 🔑 REPLACE THIS WITH YOUR AGORA APP ID
+        // =====================================================================
+        const AGORA_APP_ID = "cfef8101dcc14802a8f97d8805b3ebc9";
+        
+        // Game variables
+        let socket = null;
+        let currentGame = null;
+        let myPlayerId = null;
+        let isConnected = false;
+        let myFriendCode = null;
+
+        // Agora video variables
+        let agoraClient = null;
+        let localTracks = {
+            videoTrack: null,
+            audioTrack: null
+        };
+        let remoteUsers = {};
+        let isVideoJoined = false;
+        let isMuted = false;
+        let isVideoOff = false;
+
+        // MOBILE CONNECTION VARIABLES
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+        let gameStateBackup = null;
+        let heartbeatInterval;
+
+        function log(message) {
+            const statusLog = document.getElementById('statusLog');
+            if (statusLog) {
+                const timestamp = new Date().toLocaleTimeString();
+                statusLog.innerHTML += '<div>[' + timestamp + '] ' + message + '</div>';
+                statusLog.scrollTop = statusLog.scrollHeight;
+            }
+            console.log(message);
+        }
+
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const status = document.getElementById('connectionStatus');
+            status.textContent = connected ? 'Connected' : 'Disconnected';
+            status.className = 'connection-status ' + (connected ? 'connected' : 'disconnected');
+        }
+
+        // =====================================================================
+        // MOBILE-OPTIMIZED CONNECTION FUNCTION
+        // =====================================================================
+
+        function connectToServer() {
+            if (socket) {
+                socket.disconnect();
+            }
+
+            log('🔄 Attempting to connect to server...');
+            
+            // MOBILE-OPTIMIZED Socket.IO settings
+            socket = io({
+                timeout: 60000,
+                pingTimeout: 120000,
+                pingInterval: 30000,
+                reconnection: true,
+                reconnectionAttempts: 10,
+                reconnectionDelay: 2000,
+                reconnectionDelayMax: 10000,
+                transports: ['websocket', 'polling'],
+                upgrade: true,
+                rememberUpgrade: true,
+                forceNew: true,
+                autoConnect: true
+            });
+            
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            socket.on('connect', function() {
+                log('✅ Connected to server! Transport: ' + socket.io.engine.transport.name);
+                reconnectAttempts = 0; // Reset counter on successful connection
+                updateConnectionStatus(true);
+                
+                const playerName = document.getElementById('playerName').value || 'Player1';
+                socket.emit('get-friend-code', { 
+                    userId: myPlayerId, 
+                    userName: playerName 
+                });
+                
+                if (isMobileDevice()) {
+                    startMobileHeartbeat();
+                }
+            });
+
+            socket.on('disconnect', function(reason) {
+                log('❌ Disconnected: ' + reason);
+                updateConnectionStatus(false);
+                
+                // Only auto-reconnect on certain disconnect reasons (not user-initiated)
+                const autoReconnectReasons = [
+                    'transport close',
+                    'transport error', 
+                    'ping timeout',
+                    'server namespace disconnect'
+                ];
+                
+                if (autoReconnectReasons.includes(reason) && reconnectAttempts < maxReconnectAttempts) {
+                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
+                    log(`🔄 Auto-reconnecting in ${delay/1000} seconds... (attempt ${reconnectAttempts + 1})`);
+                    
+                    setTimeout(() => {
+                        reconnectAttempts++;
+                        socket.connect(); // Use socket.connect() instead of creating new socket
+                    }, delay);
+                } else if (reconnectAttempts >= maxReconnectAttempts) {
+                    log('❌ Max reconnection attempts reached. Please refresh page.');
+                }
+            });
+
+            socket.on('error', function(data) {
+                log('❌ Error: ' + data.message);
+                alert('Error: ' + data.message);
+            });
+
+            socket.on('friend-code-generated', function(data) {
+                myFriendCode = data.friendCode;
+                log('📱 Your friend code: ' + myFriendCode);
+            });
+
+            // NEW: Handle modern game creation
+            socket.on('public-game-created', function(data) {
+                log('🎮 Public game created! Waiting for players...');
+                currentGame = data.game;
+                showGameContent();
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('private-game-created', function(data) {
+                log('🎮 Private game created successfully!');
+                currentGame = data.game;
+                
+                document.getElementById('main-menu').innerHTML = `
+                    <div class="container">
+                        <h2>👥 Private Game Created!</h2>
+                        <div class="share-section">
+                            <h4>Share with Friends:</h4>
+                            <div class="share-options">
+                                <div class="share-link">
+                                    <label>Direct Link:</label>
+                                    <input type="text" value="${data.shareableLink}" readonly onclick="this.select()">
+                                    <button onclick="copyToClipboard('${data.shareableLink}')">📋 Copy</button>
+                                </div>
+                                <div class="share-code">
+                                    <label>Game Code:</label>
+                                    <input type="text" value="${data.friendCode}" readonly onclick="this.select()">
+                                    <button onclick="copyToClipboard('${data.friendCode}')">📋 Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="game-info">
+                            <p><strong>Players:</strong> ${data.game.players.length}/4</p>
+                            <div class="player-list">
+                                ${data.game.players.map(p => `<span class="player-badge">${p.name}</span>`).join('')}
+                            </div>
+                        </div>
+                        <button onclick="startGame()" ${data.game.players.length < 2 ? 'disabled' : ''}>
+                            Start Game (Need 2+ players)
+                        </button>
+                        <button onclick="location.reload()">Cancel Game</button>
+                    </div>
+                `;
+            });
+
+            socket.on('game-created', function(data) {
+                log('🎮 Game created successfully!');
+                currentGame = data.game;
+                showGameContent();
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('game-joined', function(data) {
+                log('🎮 Successfully joined game!');
+                currentGame = data.game;
+                showGameContent();
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('player-joined', function(data) {
+                console.log('=== PLAYER JOINED DEBUG ===');
+                console.log('Player count in new data:', data.game ? data.game.players.length : 'NO GAME DATA');
+                console.log('Players in new data:', data.game ? data.game.players.map(p => p.name) : 'NO PLAYERS');
+    
+                log('👋 Player joined: ' + (data.newPlayer ? data.newPlayer.name : 'Unknown'));
+                currentGame = data.game;
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+    
+                // Update private game creation screen if we're still on it
+                if (document.getElementById('main-menu').style.display !== 'none') {
+                   // Count only connected players
+                   const connectedPlayers = currentGame ? currentGame.players.filter(p => p.connected !== false) : [];
+                   const totalPlayers = currentGame ? currentGame.players.length : 0;
+        
+                   const gameInfo = document.querySelector('.game-info p');
+                   if (gameInfo && currentGame) {
+                       gameInfo.innerHTML = `<strong>Players:</strong> ${connectedPlayers.length}/${currentGame.maxPlayers || 4} connected (${totalPlayers} total)`;
+                   }
+        
+                   const playerList = document.querySelector('.player-list');
+                   if (playerList && currentGame) {
+                       // Show only connected players with status indicators
+                       playerList.innerHTML = currentGame.players.map(p => {
+                           const status = p.connected !== false ? '🟢' : '🔴';
+                           const opacity = p.connected !== false ? '' : 'opacity: 0.5;';
+                           return `<span class="player-badge" style="${opacity}">${status} ${p.name}</span>`;
+                       }).join('');
+                   }
+        
+                   // Enable/disable start button based on CONNECTED player count
+                   const startButton = document.querySelector('button[onclick="startGame()"]');
+                   if (startButton && currentGame) {
+                       if (connectedPlayers.length >= 2) {
+                           startButton.disabled = false;
+                           startButton.textContent = `Start Game (${connectedPlayers.length} connected players ready!)`;
+                       } else {
+                           startButton.disabled = true;
+                           startButton.textContent = `Start Game (Need 2+ connected players - ${connectedPlayers.length} connected)`;
+                       }
+                   }
+               }
+    
+               console.log('Current game players after update:', currentGame ? currentGame.players.map(p => p.name) : 'NO PLAYERS');
+               console.log('=== END DEBUG ===');
+           });
+
+            socket.on('game-started', function(data) {
+                log('🎮 Game started!');
+                currentGame = data.game;
+                showGameContent();  // ← ADD THIS LINE
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('trade-completed', function(data) {
+                const result = data.result;
+                if (result.tradedWithDeck) {
+                    log('🎴 SPECIAL RULE: Dealer had King - traded with deck instead!');
+                } else if (result.traded) {
+                    log('✅ Cards swapped successfully!');
+                } else if (result.blocked) {
+                    log('🚫 Trade BLOCKED by Jack - "Screw You!"');
+                } else if (result.kingRevealed) {
+                    if (result.roundEnded) {
+                        log('👑 King revealed but Jack blocks pass-through - Round ends!');
+                    } else {
+                        log('👑 King revealed - can pass to next player!');
+                    }
+                }
+                currentGame = data.game;
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('turn-skipped', function(data) {
+                const action = data.result.wasKing ? 'kept their King' : 'kept their card';
+                log(⏭️ Player ' + data.playerId + ' ' + action + ' and ended turn');
+                currentGame = data.game;
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('dealer-traded-deck', function(data) {
+                log('🎴 Dealer traded with deck');
+                currentGame = data.game;
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('dealer-skipped-trade', function(data) {
+                log('⏭️ Dealer skipped trade');
+                currentGame = data.game;
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('card-flipped', function(data) {
+                log('🎴 Player ' + data.playerId + ' flipped their card');
+                currentGame = data.game;
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('round-ended', function(data) {
+                log('🏁 Round ' + data.result.round + ' ended. Losers: ' + data.result.losers.map(function(l) { return l.name; }).join(', '));
+                currentGame = data.game;
+                updateGameDisplay();
+                updateSmartVideoDisplay();
+            });
+
+            socket.on('game-finished', function(data) {
+                log('🏆 Game finished! Winner: ' + (data.winner ? data.winner.name : 'No winner'));
+                alert('Game Over! Winner: ' + (data.winner ? data.winner.name : 'No winner'));
+            });
+
+            socket.on('chat-message', function(data) {
+                const chatLog = document.getElementById('chatLog');
+                if (chatLog) {
+                    const isSpectator = data.isSpectator ? '[SPECTATOR] ' : '';
+                    chatLog.innerHTML += '<div>' + isSpectator + 'Player ' + data.playerId + ': ' + data.message + '</div>';
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                }
+            });
+
+            socket.on('spectator-joined', function(data) {
+                log('👁️ Spectator joined: ' + data.spectator.name);
+            });
+
+            socket.on('player-disconnected', function(data) {
+                log('👋 Player ' + data.playerId + ' disconnected');
+            });
+        }
+
+        // =====================================================================
+        // MOBILE DETECTION AND HEARTBEAT FUNCTIONS
+        // =====================================================================
+
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function startMobileHeartbeat() {
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            
+            heartbeatInterval = setInterval(() => {
+                if (socket && socket.connected) {
+                    socket.emit('heartbeat', { timestamp: Date.now() });
+                }
+            }, 25000); // Send heartbeat every 25 seconds
+        }
+
+        function stopMobileHeartbeat() {
+            if (heartbeatInterval) {
+                clearInterval(heartbeatInterval);
+                heartbeatInterval = null;
+            }
+        }
+
+        // =====================================================================
+        // MODERN GAME JOINING FUNCTIONS
+        // =====================================================================
+
+        // Show main menu
+        function showMainMenu() {
+            document.getElementById('main-menu').style.display = 'block';
+            document.getElementById('gameContent').classList.add('hidden');
+        }
+
+        // Show game content
+        function showGameContent() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('gameContent').classList.remove('hidden');
+        }
+
+        // Quick Match function
+        function quickMatch() {
+            const playerName = document.getElementById('player-name').value.trim();
+            if (!playerName) {
+                alert('Please enter your name first!');
+                return;
+            }
+            
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            if (!socket) {
+                connectToServer();
+            }
+            
+            // Show loading state
+            document.getElementById('main-menu').innerHTML = `
+                <div class="container">
+                    <h2>🔍 Finding a game...</h2>
+                    <p>Looking for available players...</p>
+                    <div class="spinner"></div>
+                    <button onclick="showMainMenu()">Cancel</button>
+                </div>
+            `;
+            
+            socket.emit('quick-match', { 
+                userId: myPlayerId,
+                token: 'demo_token_' + myPlayerId,
+                playerName: playerName 
+            });
+        }
+
+        // Show private game options
+        function showPrivateOptions() {
+            const playerName = document.getElementById('player-name').value.trim();
+            if (!playerName) {
+                alert('Please enter your name first!');
+                return;
+            }
+            
+            document.getElementById('main-menu').innerHTML = `
+                <div class="container">
+                    <h2>👥 Private Games</h2>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="maxPlayers" style="display: block; margin-bottom: 8px; font-weight: bold;">Max Players:</label>
+                        <select id="maxPlayers" name="maxPlayers" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                            <option value="4">4 Players</option>
+                            <option value="6" selected>6 Players</option>
+                            <option value="8">8 Players</option>
+                            <option value="10">10 Players</option>
+                            <option value="12">12 Players</option>
+                        </select>
+                </div>
+                    
+                    <button onclick="createPrivateGame('${playerName}')" class="create-btn">
+                        🎯 Create Private Game
+                        <small>Get a link to share with friends</small>
+                    </button>
+                    
+                    <div class="divider">or</div>
+                    
+                    <div class="join-section">
+                        <h4>Join Friend's Game</h4>
+                        <input type="text" id="friend-code-input" placeholder="Enter game code">
+                        <button onclick="joinPrivateGame('${playerName}')">Join Game</button>
+                    </div>
+                    
+                    <button onclick="location.reload()" class="back-btn">← Back</button>
+                </div>
+            `;
+        }
+
+        // Create private game
+        function createPrivateGame(playerName) {
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            if (!socket) {
+                connectToServer();
+            }
+            
+            socket.emit('create-private-game', { 
+                userId: myPlayerId,
+                token: 'demo_token_' + myPlayerId,
+                playerName: playerName 
+            });
+        }
+
+        // Join private game
+        function joinPrivateGame(playerName) {
+            const friendCode = document.getElementById('friend-code-input').value.trim().toUpperCase();
+            if (!friendCode) {
+                alert('Please enter a game code!');
+                return;
+            }
+            
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            if (!socket) {
+                connectToServer();
+            }
+            
+            socket.emit('join-game', { 
+                friendCode: friendCode,
+                userId: myPlayerId,
+                token: 'demo_token_' + myPlayerId,
+                playerName: playerName 
+            });
+        }
+
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        // Check for URL-based joining on page load
+        function checkUrlJoin() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const joinCode = urlParams.get('join');
+            
+            if (joinCode) {
+                // Show join interface for URL-based joining
+                document.getElementById('main-menu').innerHTML = `
+                    <div class="container">
+                        <h2>🎮 Join Game</h2>
+                        <p>You're about to join a game!</p>
+                        <input type="text" id="url-player-name" placeholder="Enter your name">
+                        <button onclick="joinByUrl('${joinCode}')">Join Game</button>
+                        <button onclick="location.href = location.href.split('?')[0]">Cancel</button>
+                    </div>
+                `;
+                return true;
+            }
+            return false;
+        }
+
+        function joinByUrl(friendCode) {
+            const playerName = document.getElementById('url-player-name').value.trim();
+            if (!playerName) {
+                alert('Please enter your name!');
+                return;
+            }
+            
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            if (!socket) {
+                connectToServer();
+            }
+            
+            socket.emit('join-by-url', { 
+                friendCode: friendCode,
+                userId: myPlayerId,
+                token: 'demo_token_' + myPlayerId,
+                playerName: playerName 
+            });
+        }
+
+        // =====================================================================
+        // BANNER AD FUNCTIONS
+        // =====================================================================
+
+        function handleAdClick() {
+            console.log('Ad clicked - track this event');
+            alert('Ad space available! Contact us for pricing.');
+        }
+
+        function hideAdBanner() {
+            document.getElementById('bottomBanner').classList.add('hidden');
+        }
+
+        function showAdBanner() {
+            document.getElementById('bottomBanner').classList.remove('hidden');
+        }
+
+        // Rotate ad content every 30 seconds
+        const adMessages = [
+            "🎯 Advertise Your Business Here | Contact: ads@screwgame.com",
+            "🏈 Sports Team Sponsorship Available | Premium Placement",
+            "🍕 Local Business? Get Your Logo on Cards | Special Rates",
+            "🎮 Partner with Screw Your Neighbor | High Engagement"
+        ];
+
+        let currentAdIndex = 0;
+
+        function rotateAds() {
+            const adContent = document.querySelector('.ad-content');
+            if (adContent) {
+                currentAdIndex = (currentAdIndex + 1) % adMessages.length;
+                adContent.innerHTML = adMessages[currentAdIndex];
+            }
+        }
+
+        function trackAdImpression() {
+            console.log('Ad impression tracked');
+        }
+
+        // =====================================================================
+        // EXISTING GAME FUNCTIONS (UPDATED)
+        // =====================================================================
+
+        // NEW: Handle game type selection changes
+        function handleGameTypeChange() {
+            const gameType = document.getElementById('gameType').value;
+            const passwordContainer = document.getElementById('passwordContainer');
+            const gameTypeHelp = document.getElementById('gameTypeHelp');
+            
+            // Show/hide password field based on selection
+            if (gameType === 'private') {
+                passwordContainer.classList.add('show');
+                gameTypeHelp.textContent = 'Private games require a password and won\'t appear in public lobby';
+            } else if (gameType === 'friends') {
+                passwordContainer.classList.remove('show');
+                gameTypeHelp.textContent = 'Only your friends can see and join this game';
+            } else { // public
+                passwordContainer.classList.remove('show');
+                gameTypeHelp.textContent = 'Public games appear in the lobby for anyone to join';
+            }
+        }
+
+        function createCardDisplay(player, isMe) {
+            if (!currentGame || currentGame.state === 'waiting') {
+                return '<div style="width: 60px; height: 80px; margin: 10px 0; display: flex; align-items: center; justify-content: center; color: #666; border: 1px dashed #666;">Waiting</div>';
+            }
+            
+            if (player.card && player.card.value) {
+                const isRed = player.card.suit === '♥' || player.card.suit === '♦';
+                return '<div class="card revealed ' + (isRed ? 'red' : '') + '">' +
+                       '<div>' + player.card.value + '</div>' +
+                       '<div>' + player.card.suit + '</div>' +
+                       '</div>';
+            } else {
+                const canClick = isMe;
+                const clickHandler = canClick ? 'onclick="flipMyCard()"' : '';
+                const clickableClass = canClick ? 'clickable' : '';
+                
+                return '<div class="card face-down ' + clickableClass + '" ' + clickHandler + ' title="' + (canClick ? 'Click to flip your card' : 'Hidden card') + '">' +
+                       '<div style="font-size: 8px;">CARD</div>' +
+                       '</div>';
+            }
+        }
+
+        // =====================================================================
+        // AGORA VIDEO FUNCTIONS
+        // =====================================================================
+
+        function checkSetup() {
+            console.log("=== DEBUG SETUP CHECK ===");
+            console.log("AGORA_APP_ID:", AGORA_APP_ID);
+            console.log("Placeholder check:", AGORA_APP_ID !== "YOUR_AGORA_APP_ID_HERE");
+            const appIdConfigured = AGORA_APP_ID !== "YOUR_AGORA_APP_ID_HERE";
+            
+            if (appIdConfigured) {
+                document.getElementById('setupInstructions').style.display = 'none';
+                document.getElementById('videoControls').style.display = 'block';
+                return true;
+            } else {
+                document.getElementById('setupInstructions').style.display = 'block';
+                document.getElementById('videoControls').style.display = 'none';
+                return false;
+            }
+        }
+
+        async function joinVideoCall() {
+            if (!currentGame) {
+                alert('Please join a game first!');
+                return;
+            }
+
+            if (!checkSetup()) {
+                alert('Please configure your Agora App ID first! Check the orange box above.');
+                return;
+            }
+
+            try {
+                log('📹 Initializing video call...');
+
+                // Create Agora client
+                agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+                log('📹 Agora client created successfully');
+
+                // Add event listeners
+                agoraClient.on("user-published", handleUserPublished);
+                agoraClient.on("user-unpublished", handleUserUnpublished);
+                agoraClient.on("user-left", handleUserLeft);
+                log('📹 Event listeners added');
+
+                // Use a fixed test channel and token
+                const channel = "test123";
+                
+                // Generate a UNIQUE UID for each browser session to avoid conflicts
+                const uniqueUID = Math.floor(Math.random() * 1000000) + Date.now() % 1000000;
+                const uid = uniqueUID;
+                
+                // ============================================================
+                // 🔑 REPLACE THIS WITH YOUR GENERATED TOKEN
+                // ============================================================
+                const tempToken = "007eJxTYNgYbd/46v6M/rOFAu/PrPIve1R+47dYpNDNCffPbQ3m61uowJCclppmYWhgmJKcbGhiYWCUaJFmaZ5iYWFgmmScmpRsWWgfn9EQyMigvjyEhZEBAkF8doaS1OISQyNjBgYAkUYiRg=="; 
+                
+                log('📹 Attempting to join channel: ' + channel);
+                log('📹 Using UNIQUE UID: ' + uid);
+                log('📹 App ID: ' + AGORA_APP_ID);
+                
+                if (tempToken === "YOUR_GENERATED_TOKEN_HERE") {
+                    alert('Please generate a temp token and paste it in the code! Check the setup instructions above.');
+                    return;
+                }
+                
+                await agoraClient.join(AGORA_APP_ID, channel, tempToken, uid);
+                log('📹 Successfully joined channel with token!');
+
+                // Create local tracks
+                log('📹 Requesting camera access...');
+                localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+                log('📹 Camera access granted!');
+                
+                log('📹 Requesting microphone access...');
+                localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                log('📹 Microphone access granted!');
+
+                // Add local video to UI
+                addLocalVideo();
+                log('📹 Local video added to UI');
+
+                // Publish local tracks
+                log('📹 Publishing video/audio tracks...');
+                await agoraClient.publish([localTracks.audioTrack, localTracks.videoTrack]);
+                log('📹 Tracks published successfully!');
+
+                isVideoJoined = true;
+                updateVideoButtons();
+                
+                log('📹 Video call started successfully!');
+
+            } catch (error) {
+                console.error('=== VIDEO CALL ERROR DETAILS ===');
+                console.error('Error name:', error.name);
+                console.error('Error message:', error.message);
+                console.error('Error code:', error.code);
+                console.error('Full error object:', error);
+                console.error('================================');
+                
+                log('❌ DETAILED ERROR: ' + error.name + ' - ' + error.message);
+                
+                if (error.message.includes('CAN_NOT_GET_GATEWAY_SERVER')) {
+                    if (error.message.includes('invalid vendor key')) {
+                        alert('Invalid App ID! Please check your Agora App ID in the code.');
+                    } else {
+                        alert('Token issue. Make sure you generated a temp token for channel "test123" and pasted it in the code.');
+                    }
+                } else if (error.message.includes('INVALID_TOKEN')) {
+                    alert('Invalid token. Please generate a new temp token for channel "test123".');
+                } else if (error.name === 'NotAllowedError') {
+                    alert('Camera/microphone permission denied. Please allow access and try again.');
+                } else {
+                    alert('Failed to start video call: ' + error.message);
+                }
+            }
+        }
+
+        async function leaveVideoCall() {
+            if (!isVideoJoined) return;
+
+            try {
+                log('📹 Leaving video call...');
+
+                // Destroy local tracks
+                if (localTracks.audioTrack) {
+                    localTracks.audioTrack.stop();
+                    localTracks.audioTrack.close();
+                    localTracks.audioTrack = null;
+                }
+                if (localTracks.videoTrack) {
+                    localTracks.videoTrack.stop();
+                    localTracks.videoTrack.close();
+                    localTracks.videoTrack = null;
+                }
+
+                // Remove all remote users
+                Object.keys(remoteUsers).forEach(uid => {
+                    removeRemoteVideo(uid);
+                });
+                remoteUsers = {};
+
+                // Leave the channel
+                if (agoraClient) {
+                    await agoraClient.leave();
+                    agoraClient = null;
+                }
+
+                // Remove local video
+                removeLocalVideo();
+
+                isVideoJoined = false;
+                updateVideoButtons();
+                
+                log('📹 Left video call');
+
+            } catch (error) {
+                log('❌ Error leaving video call: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        async function toggleMute() {
+            if (!localTracks.audioTrack) return;
+
+            try {
+                if (isMuted) {
+                    await localTracks.audioTrack.setEnabled(true);
+                    isMuted = false;
+                    log('🔊 Audio unmuted');
+                } else {
+                    await localTracks.audioTrack.setEnabled(false);
+                    isMuted = true;
+                    log('🔇 Audio muted');
+                }
+                updateVideoButtons();
+            } catch (error) {
+                log('❌ Error toggling mute: ' + error.message);
+            }
+        }
+
+        async function toggleVideo() {
+            if (!localTracks.videoTrack) return;
+
+            try {
+                if (isVideoOff) {
+                    await localTracks.videoTrack.setEnabled(true);
+                    isVideoOff = false;
+                    log('📹 Video enabled');
+                } else {
+                    await localTracks.videoTrack.setEnabled(false);
+                    isVideoOff = true;
+                    log('📹 Video disabled');
+                }
+                updateVideoButtons();
+            } catch (error) {
+                log('❌ Error toggling video: ' + error.message);
+            }
+        }
+
+        function updateVideoButtons() {
+            const joinBtn = document.getElementById('joinVideoBtn');
+            const leaveBtn = document.getElementById('leaveVideoBtn');
+            const muteBtn = document.getElementById('muteBtn');
+            const videoBtn = document.getElementById('videoToggleBtn');
+            const videoGrid = document.getElementById('videoGrid');
+
+            if (isVideoJoined) {
+                joinBtn.classList.add('hidden');
+                leaveBtn.classList.remove('hidden');
+                muteBtn.classList.remove('hidden');
+                videoBtn.classList.remove('hidden');
+                videoGrid.classList.remove('hidden');
+
+                muteBtn.textContent = isMuted ? '🔇 Unmute' : '🔇 Mute';
+                muteBtn.className = isMuted ? 'inactive' : 'active';
+
+                videoBtn.textContent = isVideoOff ? '📷 Video On' : '📷 Video Off';
+                videoBtn.className = isVideoOff ? 'inactive' : 'active';
+            } else {
+                joinBtn.classList.remove('hidden');
+                leaveBtn.classList.add('hidden');
+                muteBtn.classList.add('hidden');
+                videoBtn.classList.add('hidden');
+                videoGrid.classList.add('hidden');
+            }
+        }
+
+        function addLocalVideo() {
+            const videosContainer = document.getElementById('videosContainer');
+            
+            const videoContainer = document.createElement('div');
+            videoContainer.className = 'video-container';
+            videoContainer.id = 'local-video-container';
+            
+            videoContainer.innerHTML = `
+                <div id="local-video" style="width: 100%; height: 100%;"></div>
+                <div class="video-label">You</div>
+                <div class="video-status" id="local-status">📹 🎤</div>
+            `;
+            
+            videosContainer.appendChild(videoContainer);
+
+            // Play local video
+            if (localTracks.videoTrack) {
+                localTracks.videoTrack.play('local-video');
+            }
+        }
+
+        function removeLocalVideo() {
+            const localContainer = document.getElementById('local-video-container');
+            if (localContainer) {
+                localContainer.remove();
+            }
+        }
+
+        function addRemoteVideo(uid, user) {
+            const videosContainer = document.getElementById('videosContainer');
+            
+            const videoContainer = document.createElement('div');
+            videoContainer.className = 'video-container';
+            videoContainer.id = `remote-video-${uid}`;
+            
+            // Try to get player name from current game
+            let playerName = 'Player ' + uid;
+            if (currentGame && currentGame.players) {
+                const player = currentGame.players.find(p => p.id === uid);
+                if (player) {
+                    playerName = player.name;
+                }
+            }
+            
+            videoContainer.innerHTML = `
+                <div id="video-${uid}" style="width: 100%; height: 100%;"></div>
+                <div class="video-label">${playerName}</div>
+                <div class="video-status" id="status-${uid}">📹 🎤</div>
+            `;
+            
+            videosContainer.appendChild(videoContainer);
+
+            // Play remote video
+            if (user.videoTrack) {
+                user.videoTrack.play(`video-${uid}`);
+            }
+        }
+
+        function removeRemoteVideo(uid) {
+            const videoContainer = document.getElementById(`remote-video-${uid}`);
+            if (videoContainer) {
+                videoContainer.remove();
+            }
+        }
+
+        function addSmartVideoContainer(player) {
+        const videosContainer = document.getElementById('videosContainer');
+        if (!videosContainer) return;
+    
+        // Check if container already exists
+        const existingContainer = document.getElementById(`smart-video-${player.id}`);
+        if (existingContainer) {
+            // Update existing container with new role
+            updateVideoContainerRole(existingContainer, player);
+            return;
+        }
+    
+        // Create new video container
+        const videoContainer = document.createElement('div');
+        videoContainer.className = 'video-container';
+        videoContainer.id = `smart-video-${player.id}`;
+    
+        // Role-based styling
+        let borderColor = '#333';
+        let label = player.name;
+    
+        switch(player.videoRole) {
+            case 'current-turn':
+                borderColor = '#00FF00';
+                label = `🎯 ${player.name} (Turn)`;
+                break;
+            case 'left-neighbor':
+                borderColor = '#FFD700';
+                label = `← ${player.name}`;
+                break;
+            case 'right-neighbor':
+                borderColor = '#FF6B35';
+                label = `${player.name} →`;
+                break;
+            case 'me':
+                borderColor = '#2a5298';
+                label = `📹 ${player.name} (You)`;
+                break;
+        }
+    
+        videoContainer.style.border = `3px solid ${borderColor}`;
+        videoContainer.className = `video-container video-${player.videoRole}`;
+    
+        videoContainer.innerHTML = `
+            <div id="video-${player.id}" style="width: 100%; height: 100%;"></div>
+            <div class="video-label" style="background: ${borderColor};">${label}</div>
+            <div class="video-status" id="status-${player.id}">📹 🎤</div>
+        `;
+    
+        videosContainer.appendChild(videoContainer);
+    
+        // Try to play existing video for this player
+        const remoteUser = remoteUsers[player.id];
+        if (remoteUser && remoteUser.videoTrack) {
+            remoteUser.videoTrack.play(`video-${player.id}`);
+        }
+    
+        console.log(`Added smart video container for ${player.name} with role: ${player.videoRole}`);
+    }
+        // Agora event handlers
+        async function handleUserPublished(user, mediaType) {
+            const uid = user.uid;
+            
+            try {
+                // Subscribe to the remote user
+                await agoraClient.subscribe(user, mediaType);
+                
+                if (!remoteUsers[uid]) {
+                    remoteUsers[uid] = user;
+                    addRemoteVideo(uid, user);
+                }
+
+                if (mediaType === 'video') {
+                    user.videoTrack.play(`video-${uid}`);
+                    log(`📹 ${uid} started video`);
+                }
+                if (mediaType === 'audio') {
+                    user.audioTrack.play();
+                    log(`🔊 ${uid} started audio`);
+                }
+            } catch (error) {
+                log('❌ Error handling user published: ' + error.message);
+            }
+        }
+
+        function handleUserUnpublished(user, mediaType) {
+            const uid = user.uid;
+            log(`📹 ${uid} stopped ${mediaType}`);
+        }
+
+        function handleUserLeft(user) {
+            const uid = user.uid;
+            delete remoteUsers[uid];
+            removeRemoteVideo(uid);
+            log(`👋 ${uid} left video call`);
+        }
+
+        // Calculate which players should be visible in video feeds
+        function getRelevantPlayers() {
+            if (!currentGame || !currentGame.players) return [];
+    
+            const activePlayers = currentGame.players.filter(p => p.lives > 0);
+            if (activePlayers.length < 2) return activePlayers;
+    
+            const myIndex = activePlayers.findIndex(p => p.id === myPlayerId);
+            const currentTurnIndex = activePlayers.findIndex(p => p.id === currentGame.currentPlayerId);
+    
+            if (myIndex === -1) return activePlayers; // Spectator view - show all
+    
+            const relevantPlayers = [];
+    
+        // 1. ALWAYS show current turn player (highlighted)
+        const currentTurnPlayer = activePlayers[currentTurnIndex];
+        if (currentTurnPlayer) {
+            relevantPlayers.push({
+                ...currentTurnPlayer,
+                videoRole: 'current-turn',
+                priority: 1
+            });
+        }
+    
+        // 2. Show my neighbors (left and right)
+        const leftNeighborIndex = (myIndex - 1 + activePlayers.length) % activePlayers.length;
+        const rightNeighborIndex = (myIndex + 1) % activePlayers.length;
+    
+        const leftNeighbor = activePlayers[leftNeighborIndex];
+        const rightNeighbor = activePlayers[rightNeighborIndex];
+    
+        // Add left neighbor (who trades TO me)
+        if (leftNeighbor && leftNeighbor.id !== currentTurnPlayer?.id) {
+            relevantPlayers.push({
+                ...leftNeighbor,
+                videoRole: 'left-neighbor',
+                priority: 2
+            });
+        }
+    
+        // Add right neighbor (who I trade TO)
+        if (rightNeighbor && rightNeighbor.id !== currentTurnPlayer?.id) {
+            relevantPlayers.push({
+                ...rightNeighbor,
+                videoRole: 'right-neighbor', 
+                priority: 2
+            });
+        }
+    
+        // 3. Add myself if not already included
+        const me = activePlayers[myIndex];
+        if (!relevantPlayers.find(p => p.id === me.id)) {
+            relevantPlayers.push({
+                ...me,
+                videoRole: 'me',
+                priority: 3
+            });
+        }
+    
+        // Sort by priority and limit to 4 feeds max
+        return relevantPlayers
+               .sort((a, b) => a.priority - b.priority)
+               .slice(0, 4);
+        }
+
+        // Update video feeds based on relevant players
+function updateSmartVideoDisplay() {
+    if (!isVideoJoined) return;
+    
+    const relevantPlayers = getRelevantPlayers();
+    console.log('=== SMART VIDEO UPDATE ===');
+    console.log('Relevant players:', relevantPlayers);
+    
+    // Find all existing video containers and reset borders
+    const allVideoContainers = document.querySelectorAll('.video-container');
+    allVideoContainers.forEach(container => {
+        container.style.border = '2px solid #333';
+    });
+    
+    // Add colored borders to existing videos based on player roles
+    relevantPlayers.forEach(player => {
+        // Try different container ID patterns
+        let container = document.getElementById(`remote-video-${player.id}`) || 
+                      document.getElementById(`local-video-container`) ||
+                      document.querySelector(`[id*="${player.id}"]`);
+        
+        if (container) {
+            let borderColor = '#333';
+            let label = player.name;
+            
+            switch(player.videoRole) {
+                case 'current-turn':
+                    borderColor = '#00FF00'; // Green
+                    label = `🎯 ${player.name} (Turn)`;
+                    break;
+                case 'left-neighbor':
+                    borderColor = '#FFD700'; // Gold  
+                    label = `← ${player.name}`;
+                    break;
+                case 'right-neighbor':
+                    borderColor = '#FF6B35'; // Orange
+                    label = `${player.name} →`;
+                    break;
+                case 'me':
+                    borderColor = '#2a5298'; // Blue
+                    label = `📹 ${player.name} (You)`;
+                    break;
+            }
+            
+            container.style.border = `4px solid ${borderColor}`;
+            
+            // Update label if it exists
+            const labelElement = container.querySelector('.video-label');
+            if (labelElement) {
+                labelElement.textContent = label;
+                labelElement.style.background = borderColor;
+            }
+            
+            console.log(`Applied ${borderColor} border to ${player.name} (${player.videoRole})`);
+        } else {
+            console.log(`No container found for ${player.name}`);
+        }
+    });
+    console.log('=== END SMART VIDEO UPDATE ===');
+}
+
+// Update existing video container with new role styling
+function updateVideoContainerRole(container, player) {
+    // Role-based styling
+    let borderColor = '#333';
+    let label = player.name;
+    
+    switch(player.videoRole) {
+        case 'current-turn':
+            borderColor = '#00FF00';
+            label = `🎯 ${player.name} (Turn)`;
+            break;
+        case 'left-neighbor':
+            borderColor = '#FFD700';
+            label = `← ${player.name}`;
+            break;
+        case 'right-neighbor':
+            borderColor = '#FF6B35';
+            label = `${player.name} →`;
+            break;
+        case 'me':
+            borderColor = '#2a5298';
+            label = `📹 ${player.name} (You)`;
+            break;
+    }
+    
+    // Update border and label without destroying video element
+    container.style.border = `3px solid ${borderColor}`;
+    container.className = `video-container video-${player.videoRole}`;
+    
+    const labelElement = container.querySelector('.video-label');
+    if (labelElement) {
+        labelElement.textContent = label;
+        labelElement.style.background = borderColor;
+    }
+}
+
+    // Call this whenever game state changes
+    function onGameStateChanged() {
+        updateGameDisplay();
+        updateSmartVideoDisplay(); // ← Add this line
+    }
+
+        // UPDATED: Create game function with game type support
+        function createGame() {
+            if (!isConnected) {
+                alert('Please connect to server first!');
+                return;
+            }
+
+            if (currentGame) {
+                alert('Please leave current game first!');
+                return;
+            }
+
+            const playerName = document.getElementById('playerName').value || 'Player1';
+            const gameType = document.getElementById('gameType').value;
+            const gamePassword = document.getElementById('gamePassword').value;
+            const gameId = 'game_' + Math.random().toString(36).substr(2, 9);
+            
+            document.getElementById('gameId').value = gameId;
+
+            // Validate password for private games
+            if (gameType === 'private' && !gamePassword.trim()) {
+                alert('Password is required for private games!');
+                return;
+            }
+
+            const gameSettings = {
+                type: gameType,
+                password: gameType === 'private' ? gamePassword.trim() : null,
+                maxPlayers: 8,
+                isPublic: gameType === 'public'
+            };
+
+            socket.emit('create-game', {
+                gameId: gameId,
+                userId: myPlayerId,
+                token: 'demo_token_' + myPlayerId,
+                playerName: playerName,
+                settings: gameSettings
+            });
+
+            log(`🎯 Creating ${gameType} game: ${gameId}` + (gameType === 'private' ? ' (password protected)' : ''));
+        }
+
+        function joinGame() {
+            if (!isConnected) {
+                alert('Please connect to server first!');
+                return;
+            }
+
+            if (currentGame) {
+                log('⚠️ Already in a game! Leave current game first.');
+                return;
+            }
+
+            const playerName = document.getElementById('playerName').value || 'Player1';
+            const gameId = document.getElementById('gameId').value;
+
+            if (!gameId) {
+                alert('Please enter a Game ID to join!');
+                return;
+            }
+
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            log('🎯 Attempting to join game: ' + gameId + ' as ' + playerName);
+
+            socket.emit('join-game', {
+                gameId: gameId,
+                userId: myPlayerId,
+                token: 'demo_token_' + myPlayerId,
+                playerName: playerName
+            });
+        }
+
+        async function leaveGame() {
+            if (currentGame) {
+                // Leave video call first
+                await leaveVideoCall();
+                
+                socket.disconnect();
+                currentGame = null;
+                log('👋 Left the game');
+                location.reload(); // Refresh to go back to main menu
+            } else {
+                log('ℹ️ Not in any game');
+            }
+        }
+
+        function startGame() {
+            console.log('=== START GAME DEBUG ===');
+            console.log('startGame() function called');
+            console.log('currentGame:', currentGame);
+            
+            if (!currentGame) {
+                console.log('ERROR: No current game!');
+                alert('Please join a game first!');
+                return;
+            }
+
+            console.log('currentGame.id:', currentGame.id);
+            console.log('Creating settings...');
+
+            const settings = {
+                startingLives: parseInt(document.getElementById('startingLives').value),
+                deckCount: parseInt(document.getElementById('deckCount').value),
+                tournamentMode: 'single',
+                cardStyle: 'classic'
+            };
+
+            console.log('Settings:', settings);
+            console.log('Emitting start-game event...');
+
+            socket.emit('start-game', {
+                gameId: currentGame.id,
+                settings: settings
+            });
+
+            console.log('start-game event emitted');
+            console.log('=== END START GAME DEBUG ===');
+
+            log('🚀 Starting game with settings: ' + JSON.stringify(settings));
+        }
+
+        function flipMyCard() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            socket.emit('flip-card', {
+                gameId: currentGame.id
+            });
+
+            log('🎴 Attempting to flip your card...');
+        }
+
+        function endRound() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            if (currentGame.turnPhase !== 'revealing') {
+                alert('Cannot end round yet - still in trading phase!');
+                return;
+            }
+
+            socket.emit('end-round', {
+                gameId: currentGame.id
+            });
+        }
+
+        function dealerTradeWithDeck() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            socket.emit('dealer-trade-deck', {
+                gameId: currentGame.id
+            });
+        }
+
+        function dealerSkipTrade() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            socket.emit('dealer-skip-trade', {
+                gameId: currentGame.id
+            });
+        }
+
+        function tradeWithPlayer(targetPlayerId) {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            if (currentGame.currentPlayerId !== myPlayerId) {
+                alert('It\'s not your turn!');
+                return;
+            }
+
+            if (currentGame.turnPhase !== 'trading') {
+                alert('Not in trading phase!');
+                return;
+            }
+
+            socket.emit('trade-request', {
+                gameId: currentGame.id,
+                targetPlayerId: targetPlayerId,
+                direction: 'right'
+            });
+
+            log('🔄 Requesting trade with player ' + targetPlayerId);
+        }
+
+        function keepCard() {
+            if (!currentGame) {
+                alert('No active game!');
+                return;
+            }
+
+            socket.emit('skip-turn', {
+                gameId: currentGame.id
+            });
+
+            log('⏭️ Keeping card and ending turn');
+        }
+
+        function sendChatMessage() {
+            const messageInput = document.getElementById('chatMessage');
+            const message = messageInput.value.trim();
+            
+            if (!message || !currentGame) return;
+
+            socket.emit('game-chat', {
+                gameId: currentGame.id,
+                message: message
+            });
+
+            messageInput.value = '';
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function joinAsSpectator() {
+            if (!currentGame) {
+                alert('Please join a game first!');
+                return;
+            }
+
+            const spectatorId = 'spectator_' + Math.random().toString(36).substr(2, 9);
+            
+            socket.emit('join-as-spectator', {
+                gameId: currentGame.id,
+                userId: spectatorId,
+                name: 'Spectator_' + spectatorId.substr(-4)
+            });
+        }
+
+        function updateGameDisplay() {
+            if (!currentGame) {
+                document.getElementById('gameInfo').innerHTML = 'No game connected';
+                document.getElementById('playersContainer').innerHTML = '';
+                document.getElementById('tradeControls').innerHTML = '<p>Join a game to start playing</p>';
+                document.getElementById('dealerControls').style.display = 'none';
+                return;
+            }
+
+            const gameInfo = document.getElementById('gameInfo');
+            const currentPlayerName = currentGame.players.find(function(p) { return p.id === currentGame.currentPlayerId; });
+            const dealerName = currentGame.players.find(function(p) { return p.id === currentGame.dealerId; });
+            
+            let phaseDescription = '';
+            if (currentGame.turnPhase === 'trading') {
+                phaseDescription = 'Players taking turns to trade';
+            } else if (currentGame.turnPhase === 'dealer-turn') {
+                phaseDescription = 'Dealer can trade with deck or skip';
+            } else if (currentGame.turnPhase === 'revealing') {
+                phaseDescription = 'Ready to reveal all cards';
+            }
+            
+            // Show game type in the info
+            const gameTypeDisplay = currentGame.settings.type === 'public' ? '🌐 Public' : 
+                                  currentGame.settings.type === 'private' ? '🔒 Private' : 
+                                  '👥 Friends Only';
+            const connectedPlayers = currentGame.players.filter(p => p.connected !== false);
+            
+            gameInfo.innerHTML = 
+                '<strong>Game ID:</strong> ' + currentGame.id + '<br>' +
+                '<strong>Type:</strong> ' + gameTypeDisplay + '<br>' +
+                '<strong>State:</strong> ' + currentGame.state + '<br>' +
+                '<strong>Round:</strong> ' + currentGame.round + '<br>' +
+                '<strong style="color: #FFD700;">🎯 Dealer:</strong> <span style="color: #FFD700; font-weight: bold;">' + (dealerName ? dealerName.name : 'Unknown') + '</span><br>' +
+                '<strong style="color: #00FF00;">⭐ Current Turn:</strong> <span style="color: #00FF00; font-weight: bold;">' + (currentPlayerName ? currentPlayerName.name : 'Unknown') + '</span><br>' +
+                '<strong>Phase:</strong> ' + phaseDescription + '<br>' +
+                '<strong>Cards Remaining:</strong> ' + currentGame.cardsRemaining + '<br>' +
+                '<strong>Players:</strong> ' + connectedPlayers.length + '/' + currentGame.players.length + ' connected';
+
+            const dealerControls = document.getElementById('dealerControls');
+            const isDealer = currentGame.dealerId === myPlayerId;
+            const isDealerTurn = currentGame.turnPhase === 'dealer-turn';
+            
+            if (isDealer && isDealerTurn) {
+                dealerControls.style.display = 'block';
+            } else {
+                dealerControls.style.display = 'none';
+            }
+
+            const playersContainer = document.getElementById('playersContainer');
+            playersContainer.innerHTML = '';
+
+            if (currentGame.players && currentGame.players.length > 0) {
+                for (let i = 0; i < currentGame.players.length; i++) {
+                    const player = currentGame.players[i];
+                    const isMe = player.id === myPlayerId;
+                    const isCurrent = player.id === currentGame.currentPlayerId;
+                    const isDealer = player.id === currentGame.dealerId;
+                    const isEliminated = player.lives <= 0;
+
+                    const playerDiv = document.createElement('div');
+                    playerDiv.className = 'player' + (isCurrent ? ' current' : '') + (isEliminated ? ' eliminated' : '');
+                    
+                    let lives = '';
+                    for (let j = 0; j < player.lives; j++) {
+                        lives += '<div class="life"></div>';
+                    }
+                    
+                    const cardDisplay = createCardDisplay(player, isMe);
+
+                    const isMyTurn = currentGame.currentPlayerId === myPlayerId;
+                    const activePlayers = currentGame.players.filter(function(p) { return p.lives > 0; });
+                    const myIndex = activePlayers.findIndex(function(p) { return p.id === myPlayerId; });
+                    const playerIndex = activePlayers.findIndex(function(p) { return p.id === player.id; });
+                    
+                    const isNextPlayer = isMyTurn && (myIndex + 1) % activePlayers.length === playerIndex;
+                    const canTradeWith = isNextPlayer && currentGame.turnPhase === 'trading' && !isEliminated;
+
+                    playerDiv.innerHTML = 
+                        '<h4>' +
+                        player.name + (isMe ? ' (You)' : '') + 
+                        (isDealer ? ' <span style="color: #FFD700; font-weight: bold;">🎯 DEALER</span>' : '') + 
+                        (isCurrent ? ' <span style="color: #00FF00; font-weight: bold;">⭐ YOUR TURN</span>' : '') +
+                        '</h4>' +
+                        '<div class="lives">' + lives + '</div>' +
+                        cardDisplay +
+                        '<div>' +
+                        (player.hasTraded ? '✅ Traded' : '⏳ Can Trade') +
+                        (!player.connected ? ' 🔴 Offline' : ' 🟢 Online') +
+                        '</div>' +
+                        (canTradeWith ? '<button onclick="tradeWithPlayer(\'' + player.id + '\')">Trade →</button>' : '');
+
+                    playersContainer.appendChild(playerDiv);
+                }
+            }
+
+            // Trade controls (keeping all existing game logic)
+            const tradeControls = document.getElementById('tradeControls');
+            const activePlayers = currentGame.players.filter(function(p) { return p.lives > 0; });
+            const isMyTurn = currentGame.currentPlayerId === myPlayerId;
+            const canTrade = isMyTurn && currentGame.turnPhase === 'trading';
+            
+            if (canTrade) {
+                const myIndex = activePlayers.findIndex(function(p) { return p.id === myPlayerId; });
+                const nextPlayerIndex = (myIndex + 1) % activePlayers.length;
+                const nextPlayer = activePlayers[nextPlayerIndex];
+                
+                const myPlayer = activePlayers.find(function(p) { return p.id === myPlayerId; });
+                const hasKing = myPlayer && myPlayer.card && myPlayer.card.value === 'K';
+                const isDealer = currentGame.dealerId === myPlayerId;
+                
+                if (hasKing) {
+                    tradeControls.innerHTML = 
+                        '<div style="background: rgba(255, 215, 0, 0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                        '<p><strong>🎴 It\'s your turn!</strong> ' + (isDealer ? '(You are the DEALER)' : '') + '</p>' +
+                        '<p><strong>You have a King!</strong> Choose your action:</p>' +
+                        '<button onclick="tradeWithPlayer(\'' + nextPlayer.id + '\')">Pass King to ' + nextPlayer.name + ' →</button>' +
+                        '<button onclick="keepCard()">Keep King (End Turn)</button>' +
+                        '<p><em>Kings give you a choice - pass it along or keep it safe!</em></p>' +
+                        '</div>';
+                } else {
+                    tradeControls.innerHTML = 
+                        '<div style="background: rgba(0, 255, 0, 0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                        '<p><strong>🎴 It\'s your turn!</strong> ' + (isDealer ? '(You are the DEALER)' : '') + '</p>' +
+                        '<p>Choose your action:</p>' +
+                        '<button onclick="tradeWithPlayer(\'' + nextPlayer.id + '\')">Trade with ' + nextPlayer.name + ' →</button>' +
+                        '<button onclick="keepCard()">Keep My Card (End Turn)</button>' +
+                        '<p><em>Trade with next player or keep your current card</em></p>' +
+                        '</div>';
+                }
+            } else if (currentGame.turnPhase === 'dealer-turn' && currentGame.dealerId === myPlayerId) {
+                tradeControls.innerHTML = 
+                    '<div style="background: rgba(255, 215, 0, 0.3); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                    '<p><strong>🎯 DEALER\'S SPECIAL TURN!</strong></p>' +
+                    '<p>As the dealer, you get the final action:</p>' +
+                    '<ul style="margin: 5px 0; padding-left: 20px;">' +
+                    '<li><strong>Trade with Deck</strong> - Swap your card with the top deck card</li>' +
+                    '<li><strong>Skip Trade</strong> - Keep your current card and end the round</li>' +
+                    '</ul>' +
+                    '<p><em>Use the dealer controls above to make your choice!</em></p>' +
+                    '</div>';
+            } else if (currentGame.turnPhase === 'dealer-turn') {
+                const dealerName = currentGame.players.find(function(p) { return p.id === currentGame.dealerId; });
+                tradeControls.innerHTML = 
+                    '<div style="background: rgba(255, 215, 0, 0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                    '<p><strong>🎯 DEALER\'S TURN</strong></p>' +
+                    '<p>Waiting for <strong>' + (dealerName ? dealerName.name : 'Dealer') + '</strong> to make their final decision...</p>' +
+                    '</div>';
+            } else if (currentGame.turnPhase === 'revealing') {
+                tradeControls.innerHTML = 
+                    '<div style="background: rgba(255, 0, 0, 0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                    '<p><strong>🎴 REVEALING PHASE</strong></p>' +
+                    '<p>All trading is complete. Click "End Round" to reveal all cards and find the losers!</p>' +
+                    '</div>';
+            } else {
+                const currentPlayerName = currentGame.players.find(function(p) { return p.id === currentGame.currentPlayerId; });
+                const isCurrentDealer = currentGame.dealerId === currentGame.currentPlayerId;
+                tradeControls.innerHTML = 
+                    '<div style="background: rgba(128, 128, 128, 0.2); padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                    '<p><strong>⏳ Waiting...</strong></p>' +
+                    '<p>It\'s <strong>' + (currentPlayerName ? currentPlayerName.name : 'Unknown') + '\'s</strong> turn ' + (isCurrentDealer ? '(DEALER)' : '') + '</p>' +
+                    '<p><em>Turn order: Player after dealer goes first, dealer goes last</em></p>' +
+                    '</div>';
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            log('🎮 Game loaded with video integration and modern game joining!');
+            checkSetup();
+            updateVideoButtons();
+            
+            // Check for URL joining first
+            if (!checkUrlJoin()) {
+                // Show main menu if not joining via URL
+                showMainMenu();
+            }
+            
+            // Initialize game type dropdown
+            handleGameTypeChange();
+            
+            // Start ad rotation and track impression
+            setInterval(rotateAds, 30000);
+            trackAdImpression();
+        };
+    </script>
+</body>
+</html>
