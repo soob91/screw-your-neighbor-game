@@ -593,25 +593,36 @@ io.on('connection', (socket) => {
   });
 
   // Start game
-  socket.on('start-game', async (data) => {
+  // In your server.js, find the 'start-game' socket handler and update it:
+
+socket.on('start-game', async (data) => {
     const { gameId, settings } = data;
     
     try {
-      const game = gameManager.getGame(gameId);
-      if (!game) throw new Error('Game not found');
-      
-      if (game.hostId !== socket.userId) {
-        throw new Error('Only the host can start the game');
-      }
+        const game = gameManager.getGame(gameId);
+        if (!game) throw new Error('Game not found');
+        
+        if (game.hostId !== socket.userId) {
+            throw new Error('Only the host can start the game');
+        }
 
-      await game.startGame(settings);
-      
-      sendGameUpdateToAll(gameId, 'game-started');
+        // FIXED: Count only connected players
+        const connectedPlayers = game.players.filter(p => p.connected !== false);
+        if (connectedPlayers.length < 2) {
+            throw new Error(`Need at least 2 connected players to start (${connectedPlayers.length} connected, ${game.players.length} total)`);
+        }
+
+        // Optional: Remove disconnected players before starting
+        game.players = game.players.filter(p => p.connected !== false);
+        
+        await game.startGame(settings);
+        
+        sendGameUpdateToAll(gameId, 'game-started');
 
     } catch (error) {
-      socket.emit('error', { message: error.message });
+        socket.emit('error', { message: error.message });
     }
-  });
+});
 
   // Skip turn (for any card)
   socket.on('skip-turn', async (data) => {

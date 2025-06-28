@@ -891,39 +891,48 @@
                 console.log('=== PLAYER JOINED DEBUG ===');
                 console.log('Player count in new data:', data.game ? data.game.players.length : 'NO GAME DATA');
                 console.log('Players in new data:', data.game ? data.game.players.map(p => p.name) : 'NO PLAYERS');
-                
+    
                 log('👋 Player joined: ' + (data.newPlayer ? data.newPlayer.name : 'Unknown'));
                 currentGame = data.game;
                 updateGameDisplay();
-                
+    
                 // Update private game creation screen if we're still on it
                 if (document.getElementById('main-menu').style.display !== 'none') {
-                    const gameInfo = document.querySelector('.game-info p');
-                    if (gameInfo && currentGame) {
-                        gameInfo.innerHTML = `<strong>Players:</strong> ${currentGame.players.length}/4`;
-                    }
-                    
-                    const playerList = document.querySelector('.player-list');
-                    if (playerList && currentGame) {
-                        playerList.innerHTML = currentGame.players.map(p => `<span class="player-badge">${p.name}</span>`).join('');
-                    }
-                    
-                    // Enable/disable start button based on player count
-                    const startButton = document.querySelector('button[onclick="startGame()"]');
-                    if (startButton && currentGame) {
-                        if (currentGame.players.length >= 2) {
-                            startButton.disabled = false;
-                            startButton.textContent = `Start Game (${currentGame.players.length} players ready!)`;
-                        } else {
-                            startButton.disabled = true;
-                            startButton.textContent = 'Start Game (Need 2+ players)';
-                        }
-                    }
-                }
-                
-                console.log('Current game players after update:', currentGame ? currentGame.players.map(p => p.name) : 'NO PLAYERS');
-                console.log('=== END DEBUG ===');
-            });
+                   // Count only connected players
+                   const connectedPlayers = currentGame ? currentGame.players.filter(p => p.connected !== false) : [];
+                   const totalPlayers = currentGame ? currentGame.players.length : 0;
+        
+                   const gameInfo = document.querySelector('.game-info p');
+                   if (gameInfo && currentGame) {
+                       gameInfo.innerHTML = `<strong>Players:</strong> ${connectedPlayers.length}/${currentGame.maxPlayers || 4} connected (${totalPlayers} total)`;
+                   }
+        
+                   const playerList = document.querySelector('.player-list');
+                   if (playerList && currentGame) {
+                       // Show only connected players with status indicators
+                       playerList.innerHTML = currentGame.players.map(p => {
+                           const status = p.connected !== false ? '🟢' : '🔴';
+                           const opacity = p.connected !== false ? '' : 'opacity: 0.5;';
+                           return `<span class="player-badge" style="${opacity}">${status} ${p.name}</span>`;
+                       }).join('');
+                   }
+        
+                   // Enable/disable start button based on CONNECTED player count
+                   const startButton = document.querySelector('button[onclick="startGame()"]');
+                   if (startButton && currentGame) {
+                       if (connectedPlayers.length >= 2) {
+                           startButton.disabled = false;
+                           startButton.textContent = `Start Game (${connectedPlayers.length} connected players ready!)`;
+                       } else {
+                           startButton.disabled = true;
+                           startButton.textContent = `Start Game (Need 2+ connected players - ${connectedPlayers.length} connected)`;
+                       }
+                   }
+               }
+    
+               console.log('Current game players after update:', currentGame ? currentGame.players.map(p => p.name) : 'NO PLAYERS');
+               console.log('=== END DEBUG ===');
+           });
 
             socket.on('game-started', function(data) {
                 log('🎮 Game started!');
@@ -1901,6 +1910,7 @@
             const gameTypeDisplay = currentGame.settings.type === 'public' ? '🌐 Public' : 
                                   currentGame.settings.type === 'private' ? '🔒 Private' : 
                                   '👥 Friends Only';
+            const connectedPlayers = currentGame.players.filter(p => p.connected !== false);
             
             gameInfo.innerHTML = 
                 '<strong>Game ID:</strong> ' + currentGame.id + '<br>' +
@@ -1911,7 +1921,7 @@
                 '<strong style="color: #00FF00;">⭐ Current Turn:</strong> <span style="color: #00FF00; font-weight: bold;">' + (currentPlayerName ? currentPlayerName.name : 'Unknown') + '</span><br>' +
                 '<strong>Phase:</strong> ' + phaseDescription + '<br>' +
                 '<strong>Cards Remaining:</strong> ' + currentGame.cardsRemaining + '<br>' +
-                '<strong>Players:</strong> ' + currentGame.players.length;
+                '<strong>Players:</strong> ' + connectedPlayers.length + '/' + currentGame.players.length + ' connected';
 
             const dealerControls = document.getElementById('dealerControls');
             const isDealer = currentGame.dealerId === myPlayerId;
