@@ -319,6 +319,12 @@
             border-color: #4CAF50;
         }
         
+        .available-player.eliminated {
+            opacity: 0.5;
+            background: rgba(244, 67, 54, 0.2);
+            border-color: #f44336;
+        }
+        
         .available-name {
             font-size: 10px;
             font-weight: bold;
@@ -338,6 +344,21 @@
             margin: 0 auto 4px;
             font-size: 8px;
             font-weight: bold;
+        }
+        
+        .available-card.face-down {
+            background: linear-gradient(45deg, #8B0000, #A0522D);
+            color: white;
+        }
+        
+        .available-card.face-down:before {
+            content: "🂠";
+            font-size: 10px;
+            color: #FFD700;
+        }
+        
+        .available-card.red {
+            color: #ff0000;
         }
         
         .available-lives {
@@ -386,6 +407,11 @@
             background: #f44336;
         }
         
+        .control-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
         /* Video Controls */
         .video-controls {
             display: flex;
@@ -416,204 +442,148 @@
         .hidden {
             display: none !important;
         }
+        
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        
+        .connected {
+            background: #4CAF50;
+        }
+        
+        .disconnected {
+            background: #f44336;
+        }
+        
+        /* Main Menu (hidden during game) */
+        .main-menu {
+            background: rgba(0,0,0,0.4);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .menu-section {
+            margin: 25px 0;
+        }
+        
+        .quick-match-btn {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+            transition: transform 0.2s;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .private-game-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: transform 0.2s;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        
+        input {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            color: black;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
-    <!-- Game Status -->
-    <div class="game-status" id="gameStatus">
-        🎯 Your turn! Trade with Sis or keep your card.
+    <div class="connection-status" id="connectionStatus">Disconnected</div>
+    
+    <!-- Main Menu (shown before joining game) -->
+    <div class="main-menu" id="main-menu">
+        <h1>🎮 Screw Your Neighbor</h1>
+        <div class="menu-section">
+            <h3>Join a Game</h3>
+            <input type="text" id="player-name" placeholder="Enter your name" maxlength="20">
+            
+            <button onclick="quickMatch()" class="quick-match-btn">
+                ⚡ Quick Match
+                <small style="display: block; font-size: 12px; opacity: 0.9; margin-top: 5px;">Join any available game instantly</small>
+            </button>
+            
+            <div style="margin: 20px 0; color: #ccc; font-style: italic;">or</div>
+            
+            <button onclick="showPrivateOptions()" class="private-game-btn">
+                👥 Play with Friends
+                <small style="display: block; font-size: 12px; opacity: 0.9; margin-top: 5px;">Create or join a private game</small>
+            </button>
+        </div>
     </div>
     
-    <!-- Video Controls -->
-    <div class="video-controls" id="videoControls">
-        <button class="video-btn" id="joinVideoBtn" onclick="joinVideoCall()">📹 Join Video</button>
-        <button class="video-btn hidden" id="leaveVideoBtn" onclick="leaveVideoCall()">📹 Leave</button>
-        <button class="video-btn hidden" id="muteBtn" onclick="toggleMute()">🔇 Mute</button>
-        <button class="video-btn hidden" id="videoToggleBtn" onclick="toggleVideo()">📷 Off</button>
-    </div>
-    
-    <!-- Personal Table Focus Area -->
-    <div class="personal-table">
-        <div class="table-title">🪑 Your Personal Table View</div>
+    <!-- Game Content (Personal Table Layout) -->
+    <div id="gameContent" class="hidden">
         
-        <div class="focus-grid" id="focusGrid">
-            
-            <!-- Left Neighbor Slot -->
-            <div class="focus-card my-neighbor slot-left" id="leftNeighborSlot" onclick="removeFromFocus('left')">
-                <button class="remove-btn">×</button>
-                <div class="focus-name">← Mike (Left)</div>
-                <div class="focus-video" id="leftVideo">
-                    <video autoplay muted></video>
-                </div>
-                <div class="focus-status">3 lives • Ready</div>
-                <div class="focus-lives">
-                    <div class="focus-life"></div>
-                    <div class="focus-life"></div>
-                    <div class="focus-life"></div>
-                </div>
-                <div class="focus-game-card face-down"></div>
-            </div>
-            
-            <!-- Current Turn Player Slot (smaller) -->
-            <div class="focus-card current-turn small slot-center" id="currentPlayerSlot">
-                <div class="focus-name">🎯 Alex (Turn)</div>
-                <div class="focus-video small" id="currentVideo">
-                    <video autoplay muted></video>
-                </div>
-                <div class="focus-status">2 lives</div>
-                <div class="focus-lives">
-                    <div class="focus-life"></div>
-                    <div class="focus-life"></div>
-                </div>
-                <div class="focus-game-card revealed red">
-                    <div>K</div>
-                    <div>♥</div>
-                </div>
-            </div>
-            
-            <!-- Right Neighbor Slot -->
-            <div class="focus-card my-neighbor slot-right" id="rightNeighborSlot" onclick="removeFromFocus('right')">
-                <button class="remove-btn">×</button>
-                <div class="focus-name">Sis (Right) →</div>
-                <div class="focus-video" id="rightVideo">
-                    <video autoplay muted></video>
-                </div>
-                <div class="focus-status">3 lives • Can trade</div>
-                <div class="focus-lives">
-                    <div class="focus-life"></div>
-                    <div class="focus-life"></div>
-                    <div class="focus-life"></div>
-                </div>
-                <div class="focus-game-card face-down"></div>
-                <div class="focus-actions">
-                    <button class="action-btn trade" onclick="tradeWithPlayer('sis')">Trade →</button>
-                </div>
-            </div>
-            
-            <!-- Custom Slot 1 -->
-            <div class="focus-card slot-custom1" id="customSlot1" onclick="removeFromFocus('custom1')">
-                <button class="remove-btn">×</button>
-                <div class="focus-name">🎯 Sarah (Dealer)</div>
-                <div class="focus-video" id="custom1Video">
-                    <video autoplay muted></video>
-                </div>
-                <div class="focus-status">1 life • Dealer</div>
-                <div class="focus-lives">
-                    <div class="focus-life"></div>
-                </div>
-                <div class="focus-game-card face-down"></div>
-            </div>
-            
-            <!-- Custom Slot 2 (Empty) -->
-            <div class="focus-card empty slot-custom2" id="customSlot2" onclick="showAvailablePlayers()">
-                <div class="empty-slot">
-                    <div>+</div>
-                    <div style="font-size: 10px;">Tap player below</div>
-                </div>
-            </div>
-            
+        <!-- Game Status -->
+        <div class="game-status" id="gameStatus">
+            🎯 Connecting to game...
         </div>
-    </div>
-    
-    <!-- Available Players -->
-    <div class="available-players">
-        <div class="available-title">👥 Tap any player to add them to your table</div>
-        <div class="players-scroll">
-            <div class="players-list" id="availablePlayersList">
-                
-                <div class="available-player" onclick="addToFocus('tom')" data-player="tom">
-                    <div class="available-name">Tom</div>
-                    <div class="available-card face-down"></div>
-                    <div class="available-lives">
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                    </div>
-                </div>
-                
-                <div class="available-player in-focus" onclick="addToFocus('mike')" data-player="mike">
-                    <div class="available-name">Mike ✓</div>
-                    <div class="available-card face-down"></div>
-                    <div class="available-lives">
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                    </div>
-                </div>
-                
-                <div class="available-player" onclick="addToFocus('dave')" data-player="dave">
-                    <div class="available-name">Dave</div>
-                    <div class="available-card revealed">
-                        <div>7</div>
-                        <div>♠</div>
-                    </div>
-                    <div class="available-lives">
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                    </div>
-                </div>
-                
-                <div class="available-player" onclick="addToFocus('jen')" data-player="jen">
-                    <div class="available-name">Jen</div>
-                    <div class="available-card face-down"></div>
-                    <div class="available-lives">
-                        <div class="available-life"></div>
-                    </div>
-                </div>
-                
-                <div class="available-player" onclick="addToFocus('rob')" data-player="rob">
-                    <div class="available-name">Rob</div>
-                    <div class="available-card revealed red">
-                        <div>Q</div>
-                        <div>♦</div>
-                    </div>
-                    <div class="available-lives">
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                    </div>
-                </div>
-                
-                <div class="available-player" onclick="addToFocus('lisa')" data-player="lisa">
-                    <div class="available-name">Lisa</div>
-                    <div class="available-card face-down"></div>
-                    <div class="available-lives">
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                    </div>
-                </div>
-                
-                <div class="available-player in-focus" onclick="addToFocus('sis')" data-player="sis">
-                    <div class="available-name">Sis ✓</div>
-                    <div class="available-card face-down"></div>
-                    <div class="available-lives">
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                        <div class="available-life"></div>
-                    </div>
-                </div>
-                
-                <div class="available-player in-focus" onclick="addToFocus('sarah')" data-player="sarah">
-                    <div class="available-name">Sarah ✓</div>
-                    <div class="available-card face-down"></div>
-                    <div class="available-lives">
-                        <div class="available-life"></div>
-                    </div>
-                </div>
-                
+        
+        <!-- Video Controls -->
+        <div class="video-controls" id="videoControls">
+            <button class="video-btn" id="joinVideoBtn" onclick="joinVideoCall()">📹 Join Video</button>
+            <button class="video-btn hidden" id="leaveVideoBtn" onclick="leaveVideoCall()">📹 Leave</button>
+            <button class="video-btn hidden" id="muteBtn" onclick="toggleMute()">🔇 Mute</button>
+            <button class="video-btn hidden" id="videoToggleBtn" onclick="toggleVideo()">📷 Off</button>
+        </div>
+        
+        <!-- Personal Table Focus Area -->
+        <div class="personal-table">
+            <div class="table-title">🪑 Your Personal Table View</div>
+            
+            <div class="focus-grid" id="focusGrid">
+                <!-- Focus slots will be populated by JavaScript -->
             </div>
         </div>
-    </div>
-    
-    <!-- Quick Controls -->
-    <div class="quick-controls">
-        <button class="control-btn" onclick="flipMyCard()">🎴 Flip Card</button>
-        <button class="control-btn" onclick="keepCard()">⭐ Keep Card</button>
-        <button class="control-btn" onclick="endRound()">🏁 End Round</button>
-        <button class="control-btn danger" onclick="leaveGame()">🚪 Leave</button>
+        
+        <!-- Available Players -->
+        <div class="available-players" id="availablePlayersSection">
+            <div class="available-title">👥 Tap any player to add them to your table</div>
+            <div class="players-scroll">
+                <div class="players-list" id="availablePlayersList">
+                    <!-- Available players will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Controls -->
+        <div class="quick-controls">
+            <button class="control-btn" onclick="flipMyCard()" id="flipCardBtn">🎴 Flip Card</button>
+            <button class="control-btn" onclick="keepCard()" id="keepCardBtn">⭐ Keep Card</button>
+            <button class="control-btn" onclick="endRound()" id="endRoundBtn">🏁 End Round</button>
+            <button class="control-btn danger" onclick="leaveGame()">🚪 Leave</button>
+        </div>
+        
     </div>
 
-    <!-- Agora SDK -->
+    <!-- Scripts -->
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.19.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script>
@@ -627,6 +597,7 @@
         let currentGame = null;
         let myPlayerId = null;
         let isConnected = false;
+        let myFriendCode = null;
 
         // Agora video variables
         let agoraClient = null;
@@ -641,45 +612,422 @@
 
         // Personal Table State
         let focusedPlayers = {
-            left: 'mike',
-            center: 'alex', 
-            right: 'sis',
-            custom1: 'sarah',
-            custom2: null
+            left: null,     // Left neighbor
+            center: null,   // Current turn player
+            right: null,    // Right neighbor
+            custom1: null,  // Custom slot 1
+            custom2: null   // Custom slot 2
         };
+
+        // =====================================================================
+        // CONNECTION AND GAME MANAGEMENT
+        // =====================================================================
+
+        function connectToServer() {
+            if (socket) {
+                socket.disconnect();
+            }
+
+            console.log('🔄 Connecting to server...');
+            
+            socket = io({
+                timeout: 60000,
+                pingTimeout: 120000,
+                pingInterval: 30000,
+                reconnection: true,
+                reconnectionAttempts: 10,
+                reconnectionDelay: 2000,
+                reconnectionDelayMax: 10000,
+                transports: ['websocket', 'polling'],
+                upgrade: true,
+                rememberUpgrade: true,
+                forceNew: true,
+                autoConnect: true
+            });
+            
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            socket.on('connect', function() {
+                console.log('✅ Connected to server!');
+                updateConnectionStatus(true);
+                
+                const playerName = document.getElementById('player-name').value || 'Player1';
+                socket.emit('get-friend-code', { 
+                    userId: myPlayerId, 
+                    userName: playerName 
+                });
+            });
+
+            socket.on('disconnect', function(reason) {
+                console.log('❌ Disconnected:', reason);
+                updateConnectionStatus(false);
+            });
+
+            socket.on('error', function(data) {
+                console.log('❌ Error:', data.message);
+                alert('Error: ' + data.message);
+            });
+
+            // Game event handlers
+            socket.on('game-created', function(data) {
+                console.log('🎮 Game created!');
+                currentGame = data.game;
+                showGameContent();
+                updatePersonalTable();
+            });
+
+            socket.on('game-joined', function(data) {
+                console.log('🎮 Game joined!');
+                currentGame = data.game;
+                showGameContent();
+                updatePersonalTable();
+            });
+
+            socket.on('player-joined', function(data) {
+                console.log('👋 Player joined:', data.newPlayer?.name);
+                currentGame = data.game;
+                updatePersonalTable();
+            });
+
+            socket.on('game-started', function(data) {
+                console.log('🎮 Game started!');
+                currentGame = data.game;
+                updatePersonalTable();
+            });
+
+            socket.on('trade-completed', function(data) {
+                console.log('🔄 Trade completed');
+                currentGame = data.game;
+                updatePersonalTable();
+            });
+
+            socket.on('turn-skipped', function(data) {
+                console.log('⏭️ Turn skipped');
+                currentGame = data.game;
+                updatePersonalTable();
+            });
+
+            socket.on('card-flipped', function(data) {
+                console.log('🎴 Card flipped');
+                currentGame = data.game;
+                updatePersonalTable();
+            });
+
+            socket.on('round-ended', function(data) {
+                console.log('🏁 Round ended');
+                currentGame = data.game;
+                updatePersonalTable();
+            });
+
+            socket.on('dealer-traded-deck', function(data) {
+                console.log('🎴 Dealer traded with deck');
+                currentGame = data.game;
+                updatePersonalTable();
+            });
+
+            socket.on('dealer-skipped-trade', function(data) {
+                console.log('⏭️ Dealer skipped trade');
+                currentGame = data.game;
+                updatePersonalTable();
+            });
+        }
+
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const status = document.getElementById('connectionStatus');
+            status.textContent = connected ? 'Connected' : 'Disconnected';
+            status.className = 'connection-status ' + (connected ? 'connected' : 'disconnected');
+        }
+
+        // =====================================================================
+        // GAME JOINING FUNCTIONS
+        // =====================================================================
+
+        function quickMatch() {
+            const playerName = document.getElementById('player-name').value.trim();
+            if (!playerName) {
+                alert('Please enter your name first!');
+                return;
+            }
+            
+            if (!myPlayerId) {
+                myPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            if (!socket) {
+                connectToServer();
+            }
+            
+            // Show loading state
+            document.getElementById('main-menu').innerHTML = `
+                <div style="text-align: center;">
+                    <h2>🔍 Finding a game...</h2>
+                    <p>Looking for available players...</p>
+                    <div style="width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto;"></div>
+                    <button onclick="location.reload()">Cancel</button>
+                </div>
+                <style>
+                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                </style>
+            `;
+            
+            socket.emit('quick-match', { 
+                userId: myPlayerId,
+                token: 'demo_token_' + myPlayerId,
+                playerName: playerName 
+            });
+        }
+
+        function showPrivateOptions() {
+            alert('Private games coming soon! Use Quick Match for now.');
+        }
+
+        function showGameContent() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('gameContent').classList.remove('hidden');
+        }
 
         // =====================================================================
         // PERSONAL TABLE MANAGEMENT
         // =====================================================================
 
+        function updatePersonalTable() {
+            if (!currentGame || !currentGame.players) {
+                updateGameStatus('🎮 Waiting for game data...');
+                return;
+            }
+
+            console.log('🔄 Updating personal table with game data');
+            
+            // Update game status
+            updateGameStatus();
+            
+            // Calculate focus assignments
+            calculateFocusAssignments();
+            
+            // Update focus grid
+            updateFocusGrid();
+            
+            // Update available players
+            updateAvailablePlayersList();
+            
+            // Update control buttons
+            updateControlButtons();
+        }
+
+        function calculateFocusAssignments() {
+            const activePlayers = currentGame.players.filter(p => p.lives > 0);
+            if (activePlayers.length === 0) return;
+
+            const myIndex = activePlayers.findIndex(p => p.id === myPlayerId);
+            if (myIndex === -1) return; // I'm a spectator or eliminated
+
+            // Calculate neighbors
+            const leftIndex = (myIndex - 1 + activePlayers.length) % activePlayers.length;
+            const rightIndex = (myIndex + 1) % activePlayers.length;
+            
+            // Assign core positions
+            focusedPlayers.left = activePlayers[leftIndex]?.id || null;
+            focusedPlayers.right = activePlayers[rightIndex]?.id || null;
+            focusedPlayers.center = currentGame.currentPlayerId;
+
+            // Keep custom slots if players are still active, otherwise clear them
+            if (focusedPlayers.custom1) {
+                const player = currentGame.players.find(p => p.id === focusedPlayers.custom1);
+                if (!player || player.lives <= 0) {
+                    focusedPlayers.custom1 = null;
+                }
+            }
+            if (focusedPlayers.custom2) {
+                const player = currentGame.players.find(p => p.id === focusedPlayers.custom2);
+                if (!player || player.lives <= 0) {
+                    focusedPlayers.custom2 = null;
+                }
+            }
+
+            // Auto-fill custom slots with dealer and other interesting players
+            if (!focusedPlayers.custom1 && currentGame.dealerId && 
+                currentGame.dealerId !== focusedPlayers.left && 
+                currentGame.dealerId !== focusedPlayers.right && 
+                currentGame.dealerId !== focusedPlayers.center) {
+                focusedPlayers.custom1 = currentGame.dealerId;
+            }
+        }
+
+        function updateFocusGrid() {
+            const focusGrid = document.getElementById('focusGrid');
+            focusGrid.innerHTML = '';
+
+            // Create focus slots
+            const slots = [
+                { key: 'left', class: 'slot-left my-neighbor', label: '← Left' },
+                { key: 'center', class: 'slot-center small current-turn', label: '🎯 Turn' },
+                { key: 'right', class: 'slot-right my-neighbor', label: 'Right →' },
+                { key: 'custom1', class: 'slot-custom1', label: 'Custom' },
+                { key: 'custom2', class: 'slot-custom2', label: 'Custom' }
+            ];
+
+            slots.forEach(slot => {
+                const playerId = focusedPlayers[slot.key];
+                const player = playerId ? currentGame.players.find(p => p.id === playerId) : null;
+                
+                const slotDiv = document.createElement('div');
+                slotDiv.className = `focus-card ${slot.class}`;
+                slotDiv.id = `${slot.key}Slot`;
+
+                if (player) {
+                    // Player in slot
+                    slotDiv.innerHTML = createFocusPlayerHTML(player, slot);
+                    if (slot.key.startsWith('custom')) {
+                        slotDiv.onclick = () => removeFromFocus(slot.key);
+                    }
+                } else {
+                    // Empty slot
+                    slotDiv.classList.add('empty');
+                    slotDiv.innerHTML = `
+                        <div class="empty-slot">
+                            <div>+</div>
+                            <div style="font-size: 10px;">Tap player below</div>
+                        </div>
+                    `;
+                    slotDiv.onclick = () => showAvailablePlayers();
+                }
+
+                focusGrid.appendChild(slotDiv);
+            });
+        }
+
+        function createFocusPlayerHTML(player, slot) {
+            const isMe = player.id === myPlayerId;
+            const isCurrentTurn = player.id === currentGame.currentPlayerId;
+            const isDealer = player.id === currentGame.dealerId;
+            
+            // Player name with indicators
+            let playerName = player.name;
+            if (isMe) playerName = `📹 ${playerName} (You)`;
+            else if (isCurrentTurn) playerName = `🎯 ${playerName}`;
+            else if (isDealer) playerName = `💰 ${playerName}`;
+            
+            if (slot.key === 'left') playerName = `← ${playerName}`;
+            if (slot.key === 'right') playerName = `${playerName} →`;
+
+            // Video element
+            const videoHTML = `
+                <div class="focus-video ${slot.class.includes('small') ? 'small' : ''}" id="${slot.key}Video">
+                    ${isVideoJoined ? '<video autoplay muted></video>' : '<div class="no-video">📹 Join Video</div>'}
+                </div>
+            `;
+
+            // Lives display
+            const livesHTML = Array(player.lives).fill('<div class="focus-life"></div>').join('');
+
+            // Card display
+            const cardHTML = createCardHTML(player, 'focus-game-card');
+
+            // Status text
+            let statusText = `${player.lives} lives`;
+            if (isDealer) statusText += ' • Dealer';
+            if (isCurrentTurn) statusText += ' • Your turn';
+            if (player.hasTraded) statusText += ' • Traded';
+
+            // Action buttons
+            let actionsHTML = '';
+            if (canTradeWithPlayer(player.id)) {
+                actionsHTML = `
+                    <div class="focus-actions">
+                        <button class="action-btn trade" onclick="tradeWithPlayer('${player.id}')">Trade →</button>
+                    </div>
+                `;
+            }
+
+            // Remove button for custom slots
+            let removeBtn = '';
+            if (slot.key.startsWith('custom')) {
+                removeBtn = '<button class="remove-btn" onclick="removeFromFocus(\'' + slot.key + '\')">×</button>';
+            }
+
+            return `
+                ${removeBtn}
+                <div class="focus-name">${playerName}</div>
+                ${videoHTML}
+                <div class="focus-status">${statusText}</div>
+                <div class="focus-lives">${livesHTML}</div>
+                ${cardHTML}
+                ${actionsHTML}
+            `;
+        }
+
+        function updateAvailablePlayersList() {
+            const playersList = document.getElementById('availablePlayersList');
+            playersList.innerHTML = '';
+
+            if (!currentGame || !currentGame.players) return;
+
+            currentGame.players.forEach(player => {
+                const isInFocus = Object.values(focusedPlayers).includes(player.id);
+                const isEliminated = player.lives <= 0;
+                
+                const playerDiv = document.createElement('div');
+                playerDiv.className = `available-player ${isInFocus ? 'in-focus' : ''} ${isEliminated ? 'eliminated' : ''}`;
+                playerDiv.setAttribute('data-player', player.id);
+                playerDiv.onclick = () => addToFocus(player.id);
+
+                const livesHTML = Array(player.lives).fill('<div class="available-life"></div>').join('');
+                const cardHTML = createCardHTML(player, 'available-card');
+
+                playerDiv.innerHTML = `
+                    <div class="available-name">${player.name}${isInFocus ? ' ✓' : ''}</div>
+                    ${cardHTML}
+                    <div class="available-lives">${livesHTML}</div>
+                `;
+
+                playersList.appendChild(playerDiv);
+            });
+        }
+
+        function createCardHTML(player, className) {
+            if (!player.card || !player.cardRevealed) {
+                return `<div class="${className} face-down"></div>`;
+            }
+
+            const isRed = player.card.suit === '♥' || player.card.suit === '♦';
+            return `
+                <div class="${className} revealed ${isRed ? 'red' : ''}">
+                    <div>${player.card.value}</div>
+                    <div>${player.card.suit}</div>
+                </div>
+            `;
+        }
+
         function addToFocus(playerId) {
             console.log('🎮 Adding player to focus:', playerId);
             
-            // Find empty slot or replace custom slot
+            // Find empty custom slot
             let targetSlot = null;
-            if (!focusedPlayers.custom2) {
-                targetSlot = 'custom2';
-            } else if (!focusedPlayers.custom1) {
+            if (!focusedPlayers.custom1) {
                 targetSlot = 'custom1';
+            } else if (!focusedPlayers.custom2) {
+                targetSlot = 'custom2';
             } else {
-                // Replace custom2 by default
+                // Replace custom2
                 targetSlot = 'custom2';
             }
             
             // Remove from previous slot if already focused
-            for (let slot in focusedPlayers) {
+            Object.keys(focusedPlayers).forEach(slot => {
                 if (focusedPlayers[slot] === playerId) {
                     focusedPlayers[slot] = null;
                 }
-            }
+            });
             
             // Add to new slot
             focusedPlayers[targetSlot] = playerId;
             
             updatePersonalTable();
-            updateAvailablePlayersDisplay();
             
-            // If video is active, create video element for this player
+            // Add video for this player if video is active
             if (isVideoJoined) {
                 createVideoForPlayer(playerId, targetSlot);
             }
@@ -688,43 +1036,125 @@
         function removeFromFocus(slot) {
             console.log('🎮 Removing from focus slot:', slot);
             
-            // Don't allow removing neighbors or current player
-            if (slot === 'left' || slot === 'right' || slot === 'center') {
-                console.log('Cannot remove core players');
+            if (slot.startsWith('custom')) {
+                focusedPlayers[slot] = null;
+                updatePersonalTable();
+            }
+        }
+
+        function showAvailablePlayers() {
+            document.getElementById('availablePlayersSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // =====================================================================
+        // GAME STATUS AND CONTROLS
+        // =====================================================================
+
+        function updateGameStatus() {
+            if (!currentGame) {
+                document.getElementById('gameStatus').textContent = '🎮 Connecting to game...';
                 return;
             }
-            
-            focusedPlayers[slot] = null;
-            updatePersonalTable();
-            updateAvailablePlayersDisplay();
-        }
 
-        function updatePersonalTable() {
-            // Update the visual representation of focused players
-            // This would connect to your real game data
-            console.log('🎮 Updated personal table:', focusedPlayers);
-        }
-
-        function updateAvailablePlayersDisplay() {
-            // Update the checkmarks on available players
-            const availablePlayers = document.querySelectorAll('.available-player');
+            const isMyTurn = currentGame.currentPlayerId === myPlayerId;
+            const currentPlayer = currentGame.players.find(p => p.id === currentGame.currentPlayerId);
+            const phase = currentGame.turnPhase || 'trading';
             
-            availablePlayers.forEach(player => {
-                const playerId = player.getAttribute('data-player');
-                const isInFocus = Object.values(focusedPlayers).includes(playerId);
-                
-                if (isInFocus) {
-                    player.classList.add('in-focus');
-                    const nameEl = player.querySelector('.available-name');
-                    if (!nameEl.textContent.includes('✓')) {
-                        nameEl.textContent += ' ✓';
-                    }
+            let statusText = '';
+            
+            if (isMyTurn) {
+                if (phase === 'trading') {
+                    statusText = '🎯 Your turn! Trade with next player or keep your card.';
+                } else if (phase === 'dealer-turn') {
+                    statusText = '🎯 Your dealer turn! Trade with deck or skip.';
                 } else {
-                    player.classList.remove('in-focus');
-                    const nameEl = player.querySelector('.available-name');
-                    nameEl.textContent = nameEl.textContent.replace(' ✓', '');
+                    statusText = '🎯 Your turn!';
                 }
+            } else if (currentPlayer) {
+                statusText = `⏳ ${currentPlayer.name}'s turn...`;
+            } else {
+                statusText = `Round ${currentGame.round || 1} | ${currentGame.players?.length || 0} players`;
+            }
+
+            document.getElementById('gameStatus').textContent = statusText;
+        }
+
+        function updateControlButtons() {
+            const isMyTurn = currentGame?.currentPlayerId === myPlayerId;
+            const phase = currentGame?.turnPhase || 'trading';
+            
+            document.getElementById('flipCardBtn').disabled = false;
+            document.getElementById('keepCardBtn').disabled = !isMyTurn || phase !== 'trading';
+            document.getElementById('endRoundBtn').disabled = phase !== 'revealing';
+        }
+
+        function canTradeWithPlayer(playerId) {
+            if (!currentGame || currentGame.currentPlayerId !== myPlayerId) return false;
+            if (currentGame.turnPhase !== 'trading') return false;
+            
+            // Check if this is the next player in sequence
+            const activePlayers = currentGame.players.filter(p => p.lives > 0);
+            const myIndex = activePlayers.findIndex(p => p.id === myPlayerId);
+            const nextIndex = (myIndex + 1) % activePlayers.length;
+            const nextPlayer = activePlayers[nextIndex];
+            
+            return nextPlayer?.id === playerId;
+        }
+
+        // =====================================================================
+        // GAME ACTIONS
+        // =====================================================================
+
+        function tradeWithPlayer(playerId) {
+            if (!currentGame) return;
+            
+            console.log('🔄 Trading with player:', playerId);
+            
+            socket.emit('trade-request', {
+                gameId: currentGame.id,
+                targetPlayerId: playerId,
+                direction: 'right'
             });
+        }
+
+        function keepCard() {
+            if (!currentGame) return;
+            
+            console.log('⭐ Keeping card');
+            
+            socket.emit('skip-turn', {
+                gameId: currentGame.id
+            });
+        }
+
+        function flipMyCard() {
+            if (!currentGame) return;
+            
+            console.log('🎴 Flipping my card');
+            
+            socket.emit('flip-card', {
+                gameId: currentGame.id
+            });
+        }
+
+        function endRound() {
+            if (!currentGame) return;
+            
+            console.log('🏁 Ending round');
+            
+            socket.emit('end-round', {
+                gameId: currentGame.id
+            });
+        }
+
+        async function leaveGame() {
+            if (!currentGame) return;
+            
+            if (confirm('Are you sure you want to leave the game?')) {
+                await leaveVideoCall();
+                socket.disconnect();
+                location.reload();
+            }
         }
 
         // =====================================================================
@@ -732,36 +1162,34 @@
         // =====================================================================
 
         async function joinVideoCall() {
-            console.log('📹 Joining video call...');
-            
+            if (!currentGame) {
+                alert('Please join a game first!');
+                return;
+            }
+
             try {
-                // Create Agora client
+                console.log('📹 Joining video call...');
+                
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 
-                // Add event listeners
                 agoraClient.on("user-published", handleUserPublished);
                 agoraClient.on("user-unpublished", handleUserUnpublished);
                 agoraClient.on("user-left", handleUserLeft);
                 
-                // Join channel
                 const channel = "test123";
                 const uid = Math.floor(Math.random() * 1000000) + Date.now() % 1000000;
-                const tempToken = "007eJxTYNgYbd/46v6M/rOFAu/PrPIve1R+47dYpNDNCffPbQ3m61uowJCclppmYWhgmJKcbGhiYWCUaJFmaZ5iYWFgmmScmpRsWWgfn9EQyMigvjyEhZEBAkF8doaS1OISQyNjBgYAkUYiRg==";
+                const tempToken = "007eJxTYNgYbd/46v6M/rOFAu/PrPIve1R+47dYpNDNCffPbQ1m61uowJCclppmYWhgmJKcbGhiYWCUaJFmaZ5iYWFgmmScmpRsWWgfn9EQyMigvjyEhZEBAkF8doaS1OISQyNjBgYAkUYiRg==";
                 
                 await agoraClient.join(AGORA_APP_ID, channel, tempToken, uid);
                 
-                // Create local tracks
                 localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
                 localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                 
-                // Publish tracks
                 await agoraClient.publish([localTracks.audioTrack, localTracks.videoTrack]);
                 
                 isVideoJoined = true;
                 updateVideoButtons();
-                
-                // Create video elements for focused players
-                createVideoElementsForFocusedPlayers();
+                updatePersonalTable(); // Refresh to show video elements
                 
                 console.log('📹 Video call joined successfully!');
                 
@@ -775,7 +1203,6 @@
             if (!isVideoJoined) return;
 
             try {
-                // Destroy local tracks
                 if (localTracks.audioTrack) {
                     localTracks.audioTrack.stop();
                     localTracks.audioTrack.close();
@@ -787,12 +1214,10 @@
                     localTracks.videoTrack = null;
                 }
 
-                // Remove all remote users
                 Object.keys(remoteUsers).forEach(uid => {
                     delete remoteUsers[uid];
                 });
 
-                // Leave channel
                 if (agoraClient) {
                     await agoraClient.leave();
                     agoraClient = null;
@@ -800,59 +1225,12 @@
 
                 isVideoJoined = false;
                 updateVideoButtons();
+                updatePersonalTable(); // Refresh to hide video elements
                 
                 console.log('📹 Left video call');
 
             } catch (error) {
                 console.error('Error leaving video call:', error);
-            }
-        }
-
-        function createVideoElementsForFocusedPlayers() {
-            // Create video elements for all focused players
-            Object.entries(focusedPlayers).forEach(([slot, playerId]) => {
-                if (playerId) {
-                    createVideoForPlayer(playerId, slot);
-                }
-            });
-        }
-
-        function createVideoForPlayer(playerId, slot) {
-            console.log(`📹 Creating video element for ${playerId} in slot ${slot}`);
-            
-            // This would connect to your real video system
-            // For now, just create placeholder video elements
-            
-            const videoContainers = {
-                'left': 'leftVideo',
-                'center': 'currentVideo', 
-                'right': 'rightVideo',
-                'custom1': 'custom1Video',
-                'custom2': 'custom2Video'
-            };
-            
-            const containerId = videoContainers[slot];
-            const container = document.getElementById(containerId);
-            
-            if (container) {
-                // Remove existing video
-                const existingVideo = container.querySelector('video');
-                if (existingVideo) {
-                    existingVideo.remove();
-                }
-                
-                // Create new video element
-                const video = document.createElement('video');
-                video.autoplay = true;
-                video.muted = true;
-                video.style.width = '100%';
-                video.style.height = '100%';
-                video.style.objectFit = 'cover';
-                
-                container.appendChild(video);
-                
-                // This would connect to actual video streams based on playerId
-                console.log(`📹 Video element created for ${playerId}`);
             }
         }
 
@@ -915,6 +1293,31 @@
             }
         }
 
+        function createVideoForPlayer(playerId, slot) {
+            console.log(`📹 Creating video element for ${playerId} in slot ${slot}`);
+            
+            const videoContainer = document.getElementById(`${slot}Video`);
+            if (videoContainer) {
+                const existingVideo = videoContainer.querySelector('video');
+                if (existingVideo) {
+                    existingVideo.remove();
+                }
+                
+                const video = document.createElement('video');
+                video.autoplay = true;
+                video.muted = true;
+                video.style.width = '100%';
+                video.style.height = '100%';
+                video.style.objectFit = 'cover';
+                
+                videoContainer.appendChild(video);
+                
+                // Connect to actual video stream based on playerId
+                // This would map playerId to video UID
+                console.log(`📹 Video element created for ${playerId}`);
+            }
+        }
+
         // Agora event handlers
         async function handleUserPublished(user, mediaType) {
             const uid = user.uid;
@@ -927,11 +1330,9 @@
                 }
 
                 if (mediaType === 'video') {
-                    // Find which focused player this video belongs to and play it
+                    // Find the player slot for this video and play it
                     console.log(`📹 ${uid} published video`);
-                    
-                    // This would map the UID to your player ID and play in correct slot
-                    // For demo, just log it
+                    // TODO: Map UID to playerId and play in correct slot
                 }
                 if (mediaType === 'audio') {
                     user.audioTrack.play();
@@ -953,51 +1354,13 @@
         }
 
         // =====================================================================
-        // GAME FUNCTIONS  
-        // =====================================================================
-
-        function tradeWithPlayer(playerId) {
-            console.log('🎮 Trading with player:', playerId);
-            alert(`Trading with ${playerId}!`);
-        }
-
-        function keepCard() {
-            console.log('🎮 Keeping card');
-            alert('Keeping your card!');
-        }
-
-        function flipMyCard() {
-            console.log('🎮 Flipping my card');
-            alert('Flipping your card!');
-        }
-
-        function endRound() {
-            console.log('🎮 Ending round');
-            alert('Ending round!');
-        }
-
-        function leaveGame() {
-            console.log('🎮 Leaving game');
-            if (confirm('Are you sure you want to leave the game?')) {
-                // Leave video call first
-                leaveVideoCall();
-                alert('Left the game!');
-            }
-        }
-
-        function showAvailablePlayers() {
-            console.log('🎮 Showing available players');
-            document.querySelector('.available-players').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // =====================================================================
         // INITIALIZATION
         // =====================================================================
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎮 Personal Table Layout loaded!');
-            updateAvailablePlayersDisplay();
             updateVideoButtons();
+            updateConnectionStatus(false);
         });
     </script>
 </body>
