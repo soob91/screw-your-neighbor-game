@@ -1704,75 +1704,79 @@
         }
 
         // Update video feeds based on relevant players
-        function updateSmartVideoDisplay() {
-        if (!isVideoJoined) return;
+function updateSmartVideoDisplay() {
+    if (!isVideoJoined) return;
     
-        const relevantPlayers = getRelevantPlayers();
-        const videosContainer = document.getElementById('videosContainer');
+    const relevantPlayers = getRelevantPlayers();
+    const videosContainer = document.getElementById('videosContainer');
     
-        if (!videosContainer) return;
+    if (!videosContainer) return;
     
-        console.log('=== SMART VIDEO UPDATE ===');
-        console.log('Relevant players:', relevantPlayers.map(p => `${p.name} (${p.videoRole})`));
+    console.log('=== SMART VIDEO UPDATE ===');
+    console.log('Relevant players:', relevantPlayers.map(p => `${p.name} (${p.videoRole})`));
     
-        // Clear existing videos
-        videosContainer.innerHTML = '';
+    // DON'T clear existing videos - instead update selectively
+    const existingContainers = videosContainer.querySelectorAll('.video-container');
+    const relevantPlayerIds = relevantPlayers.map(p => p.id);
     
-        // Add videos for relevant players only
-        relevantPlayers.forEach(player => {
+    // Remove video containers for players who are no longer relevant
+    existingContainers.forEach(container => {
+        const playerId = container.id.replace('smart-video-', '');
+        if (!relevantPlayerIds.includes(playerId)) {
+            container.remove();
+        }
+    });
+    
+    // Add or update video containers for relevant players
+    relevantPlayers.forEach(player => {
+        const existingContainer = document.getElementById(`smart-video-${player.id}`);
+        if (!existingContainer) {
+            // Create new container for new relevant player
             addSmartVideoContainer(player);
-        });
+        } else {
+            // Update existing container styling based on new role
+            updateVideoContainerRole(existingContainer, player);
+        }
+    });
     
-        console.log('=== END SMART VIDEO UPDATE ===');
-    }
+    console.log('=== END SMART VIDEO UPDATE ===');
+}
 
-        // Enhanced video container with role-based styling
-        function addSmartVideoContainer(player) {
-            const videosContainer = document.getElementById('videosContainer');
+// Update existing video container with new role styling
+function updateVideoContainerRole(container, player) {
+    // Role-based styling
+    let borderColor = '#333';
+    let label = player.name;
     
-            const videoContainer = document.createElement('div');
-            videoContainer.className = `video-container video-${player.videoRole}`;
-            videoContainer.id = `smart-video-${player.id}`;
-    
-            // Role-based styling
-            let borderColor = '#333';
-            let label = player.name;
-    
-            switch(player.videoRole) {
-            case 'current-turn':
-                borderColor = '#00FF00'; // Green for current turn
-                label = `🎯 ${player.name} (Turn)`;
-                break;
-            case 'left-neighbor':
-                borderColor = '#FFD700'; // Gold for left neighbor
-                label = `← ${player.name}`;
-                break;
-            case 'right-neighbor':
-                borderColor = '#FF6B35'; // Orange for right neighbor  
-                label = `${player.name} →`;
-                break;
-            case 'me':
-                borderColor = '#2a5298'; // Blue for me
-                label = `📹 ${player.name} (You)`;
-                break;
-        }
-    
-        videoContainer.style.border = `3px solid ${borderColor}`;
-    
-        videoContainer.innerHTML = `
-            <div id="video-${player.id}" style="width: 100%; height: 100%;"></div>
-            <div class="video-label" style="background: ${borderColor};">${label}</div>
-            <div class="video-status" id="status-${player.id}">📹 🎤</div>
-        `;
-    
-        videosContainer.appendChild(videoContainer);
-    
-        // Connect existing video streams if they exist
-        const existingUser = remoteUsers[player.id];
-        if (existingUser && existingUser.videoTrack) {
-            existingUser.videoTrack.play(`video-${player.id}`);
-        }
+    switch(player.videoRole) {
+        case 'current-turn':
+            borderColor = '#00FF00';
+            label = `🎯 ${player.name} (Turn)`;
+            break;
+        case 'left-neighbor':
+            borderColor = '#FFD700';
+            label = `← ${player.name}`;
+            break;
+        case 'right-neighbor':
+            borderColor = '#FF6B35';
+            label = `${player.name} →`;
+            break;
+        case 'me':
+            borderColor = '#2a5298';
+            label = `📹 ${player.name} (You)`;
+            break;
     }
+    
+    // Update border and label without destroying video element
+    container.style.border = `3px solid ${borderColor}`;
+    container.className = `video-container video-${player.videoRole}`;
+    
+    const labelElement = container.querySelector('.video-label');
+    if (labelElement) {
+        labelElement.textContent = label;
+        labelElement.style.background = borderColor;
+    }
+}
 
     // Call this whenever game state changes
     function onGameStateChanged() {
