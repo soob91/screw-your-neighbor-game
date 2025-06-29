@@ -74,26 +74,12 @@
         .focus-slot.current-turn {
             border-color: #00FF00;
             box-shadow: 0 0 15px rgba(0,255,0,0.3);
-            grid-column: 2;
-            grid-row: 1;
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
             0%, 100% { box-shadow: 0 0 15px rgba(0,255,0,0.3); }
             50% { box-shadow: 0 0 25px rgba(0,255,0,0.6); }
-        }
-
-        .focus-slot.left-neighbor {
-            border-color: #FF6B35;
-            grid-column: 1;
-            grid-row: 1;
-        }
-
-        .focus-slot.right-neighbor {
-            border-color: #FF6B35;
-            grid-column: 3;
-            grid-row: 1;
         }
 
         .focus-slot.custom {
@@ -1396,7 +1382,7 @@
             document.getElementById('hostControls')?.classList.add('hidden');
         }
 
-        // FIXED: Personal Table management - ABSOLUTELY NO DUPLICATES
+        // FIXED: Personal Table management - NEW UX SYSTEM
         function updatePersonalTable() {
             if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
             if (!focusedPlayers) initializeFocusState();
@@ -1409,24 +1395,71 @@
 
             log(`🔄 Updating table: ${playerCount} players total`);
 
-            // FIXED: Calculate unique player assignments
-            const uniquePlayersForFocus = calculateUniquePlayerSlots(myPlayerIndex, playerCount);
-            
-            // Update focused players with unique assignments
-            focusedPlayers.leftNeighbor = uniquePlayersForFocus.leftNeighbor;
-            focusedPlayers.currentTurn = uniquePlayersForFocus.currentTurn;
-            focusedPlayers.rightNeighbor = uniquePlayersForFocus.rightNeighbor;
+            if (playerCount <= 5) {
+                // AUTO-FILL MODE: All players automatically placed
+                autoFillAllPlayers(myPlayerIndex, playerCount);
+                hideAvailablePlayersSection();
+            } else {
+                // CUSTOM MODE: Fixed neighbors + customizable bottom slots
+                setupCustomFocusMode(myPlayerIndex, playerCount);
+                showAvailablePlayersSection();
+            }
 
-            // Clean custom slots if player no longer exists
-            if (focusedPlayers.custom1 && !currentGame.players.find(p => p.id === focusedPlayers.custom1.id)) {
+            renderPersonalTable();
+            renderAvailablePlayers();
+        }
+
+        // AUTO-FILL: Place all players automatically for ≤5 players
+        function autoFillAllPlayers(myPlayerIndex, playerCount) {
+            const players = currentGame.players;
+            
+            // Always center myself in my own view
+            const myPlayer = players[myPlayerIndex];
+            focusedPlayers.currentTurn = myPlayer;
+            
+            // Calculate neighbors in trading order
+            const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
+            const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
+            
+            focusedPlayers.leftNeighbor = players[leftNeighborIndex];
+            focusedPlayers.rightNeighbor = players[rightNeighborIndex];
+            
+            // Fill remaining slots with other players
+            const remainingPlayers = players.filter((p, index) => 
+                index !== myPlayerIndex && 
+                index !== leftNeighborIndex && 
+                index !== rightNeighborIndex
+            );
+            
+            focusedPlayers.custom1 = remainingPlayers[0] || null;
+            focusedPlayers.custom2 = remainingPlayers[1] || null;
+        }
+
+        // CUSTOM MODE: Fixed neighbors + customizable slots for 6+ players
+        function setupCustomFocusMode(myPlayerIndex, playerCount) {
+            const players = currentGame.players;
+            
+            // Always center myself in my own view
+            const myPlayer = players[myPlayerIndex];
+            focusedPlayers.currentTurn = myPlayer;
+            
+            // Calculate fixed neighbors
+            const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
+            const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
+            
+            focusedPlayers.leftNeighbor = players[leftNeighborIndex];
+            focusedPlayers.rightNeighbor = players[rightNeighborIndex];
+            
+            // Keep existing custom slots if valid, otherwise clear
+            if (focusedPlayers.custom1 && !players.find(p => p.id === focusedPlayers.custom1.id)) {
                 focusedPlayers.custom1 = null;
             }
-            if (focusedPlayers.custom2 && !currentGame.players.find(p => p.id === focusedPlayers.custom2.id)) {
+            if (focusedPlayers.custom2 && !players.find(p => p.id === focusedPlayers.custom2.id)) {
                 focusedPlayers.custom2 = null;
             }
-
-            // Auto-assign dealer if not in focus and slots available
-            const dealer = currentGame.players.find(p => p.id === currentGame.dealerId);
+            
+            // Auto-assign dealer if not already in focus
+            const dealer = players.find(p => p.id === currentGame.dealerId);
             if (dealer && !isPlayerInFocus(dealer.id)) {
                 if (!focusedPlayers.custom1) {
                     focusedPlayers.custom1 = dealer;
@@ -1434,63 +1467,20 @@
                     focusedPlayers.custom2 = dealer;
                 }
             }
-
-            renderPersonalTable();
-            renderAvailablePlayers();
         }
 
-        // FIXED: Calculate unique player slots to prevent duplicates
-        function calculateUniquePlayerSlots(myPlayerIndex, playerCount) {
-            const players = currentGame.players;
-            const currentTurnPlayer = players.find(p => p.id === currentGame.currentPlayerId);
-            const myPlayer = players[myPlayerIndex];
-            
-            let leftNeighbor = null;
-            let rightNeighbor = null;
-            let currentTurn = null;
-            
-            if (playerCount === 2) {
-                // With 2 players: I'm always in the middle, other player on right for trading
-                const otherPlayerIndex = myPlayerIndex === 0 ? 1 : 0;
-                const otherPlayer = players[otherPlayerIndex];
-                
-                // I'm always in the middle (current turn slot)
-                currentTurn = myPlayer;
-                
-                // Other player goes on the right so trade button appears
-                rightNeighbor = otherPlayer;
-                leftNeighbor = null;
-                
-            } else if (playerCount >= 3) {
-                // With 3+ players: calculate normal neighbors
-                const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
-                const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
-                
-                leftNeighbor = players[leftNeighborIndex];
-                rightNeighbor = players[rightNeighborIndex];
-                
-                // Show current turn player in center if it's not me
-                if (currentTurnPlayer && currentTurnPlayer.id !== myPlayer.id) {
-                    currentTurn = currentTurnPlayer;
-                    
-                    // Remove from neighbor slots if they're the current turn player
-                    if (currentTurnPlayer.id === leftNeighbor?.id) {
-                        leftNeighbor = null;
-                    }
-                    if (currentTurnPlayer.id === rightNeighbor?.id) {
-                        rightNeighbor = null;
-                    }
-                } else {
-                    // I'm the current turn player, show myself in center
-                    currentTurn = myPlayer;
-                }
+        function hideAvailablePlayersSection() {
+            const availableSection = document.querySelector('.available-players');
+            if (availableSection) {
+                availableSection.style.display = 'none';
             }
-            
-            return {
-                leftNeighbor,
-                currentTurn,
-                rightNeighbor
-            };
+        }
+
+        function showAvailablePlayersSection() {
+            const availableSection = document.querySelector('.available-players');
+            if (availableSection) {
+                availableSection.style.display = 'block';
+            }
         }
 
         function isPlayerInFocus(playerId) {
@@ -1504,19 +1494,30 @@
             
             focusGrid.innerHTML = '';
 
-            const leftSlot = createFocusSlot('left-neighbor', focusedPlayers.leftNeighbor, false);
+            // Create slots with proper grid positioning
+            const leftSlot = createFocusSlot('slot', focusedPlayers.leftNeighbor, false);
+            leftSlot.style.gridColumn = '1';
+            leftSlot.style.gridRow = '1';
             focusGrid.appendChild(leftSlot);
 
-            const currentSlot = createFocusSlot('current-turn', focusedPlayers.currentTurn, false);
-            focusGrid.appendChild(currentSlot);
+            const centerSlot = createFocusSlot('slot', focusedPlayers.currentTurn, false);
+            centerSlot.style.gridColumn = '2';
+            centerSlot.style.gridRow = '1';
+            focusGrid.appendChild(centerSlot);
 
-            const rightSlot = createFocusSlot('right-neighbor', focusedPlayers.rightNeighbor, false);
+            const rightSlot = createFocusSlot('slot', focusedPlayers.rightNeighbor, false);
+            rightSlot.style.gridColumn = '3';
+            rightSlot.style.gridRow = '1';
             focusGrid.appendChild(rightSlot);
 
             const custom1Slot = createFocusSlot('custom', focusedPlayers.custom1, true);
+            custom1Slot.style.gridColumn = '1';
+            custom1Slot.style.gridRow = '2';
             focusGrid.appendChild(custom1Slot);
 
             const custom2Slot = createFocusSlot('custom', focusedPlayers.custom2, true);
+            custom2Slot.style.gridColumn = '3';
+            custom2Slot.style.gridRow = '2';
             focusGrid.appendChild(custom2Slot);
         }
 
@@ -1524,6 +1525,12 @@
             const slot = document.createElement('div');
             let slotClasses = `focus-slot ${type}`;
             
+            // Add green glow for current turn player
+            if (player && player.id === currentGame?.currentPlayerId) {
+                slotClasses += ' current-turn';
+            }
+            
+            // Add dealer styling
             if (player && player.id === currentGame?.dealerId) {
                 slotClasses += ' dealer';
             }
@@ -1556,7 +1563,10 @@
             const cardDisplay = document.createElement('div');
             cardDisplay.className = 'card-display';
             
-            if (player.card && (player.cardRevealed || currentGame.turnPhase === 'revealing' || (player.id === playerId && player.cardRevealed))) {
+            // FIXED: Proper card visibility rules
+            const shouldShowCard = shouldPlayerCardBeVisible(player);
+            
+            if (player.card && shouldShowCard) {
                 const card = player.card;
                 const isRed = card.suit === '♥' || card.suit === '♦';
                 cardDisplay.className += isRed ? ' red revealed' : ' black revealed';
@@ -1571,6 +1581,8 @@
             } else if (player.hasCard || player.card) {
                 cardDisplay.className += ' face-down';
                 cardDisplay.textContent = '🂠';
+                
+                // Allow clicking own card to flip it
                 if (player.id === playerId) {
                     cardDisplay.onclick = () => flipCard();
                 }
@@ -1634,6 +1646,26 @@
             return slot;
         }
 
+        // FIXED: Proper card visibility rules
+        function shouldPlayerCardBeVisible(player) {
+            // Always see your own card if you've looked at it
+            if (player.id === playerId && player.cardRevealed) {
+                return true;
+            }
+            
+            // See cards in revealing phase (end of round)
+            if (currentGame.turnPhase === 'revealing') {
+                return true;
+            }
+            
+            // See cards that have been properly revealed during trading
+            if (player.cardRevealed) {
+                return true;
+            }
+            
+            return false;
+        }
+
         function canTradeWith(player) {
             if (!currentGame) return false;
             const isMyTurn = currentGame.currentPlayerId === playerId;
@@ -1645,7 +1677,7 @@
             return isMyTurn && player.lives > 0 && gameStarted && tradingPhase;
         }
 
-        // FIXED: Available players rendering - NO DUPLICATES
+        // FIXED: Available players rendering - Only for 6+ player games
         function renderAvailablePlayers() {
             const playersScroll = document.getElementById('playersScroll');
             if (!playersScroll) return;
@@ -1654,23 +1686,26 @@
 
             if (!currentGame || !currentGame.players) return;
 
-            // CRITICAL: Create Set to track already added players
-            const addedPlayerIds = new Set();
+            // Only show available players section for 6+ player games
+            const playerCount = currentGame.players.length;
+            if (playerCount <= 5) {
+                return; // Section is hidden in CSS
+            }
 
-            currentGame.players.forEach(player => {
-                // PREVENT DUPLICATES: Skip if already added
+            // Show players not currently in focus
+            const addedPlayerIds = new Set();
+            const playersNotInFocus = currentGame.players.filter(player => {
+                return !isPlayerInFocus(player.id);
+            });
+
+            playersNotInFocus.forEach(player => {
                 if (addedPlayerIds.has(player.id)) {
-                    log(`⚠️ Skipping duplicate player: ${player.name} (${player.id})`);
                     return;
                 }
                 addedPlayerIds.add(player.id);
 
                 const playerDiv = document.createElement('div');
                 let playerClasses = 'available-player';
-                
-                if (isPlayerInFocus(player.id)) {
-                    playerClasses += ' focused';
-                }
                 
                 if (player.id === currentGame.currentPlayerId) {
                     playerClasses += ' current-turn';
@@ -1685,13 +1720,6 @@
                 }
                 
                 playerDiv.className = playerClasses;
-                
-                if (isPlayerInFocus(player.id)) {
-                    const checkMark = document.createElement('div');
-                    checkMark.className = 'check-mark';
-                    checkMark.textContent = '✓';
-                    playerDiv.appendChild(checkMark);
-                }
 
                 const playerNameDiv = document.createElement('div');
                 playerNameDiv.className = 'player-name';
@@ -1701,7 +1729,10 @@
                 const miniCard = document.createElement('div');
                 miniCard.className = 'mini-card';
                 
-                if (player.card && (player.cardRevealed || currentGame.turnPhase === 'revealing' || (player.id === playerId && player.cardRevealed))) {
+                // FIXED: Proper card visibility for mini cards
+                const shouldShowCard = shouldPlayerCardBeVisible(player);
+                
+                if (player.card && shouldShowCard) {
                     const isRed = player.card.suit === '♥' || player.card.suit === '♦';
                     miniCard.className += isRed ? ' red' : ' black';
                     miniCard.textContent = `${player.card.value}${player.card.suit}`;
@@ -1722,18 +1753,27 @@
                 playersScroll.appendChild(playerDiv);
             });
 
-            log(`✅ Rendered ${addedPlayerIds.size} unique players`);
+            log(`✅ Rendered ${addedPlayerIds.size} available players`);
         }
 
-        // FIXED: Add to focus - prevent duplicates
+        // FIXED: Add to focus - only for 6+ player games
         function addToFocus(player) {
             if (!focusedPlayers) initializeFocusState();
+            
+            const playerCount = currentGame.players.length;
+            
+            // In auto-fill mode (≤5 players), no manual adding
+            if (playerCount <= 5) {
+                log(`Auto-fill mode active - cannot manually add players`);
+                return;
+            }
             
             if (isPlayerInFocus(player.id)) {
                 log(`Player ${player.name} already in focus`);
                 return;
             }
 
+            // Only custom slots can be changed in 6+ player mode
             if (!focusedPlayers.custom1) {
                 focusedPlayers.custom1 = player;
                 log(`Added ${player.name} to custom1`);
@@ -1741,6 +1781,7 @@
                 focusedPlayers.custom2 = player;
                 log(`Added ${player.name} to custom2`);
             } else {
+                // Replace custom1 with new player
                 focusedPlayers.custom1 = player;
                 log(`Replaced custom1 with ${player.name}`);
             }
@@ -1756,10 +1797,21 @@
         function removeFromFocus(playerId) {
             if (!focusedPlayers) return;
             
+            const playerCount = currentGame.players.length;
+            
+            // In auto-fill mode (≤5 players), no manual removing
+            if (playerCount <= 5) {
+                log(`Auto-fill mode active - cannot manually remove players`);
+                return;
+            }
+            
+            // Only custom slots can be removed in 6+ player mode
             if (focusedPlayers.custom1 && focusedPlayers.custom1.id === playerId) {
                 focusedPlayers.custom1 = null;
+                log(`Removed player from custom1`);
             } else if (focusedPlayers.custom2 && focusedPlayers.custom2.id === playerId) {
                 focusedPlayers.custom2 = null;
+                log(`Removed player from custom2`);
             }
 
             renderPersonalTable();
