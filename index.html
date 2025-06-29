@@ -1388,12 +1388,15 @@
             if (!focusedPlayers) initializeFocusState();
 
             const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
-            if (myPlayerIndex === -1) return;
+            if (myPlayerIndex === -1) {
+                log(`❌ Cannot find myself (${playerId}) in players list`);
+                return;
+            }
 
             const playerCount = currentGame.players.length;
             if (playerCount < 2) return;
 
-            log(`🔄 Updating table: ${playerCount} players total`);
+            log(`🔄 Updating personal table: ${playerCount} players, I am ${currentGame.players[myPlayerIndex].name} at index ${myPlayerIndex}`);
 
             if (playerCount <= 5) {
                 // AUTO-FILL MODE: All players automatically placed
@@ -1412,19 +1415,19 @@
         // AUTO-FILL: Place all players automatically for ≤5 players
         function autoFillAllPlayers(myPlayerIndex, playerCount) {
             const players = currentGame.players;
-            
-            // Always center myself in my own view
             const myPlayer = players[myPlayerIndex];
+            
+            // CRITICAL FIX: Always put myself in the center of MY screen
             focusedPlayers.currentTurn = myPlayer;
             
-            // Calculate neighbors in trading order
+            // Calculate neighbors based on MY position in turn order
             const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
             const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
             
             focusedPlayers.leftNeighbor = players[leftNeighborIndex];
             focusedPlayers.rightNeighbor = players[rightNeighborIndex];
             
-            // Fill remaining slots with other players
+            // Fill remaining slots with other players (excluding me and my neighbors)
             const remainingPlayers = players.filter((p, index) => 
                 index !== myPlayerIndex && 
                 index !== leftNeighborIndex && 
@@ -1433,17 +1436,19 @@
             
             focusedPlayers.custom1 = remainingPlayers[0] || null;
             focusedPlayers.custom2 = remainingPlayers[1] || null;
+            
+            log(`🎯 Personal view for ${myPlayer.name}: Left=${players[leftNeighborIndex]?.name}, Center=${myPlayer.name}, Right=${players[rightNeighborIndex]?.name}`);
         }
 
         // CUSTOM MODE: Fixed neighbors + customizable slots for 6+ players
         function setupCustomFocusMode(myPlayerIndex, playerCount) {
             const players = currentGame.players;
-            
-            // Always center myself in my own view
             const myPlayer = players[myPlayerIndex];
+            
+            // CRITICAL FIX: Always put myself in the center of MY screen
             focusedPlayers.currentTurn = myPlayer;
             
-            // Calculate fixed neighbors
+            // Calculate MY neighbors based on MY position in turn order
             const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
             const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
             
@@ -1467,6 +1472,8 @@
                     focusedPlayers.custom2 = dealer;
                 }
             }
+            
+            log(`🎯 Personal view for ${myPlayer.name}: Left=${players[leftNeighborIndex]?.name}, Center=${myPlayer.name}, Right=${players[rightNeighborIndex]?.name}`);
         }
 
         function hideAvailablePlayersSection() {
@@ -1566,6 +1573,11 @@
             // FIXED: Proper card visibility rules
             const shouldShowCard = shouldPlayerCardBeVisible(player);
             
+            // Debug card state
+            if (player.id === playerId) {
+                log(`🎴 My card state: hasCard=${player.hasCard}, card=${player.card ? `${player.card.value}${player.card.suit}` : 'null'}, revealed=${player.cardRevealed}, shouldShow=${shouldShowCard}`);
+            }
+            
             if (player.card && shouldShowCard) {
                 const card = player.card;
                 const isRed = card.suit === '♥' || card.suit === '♦';
@@ -1648,8 +1660,8 @@
 
         // FIXED: Proper card visibility rules
         function shouldPlayerCardBeVisible(player) {
-            // Always see your own card if you've looked at it
-            if (player.id === playerId && player.cardRevealed) {
+            // Always see your own card (even face down if you haven't looked)
+            if (player.id === playerId) {
                 return true;
             }
             
@@ -1668,13 +1680,31 @@
 
         function canTradeWith(player) {
             if (!currentGame) return false;
+            
             const isMyTurn = currentGame.currentPlayerId === playerId;
             const gameStarted = currentGame.state === 'playing';
             const tradingPhase = currentGame.turnPhase === 'trading';
             
-            // In a 2-player game, if it's my turn, I can trade with the other player
-            // In 3+ player game, I can trade with my right neighbor
-            return isMyTurn && player.lives > 0 && gameStarted && tradingPhase;
+            if (!isMyTurn || !gameStarted || !tradingPhase || player.lives <= 0) {
+                return false;
+            }
+            
+            // Find my position and calculate who I should trade with
+            const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
+            if (myPlayerIndex === -1) return false;
+            
+            const playerCount = currentGame.players.length;
+            const nextPlayerIndex = (myPlayerIndex + 1) % playerCount;
+            const nextPlayer = currentGame.players[nextPlayerIndex];
+            
+            // I can only trade with the next player in turn order
+            const canTrade = player.id === nextPlayer.id;
+            
+            if (canTrade) {
+                log(`🔄 ${player.name} is valid trade target (next in turn order)`);
+            }
+            
+            return canTrade;
         }
 
         // FIXED: Available players rendering - Only for 6+ player games
@@ -1882,11 +1912,21 @@
 
         function requestTrade(targetPlayerId) {
             if (!socket || !currentGame) return;
+            
+            log(`🔄 Requesting trade: ${playerId} → ${targetPlayerId}`);
+            
+            // Debug: Show current game state
+            const myIndex = currentGame.players.findIndex(p => p.id === playerId);
+            const targetIndex = currentGame.players.findIndex(p => p.id === targetPlayerId);
+            const expectedNextIndex = (myIndex + 1) % currentGame.players.length;
+            
+            log(`🔍 Trade Debug: My index: ${myIndex}, Target index: ${targetIndex}, Expected next: ${expectedNextIndex}`);
+            log(`🔍 Current turn: ${currentGame.currentPlayerId}, My turn: ${currentGame.currentPlayerId === playerId}`);
+            
             socket.emit('trade-request', { 
                 gameId: currentGame.id,
                 targetPlayerId 
             });
-            log(`🔄 Requesting trade with player`);
         }
 
         function endRound() {
