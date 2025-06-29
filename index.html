@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta viewport="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Screw Your Neighbor - Personal Table</title>
     <style>
         * {
@@ -17,6 +17,7 @@
             color: white;
             min-height: 100vh;
             padding: 10px;
+            overflow-x: hidden;
         }
 
         .container {
@@ -67,6 +68,7 @@
             min-height: 140px;
             position: relative;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .focus-slot.current-turn {
@@ -74,6 +76,12 @@
             box-shadow: 0 0 15px rgba(0,255,0,0.3);
             grid-column: 2;
             grid-row: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(0,255,0,0.3); }
+            50% { box-shadow: 0 0 25px rgba(0,255,0,0.6); }
         }
 
         .focus-slot.left-neighbor {
@@ -99,6 +107,11 @@
 
         .focus-slot.custom:last-of-type {
             grid-column: 3;
+        }
+
+        .focus-slot.dealer {
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.4);
         }
 
         .focus-slot.empty {
@@ -131,6 +144,18 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            background: #222;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #333, #555);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.7rem;
         }
 
         .player-info {
@@ -164,11 +189,17 @@
             font-weight: bold;
             margin-bottom: 5px;
             border: 1px solid #ddd;
+            transition: all 0.2s ease;
         }
 
         .card-display.face-down {
-            background: #1e3c72;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
             color: white;
+            cursor: pointer;
+        }
+
+        .card-display.face-down:hover {
+            transform: scale(1.05);
         }
 
         .card-display.red {
@@ -177,6 +208,10 @@
 
         .card-display.black {
             color: #333;
+        }
+
+        .card-display.revealed {
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
         }
 
         .action-button {
@@ -188,16 +223,27 @@
             color: white;
             font-size: 0.7rem;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            margin-top: 2px;
         }
 
         .action-button:hover {
             background: #0097e6;
+            transform: translateY(-1px);
         }
 
         .action-button:disabled {
             background: rgba(255,255,255,0.3);
             cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-button.trade {
+            background: #e74c3c;
+        }
+
+        .action-button.trade:hover {
+            background: #c0392b;
         }
 
         .remove-button {
@@ -239,6 +285,21 @@
             overflow-x: auto;
             gap: 8px;
             padding: 5px 0;
+            scrollbar-width: thin;
+        }
+
+        .players-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .players-scroll::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+        }
+
+        .players-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
         }
 
         .available-player {
@@ -251,15 +312,27 @@
             transition: all 0.2s;
             text-align: center;
             position: relative;
+            flex-shrink: 0;
         }
 
         .available-player:hover {
             background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
         }
 
         .available-player.focused {
             border-color: #00FF00;
             background: rgba(0,255,0,0.1);
+        }
+
+        .available-player.current-turn {
+            border-color: #00FF00;
+            box-shadow: 0 0 8px rgba(0,255,0,0.4);
+        }
+
+        .available-player.dealer {
+            border-color: #FFD700;
+            background: rgba(255,215,0,0.1);
         }
 
         .available-player .check-mark {
@@ -280,6 +353,7 @@
         .available-player .player-name {
             font-size: 0.7rem;
             margin-bottom: 3px;
+            font-weight: bold;
         }
 
         .available-player .mini-card {
@@ -293,11 +367,21 @@
             color: #333;
             font-size: 0.6rem;
             font-weight: bold;
+            margin-bottom: 2px;
         }
 
         .available-player .mini-card.face-down {
             background: #1e3c72;
             color: white;
+        }
+
+        .available-player .mini-card.red {
+            color: #d73027;
+        }
+
+        .available-player .mini-lives {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.8);
         }
 
         /* Game Controls */
@@ -320,7 +404,7 @@
             font-size: 0.8rem;
         }
 
-        .control-button:hover {
+        .control-button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
@@ -337,6 +421,10 @@
 
         .control-button.warning {
             background: #f39c12;
+        }
+
+        .control-button.primary {
+            background: #3498db;
         }
 
         /* Chat and Game Log */
@@ -371,6 +459,20 @@
             background: rgba(0,0,0,0.2);
             font-size: 0.7rem;
             margin-bottom: 8px;
+            scrollbar-width: thin;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
         }
 
         .chat-input {
@@ -386,6 +488,10 @@
             background: rgba(255,255,255,0.1);
             color: white;
             font-size: 0.8rem;
+        }
+
+        .chat-input input::placeholder {
+            color: rgba(255,255,255,0.5);
         }
 
         .chat-input button {
@@ -446,6 +552,10 @@
             font-size: 1rem;
         }
 
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
         /* Loading and Status */
         .loading {
             display: flex;
@@ -492,12 +602,42 @@
             .bottom-section {
                 grid-template-columns: 1fr;
             }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .game-status {
+                font-size: 0.8rem;
+            }
         }
 
         /* Hidden elements */
         .hidden {
             display: none !important;
         }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success { border-left: 4px solid #27ae60; }
+        .toast.error { border-left: 4px solid #e74c3c; }
+        .toast.warning { border-left: 4px solid #f39c12; }
     </style>
 </head>
 <body>
@@ -608,6 +748,13 @@
             </button>
         </div>
 
+        <!-- Start Game Button (for host) -->
+        <div id="hostControls" class="game-controls hidden">
+            <button class="control-button primary" id="startGameBtn" onclick="startGame()">
+                🚀 Start Game
+            </button>
+        </div>
+
         <!-- Bottom Section -->
         <div class="bottom-section">
             <div class="chat-section">
@@ -652,9 +799,15 @@
         let localAudioTrack = null;
         let remoteUsers = {};
 
+        // Production optimizations
+        let updateTimeout = null;
+        let lastGameState = null;
+
         // Utility functions
         function log(message) {
-            console.log(`[${new Date().toLocaleTimeString()}] ${message}`);
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            console.log(logMessage);
             addGameMessage(message);
         }
 
@@ -665,6 +818,11 @@
                 messageDiv.textContent = message;
                 gameMessages.appendChild(messageDiv);
                 gameMessages.scrollTop = gameMessages.scrollHeight;
+                
+                // Cleanup old messages for performance
+                while (gameMessages.children.length > 100) {
+                    gameMessages.removeChild(gameMessages.firstChild);
+                }
             }
         }
 
@@ -675,7 +833,25 @@
                 messageDiv.innerHTML = `<strong>${playerName}:</strong> ${message}`;
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Cleanup old messages for performance
+                while (chatMessages.children.length > 50) {
+                    chatMessages.removeChild(chatMessages.firstChild);
+                }
             }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
         }
 
         // Menu navigation
@@ -687,7 +863,6 @@
         function showQuickMatch() {
             document.querySelectorAll('.menu-screen').forEach(el => el.classList.add('hidden'));
             document.getElementById('quick-match').classList.remove('hidden');
-            // Start quick match logic
             connectToServer();
             setTimeout(() => {
                 createPublicGame();
@@ -709,10 +884,22 @@
             document.getElementById('gameContent').classList.remove('hidden');
         }
 
-        // Server connection
+        // Server connection with production error handling
         function connectToServer() {
+            if (socket && socket.connected) {
+                return; // Already connected
+            }
+
             log('🔄 Attempting to connect to server...');
-            socket = io();
+            
+            socket = io({
+                transports: ['websocket', 'polling'],
+                timeout: 20000,
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionAttempts: 5,
+                maxReconnectionAttempts: 10
+            });
             
             socket.on('connect', () => {
                 log('✅ Connected to server! Transport: ' + socket.io.engine.transport.name);
@@ -722,15 +909,25 @@
                 playerId = socket.id;
             });
 
-            socket.on('disconnect', () => {
-                log('❌ Disconnected from server');
+            socket.on('disconnect', (reason) => {
+                log(`❌ Disconnected from server: ${reason}`);
                 document.getElementById('connectionStatus').innerHTML = '🔴 Disconnected';
+                
+                // Cleanup video on disconnect
+                if (isVideoJoined) {
+                    leaveVideoCall().catch(console.error);
+                }
+            });
+
+            socket.on('connect_error', (error) => {
+                log(`❌ Connection error: ${error.message}`);
+                showToast('Connection failed. Retrying...', 'error');
             });
 
             setupSocketEvents();
         }
 
-        // Socket event handlers
+        // Socket event handlers with production optimizations
         function setupSocketEvents() {
             socket.on('public-game-created', function(data) {
                 log('🎮 Public game created! Waiting for players...');
@@ -738,6 +935,7 @@
                 showGameContent();
                 updateGameDisplay();
                 updatePersonalTable();
+                showHostControls();
             });
 
             socket.on('game-created', function(data) {
@@ -746,6 +944,11 @@
                 showGameContent();
                 updateGameDisplay();
                 updatePersonalTable();
+                showHostControls();
+                
+                if (data.friendCode) {
+                    showToast(`Game Code: ${data.friendCode}`, 'success');
+                }
             });
 
             socket.on('game-joined', function(data) {
@@ -757,10 +960,15 @@
                 showGameContent();
                 updateGameDisplay();
                 updatePersonalTable();
+                
+                // Show host controls if you're the host
+                if (currentGame.hostId === playerId) {
+                    showHostControls();
+                }
             });
 
             socket.on('player-joined', function(data) {
-                log(`👋 Player joined: ${data.playerName}`);
+                log(`👋 Player joined: ${data.newPlayer?.name || 'Unknown'}`);
                 currentGame = data.game;
                 updateGameDisplay();
                 updatePersonalTable();
@@ -769,31 +977,33 @@
             socket.on('game-started', function(data) {
                 log('🎮 Game started!');
                 currentGame = data.game;
+                hideHostControls();
                 updateGameDisplay();
                 updatePersonalTable();
                 
-                // Start video call
+                // Initialize video after game starts
                 setTimeout(() => {
                     initializeVideoCall();
                 }, 1000);
             });
 
             socket.on('trade-completed', function(data) {
-                log(`🔄 ${data.player1} and ${data.player2} traded cards`);
+                log(`🔄 Cards traded between players`);
                 currentGame = data.game;
                 updateGameDisplay();
                 updatePersonalTable();
+                showToast('Trade completed!', 'success');
             });
 
             socket.on('turn-skipped', function(data) {
-                log(`⏭️ ${data.playerName} kept their card`);
+                log(`⏭️ ${data.playerName || 'Player'} kept their card`);
                 currentGame = data.game;
                 updateGameDisplay();
                 updatePersonalTable();
             });
 
             socket.on('card-flipped', function(data) {
-                log(`🎴 ${data.playerName} flipped their card`);
+                log(`🎴 ${data.playerName || 'Player'} flipped their card`);
                 currentGame = data.game;
                 updateGameDisplay();
                 updatePersonalTable();
@@ -814,26 +1024,40 @@
             });
 
             socket.on('round-ended', function(data) {
-                log(`🏁 Round ${data.round} ended. Losers: ${data.losers.join(', ')}`);
+                log(`🏁 Round ${data.result?.round || ''} ended`);
                 currentGame = data.game;
                 updateGameDisplay();
                 updatePersonalTable();
+                
+                if (data.result?.losers) {
+                    const losers = data.result.losers.map(l => l.name).join(', ');
+                    showToast(`Losers: ${losers}`, 'warning');
+                }
             });
 
             socket.on('game-finished', function(data) {
-                log(`🎉 Game finished! Winner: ${data.winner}`);
+                log(`🎉 Game finished!`);
                 currentGame = data.game;
                 updateGameDisplay();
                 updatePersonalTable();
+                
+                if (data.winner) {
+                    showToast(`Winner: ${data.winner.name}!`, 'success');
+                }
+                
+                // Cleanup video
+                setTimeout(() => {
+                    leaveVideoCall().catch(console.error);
+                }, 5000);
             });
 
             socket.on('chat-message', function(data) {
-                addChatMessage(data.playerName, data.message);
+                addChatMessage(data.playerName || 'Unknown', data.message);
             });
 
             socket.on('error', function(data) {
                 log(`❌ Error: ${data.message}`);
-                alert(data.message);
+                showToast(data.message, 'error');
             });
         }
 
@@ -845,6 +1069,8 @@
                 return;
             }
 
+            playerName = document.getElementById('playerName').value.trim() || 'Player';
+
             const settings = {
                 startingLives: 3,
                 deckCount: 1,
@@ -854,6 +1080,8 @@
 
             socket.emit('create-public-game', {
                 playerName: playerName,
+                userId: socket.id,
+                token: `demo_token_${socket.id}`,
                 settings: settings
             });
         }
@@ -865,6 +1093,8 @@
                 return;
             }
 
+            playerName = document.getElementById('playerName').value.trim() || 'Player';
+
             const settings = {
                 startingLives: parseInt(document.getElementById('startingLives').value),
                 deckCount: parseInt(document.getElementById('deckCount').value),
@@ -874,14 +1104,16 @@
 
             socket.emit('create-private-game', {
                 playerName: playerName,
+                userId: socket.id,
+                token: `demo_token_${socket.id}`,
                 settings: settings
             });
         }
 
         function joinGame() {
-            const gameCode = document.getElementById('gameCode').value.toUpperCase();
+            const gameCode = document.getElementById('gameCode').value.trim().toUpperCase();
             if (!gameCode) {
-                alert('Please enter a game code');
+                showToast('Please enter a game code', 'error');
                 return;
             }
 
@@ -891,19 +1123,36 @@
                 return;
             }
 
+            playerName = document.getElementById('playerName').value.trim() || 'Player';
+
             socket.emit('join-game', {
                 gameCode: gameCode,
-                playerName: playerName
+                playerName: playerName,
+                userId: socket.id,
+                token: `demo_token_${socket.id}`
             });
         }
 
-        // Game display updates
+        // Game display updates with production optimizations
         function updateGameDisplay() {
+            if (!currentGame) return;
+
+            // Throttle updates for performance
+            if (updateTimeout) {
+                clearTimeout(updateTimeout);
+            }
+            
+            updateTimeout = setTimeout(() => {
+                performGameDisplayUpdate();
+            }, 50);
+        }
+
+        function performGameDisplayUpdate() {
             if (!currentGame) return;
 
             // Update header
             document.getElementById('gameCode').innerHTML = `Game: <strong>${currentGame.gameCode || 'UNKNOWN'}</strong>`;
-            document.getElementById('playerCount').innerHTML = `Players: <strong>${currentGame.players.length}/${currentGame.maxPlayers || 8}</strong>`;
+            document.getElementById('playerCount').innerHTML = `Players: <strong>${currentGame.players?.length || 0}/${currentGame.maxPlayers || 8}</strong>`;
 
             // Update button states
             updateButtonStates();
@@ -912,25 +1161,42 @@
         function updateButtonStates() {
             if (!currentGame) return;
 
-            const myPlayer = currentGame.players.find(p => p.id === playerId);
+            const myPlayer = currentGame.players?.find(p => p.id === playerId);
             const isMyTurn = currentGame.currentPlayerIndex !== undefined && 
-                           currentGame.players[currentGame.currentPlayerIndex]?.id === playerId;
-            const gameStarted = currentGame.status === 'playing';
+                           currentGame.players?.[currentGame.currentPlayerIndex]?.id === playerId;
+            const gameStarted = currentGame.state === 'playing';
+            const canEndRound = gameStarted && currentGame.turnPhase === 'revealing';
 
-            document.getElementById('flipCardBtn').disabled = !isMyTurn || !gameStarted;
-            document.getElementById('keepCardBtn').disabled = !isMyTurn || !gameStarted;
-            document.getElementById('endRoundBtn').disabled = !isMyTurn || !gameStarted;
+            const flipBtn = document.getElementById('flipCardBtn');
+            const keepBtn = document.getElementById('keepCardBtn');
+            const endBtn = document.getElementById('endRoundBtn');
+
+            if (flipBtn) flipBtn.disabled = !gameStarted || !myPlayer?.card;
+            if (keepBtn) keepBtn.disabled = !isMyTurn || !gameStarted;
+            if (endBtn) endBtn.disabled = !canEndRound;
         }
 
-        // Personal Table management
+        function showHostControls() {
+            if (currentGame?.hostId === playerId && currentGame?.state === 'waiting') {
+                document.getElementById('hostControls')?.classList.remove('hidden');
+            }
+        }
+
+        function hideHostControls() {
+            document.getElementById('hostControls')?.classList.add('hidden');
+        }
+
+        // Personal Table management with production optimizations
         function updatePersonalTable() {
-            if (!currentGame || !currentGame.players) return;
+            if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
 
             // Calculate player positions and roles
             const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
             if (myPlayerIndex === -1) return;
 
             const playerCount = currentGame.players.length;
+            if (playerCount < 2) return;
+
             const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
             const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
             const currentTurnIndex = currentGame.currentPlayerIndex || 0;
@@ -960,6 +1226,8 @@
 
         function renderPersonalTable() {
             const focusGrid = document.getElementById('focusGrid');
+            if (!focusGrid) return;
+            
             focusGrid.innerHTML = '';
 
             // Left neighbor
@@ -985,7 +1253,13 @@
 
         function createFocusSlot(type, player, removable) {
             const slot = document.createElement('div');
-            slot.className = `focus-slot ${type}`;
+            let slotClasses = `focus-slot ${type}`;
+            
+            if (player?.isDealer) {
+                slotClasses += ' dealer';
+            }
+            
+            slot.className = slotClasses;
 
             if (!player) {
                 slot.classList.add('empty');
@@ -999,13 +1273,24 @@
             // Video container
             const videoContainer = document.createElement('div');
             videoContainer.className = 'video-container';
-            videoContainer.innerHTML = `<div class="video-element" id="video-${player.id}"></div>`;
+            const videoElement = document.createElement('div');
+            videoElement.className = 'video-element';
+            videoElement.id = `video-${player.id}`;
+            
+            // Add placeholder content
+            const placeholder = document.createElement('div');
+            placeholder.className = 'video-placeholder';
+            placeholder.textContent = '📹';
+            videoElement.appendChild(placeholder);
+            
+            videoContainer.appendChild(videoElement);
 
             // Player info
             const playerInfo = document.createElement('div');
             playerInfo.className = 'player-info';
+            const dealerText = player.isDealer ? ' (Dealer)' : '';
             playerInfo.innerHTML = `
-                <span class="player-name">${player.name}${player.isDealer ? ' (Dealer)' : ''}</span>
+                <span class="player-name">${player.name}${dealerText}</span>
                 <span class="player-lives">❤️ ${player.lives || 3}</span>
             `;
 
@@ -1013,13 +1298,20 @@
             const cardDisplay = document.createElement('div');
             cardDisplay.className = 'card-display';
             
-            if (player.currentCard && player.currentCard.revealed) {
+            if (player.currentCard && player.cardRevealed) {
                 const card = player.currentCard;
-                cardDisplay.className += card.suit === '♥' || card.suit === '♦' ? ' red' : ' black';
+                cardDisplay.className += card.suit === '♥' || card.suit === '♦' ? ' red revealed' : ' black revealed';
                 cardDisplay.textContent = `${card.value}${card.suit}`;
-            } else {
+            } else if (player.card && player.cardRevealed) {
+                const card = player.card;
+                cardDisplay.className += card.suit === '♥' || card.suit === '♦' ? ' red revealed' : ' black revealed';
+                cardDisplay.textContent = `${card.value}${card.suit}`;
+            } else if (player.card || player.currentCard) {
                 cardDisplay.className += ' face-down';
                 cardDisplay.textContent = '🂠';
+                cardDisplay.onclick = () => flipCard();
+            } else {
+                cardDisplay.textContent = 'No Card';
             }
 
             slot.appendChild(videoContainer);
@@ -1029,7 +1321,7 @@
             // Action button for right neighbor
             if (type === 'right-neighbor' && canTradeWith(player)) {
                 const actionBtn = document.createElement('button');
-                actionBtn.className = 'action-button';
+                actionBtn.className = 'action-button trade';
                 actionBtn.textContent = 'Trade →';
                 actionBtn.onclick = () => requestTrade(player.id);
                 slot.appendChild(actionBtn);
@@ -1040,7 +1332,10 @@
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-button';
                 removeBtn.textContent = '×';
-                removeBtn.onclick = () => removeFromFocus(player.id);
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeFromFocus(player.id);
+                };
                 slot.appendChild(removeBtn);
             }
 
@@ -1049,37 +1344,70 @@
 
         function canTradeWith(player) {
             if (!currentGame) return false;
-            const myPlayer = currentGame.players.find(p => p.id === playerId);
+            const myPlayer = currentGame.players?.find(p => p.id === playerId);
             const isMyTurn = currentGame.currentPlayerIndex !== undefined && 
-                           currentGame.players[currentGame.currentPlayerIndex]?.id === playerId;
-            return isMyTurn && player.lives > 0;
+                           currentGame.players?.[currentGame.currentPlayerIndex]?.id === playerId;
+            return isMyTurn && player.lives > 0 && currentGame.state === 'playing';
         }
 
         function renderAvailablePlayers() {
             const playersScroll = document.getElementById('playersScroll');
+            if (!playersScroll) return;
+            
             playersScroll.innerHTML = '';
 
             if (!currentGame || !currentGame.players) return;
 
             currentGame.players.forEach(player => {
                 const playerDiv = document.createElement('div');
-                playerDiv.className = 'available-player';
+                let playerClasses = 'available-player';
                 
                 if (isPlayerInFocus(player.id)) {
-                    playerDiv.classList.add('focused');
+                    playerClasses += ' focused';
+                }
+                
+                if (currentGame.currentPlayerIndex !== undefined && 
+                    currentGame.players[currentGame.currentPlayerIndex]?.id === player.id) {
+                    playerClasses += ' current-turn';
+                }
+                
+                if (player.isDealer) {
+                    playerClasses += ' dealer';
+                }
+                
+                playerDiv.className = playerClasses;
+                
+                if (isPlayerInFocus(player.id)) {
                     const checkMark = document.createElement('div');
                     checkMark.className = 'check-mark';
                     checkMark.textContent = '✓';
                     playerDiv.appendChild(checkMark);
                 }
 
-                playerDiv.innerHTML += `
-                    <div class="player-name">${player.name}</div>
-                    <div class="mini-card ${player.currentCard && player.currentCard.revealed ? '' : 'face-down'}">
-                        ${player.currentCard && player.currentCard.revealed ? 
-                          `${player.currentCard.value}${player.currentCard.suit}` : '🂠'}
-                    </div>
-                `;
+                const playerName = document.createElement('div');
+                playerName.className = 'player-name';
+                playerName.textContent = player.name;
+                playerDiv.appendChild(playerName);
+
+                const miniCard = document.createElement('div');
+                miniCard.className = 'mini-card';
+                
+                const card = player.currentCard || player.card;
+                if (card && player.cardRevealed) {
+                    miniCard.className += card.suit === '♥' || card.suit === '♦' ? ' red' : ' black';
+                    miniCard.textContent = `${card.value}${card.suit}`;
+                } else if (card) {
+                    miniCard.className += ' face-down';
+                    miniCard.textContent = '🂠';
+                } else {
+                    miniCard.textContent = '—';
+                }
+                playerDiv.appendChild(miniCard);
+
+                const miniLives = document.createElement('div');
+                miniLives.className = 'mini-lives';
+                miniLives.textContent = `❤️ ${player.lives || 3}`;
+                playerDiv.appendChild(miniLives);
 
                 playerDiv.onclick = () => addToFocus(player);
                 playersScroll.appendChild(playerDiv);
@@ -1101,7 +1429,7 @@
             renderPersonalTable();
             renderAvailablePlayers();
             
-            // Try to start video for this player
+            // Try to initialize video for this player
             setTimeout(() => {
                 initializeVideoForPlayer(player.id);
             }, 100);
@@ -1119,10 +1447,30 @@
         }
 
         // Game actions
+        function startGame() {
+            if (!socket || !currentGame) {
+                showToast('Game not ready', 'error');
+                return;
+            }
+            
+            if (currentGame.hostId !== playerId) {
+                showToast('Only the host can start the game', 'error');
+                return;
+            }
+
+            const settings = {
+                startingLives: 3,
+                deckCount: 1
+            };
+
+            socket.emit('start-game', { settings });
+            log('🚀 Starting game...');
+        }
+
         function flipCard() {
             if (!socket || !currentGame) return;
             socket.emit('flip-card');
-            log('🎴 Attempting to flip your card...');
+            log('🎴 Flipping your card...');
         }
 
         function keepCard() {
@@ -1134,7 +1482,7 @@
         function requestTrade(targetPlayerId) {
             if (!socket || !currentGame) return;
             socket.emit('request-trade', { targetPlayerId });
-            log(`🔄 Requesting trade with player ${targetPlayerId}`);
+            log(`🔄 Requesting trade with player`);
         }
 
         function endRound() {
@@ -1148,8 +1496,18 @@
                 if (socket) {
                     socket.emit('leave-game');
                 }
-                leaveVideoCall();
+                leaveVideoCall().catch(console.error);
                 showMainMenu();
+                
+                // Cleanup
+                currentGame = null;
+                focusedPlayers = {
+                    leftNeighbor: null,
+                    currentTurn: null,
+                    rightNeighbor: null,
+                    custom1: null,
+                    custom2: null
+                };
             }
         }
 
@@ -1164,7 +1522,7 @@
             }
         }
 
-        // Video integration
+        // Video integration with production optimizations
         function initializeVideoCall() {
             if (isVideoJoined) return;
 
@@ -1182,6 +1540,7 @@
                 joinVideoChannel();
             } catch (error) {
                 log(`❌ Error initializing video: ${error.message}`);
+                // Continue without video
             }
         }
 
@@ -1192,64 +1551,77 @@
                 const appId = 'cfef8101dcc14802a8f97d8805b3ebc9';
 
                 log(`📹 Attempting to join channel: ${channelName}`);
-                log(`📹 Using UNIQUE UID: ${uid}`);
-                log(`📹 App ID: ${appId}`);
 
                 await agoraClient.join(appId, channelName, null, uid);
-                log('📹 Successfully joined channel with token!');
+                log('📹 Successfully joined channel');
 
                 // Create local tracks
-                log('📹 Requesting camera access...');
-                localVideoTrack = await AgoraRTC.createCameraVideoTrack();
-                log('📹 Camera access granted!');
+                try {
+                    localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+                    localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                    log('📹 Media tracks created');
 
-                log('📹 Requesting microphone access...');
-                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-                log('📹 Microphone access granted!');
+                    // Play local video
+                    const myVideoElement = document.getElementById(`video-${playerId}`);
+                    if (myVideoElement && localVideoTrack) {
+                        localVideoTrack.play(myVideoElement);
+                        // Remove placeholder
+                        const placeholder = myVideoElement.querySelector('.video-placeholder');
+                        if (placeholder) placeholder.remove();
+                    }
 
-                // Play local video
-                const myVideoElement = document.getElementById(`video-${playerId}`);
-                if (myVideoElement) {
-                    localVideoTrack.play(myVideoElement);
-                    log('📹 Local video added to UI');
+                    // Publish tracks
+                    await agoraClient.publish([localVideoTrack, localAudioTrack]);
+                    log('📹 Tracks published successfully');
+
+                    isVideoJoined = true;
+                    log('📹 Video call started successfully');
+
+                } catch (mediaError) {
+                    log(`❌ Media error: ${mediaError.message}`);
+                    // Continue without local video/audio
                 }
-
-                // Publish tracks
-                log('📹 Publishing video/audio tracks...');
-                await agoraClient.publish([localVideoTrack, localAudioTrack]);
-                log('📹 Tracks published successfully!');
-
-                isVideoJoined = true;
-                log('📹 Video call started successfully!');
 
             } catch (error) {
                 log(`❌ Error joining video channel: ${error.message}`);
+                // Continue without video
             }
         }
 
         async function handleUserPublished(user, mediaType) {
-            log(`🔊 ${user.uid} started ${mediaType}`);
+            log(`📹 ${user.uid} started ${mediaType}`);
             
-            await agoraClient.subscribe(user, mediaType);
-            
-            if (mediaType === 'video') {
-                const videoElement = document.getElementById(`video-${user.uid}`);
-                if (videoElement) {
-                    user.videoTrack.play(videoElement);
-                    log(`📹 Playing video for user ${user.uid}`);
+            try {
+                await agoraClient.subscribe(user, mediaType);
+                
+                if (mediaType === 'video') {
+                    const videoElement = document.getElementById(`video-${user.uid}`);
+                    if (videoElement && user.videoTrack) {
+                        user.videoTrack.play(videoElement);
+                        // Remove placeholder
+                        const placeholder = videoElement.querySelector('.video-placeholder');
+                        if (placeholder) placeholder.remove();
+                    }
                 }
+                
+                remoteUsers[user.uid] = user;
+            } catch (error) {
+                log(`❌ Error handling user published: ${error.message}`);
             }
-            
-            remoteUsers[user.uid] = user;
         }
 
         function handleUserUnpublished(user, mediaType) {
-            log(`🔇 ${user.uid} stopped ${mediaType}`);
+            log(`📹 ${user.uid} stopped ${mediaType}`);
             
             if (mediaType === 'video') {
                 const videoElement = document.getElementById(`video-${user.uid}`);
                 if (videoElement) {
+                    // Add placeholder back
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'video-placeholder';
+                    placeholder.textContent = '📹';
                     videoElement.innerHTML = '';
+                    videoElement.appendChild(placeholder);
                 }
             }
         }
@@ -1257,6 +1629,16 @@
         function handleUserLeft(user) {
             log(`👋 ${user.uid} left video call`);
             delete remoteUsers[user.uid];
+            
+            const videoElement = document.getElementById(`video-${user.uid}`);
+            if (videoElement) {
+                // Add placeholder back
+                const placeholder = document.createElement('div');
+                placeholder.className = 'video-placeholder';
+                placeholder.textContent = '📹';
+                videoElement.innerHTML = '';
+                videoElement.appendChild(placeholder);
+            }
         }
 
         function initializeVideoForPlayer(playerId) {
@@ -1265,7 +1647,9 @@
                 const videoElement = document.getElementById(`video-${playerId}`);
                 if (videoElement) {
                     remoteUser.videoTrack.play(videoElement);
-                    log(`📹 Initialized video for player ${playerId}`);
+                    // Remove placeholder
+                    const placeholder = videoElement.querySelector('.video-placeholder');
+                    if (placeholder) placeholder.remove();
                 }
             }
         }
@@ -1312,7 +1696,45 @@
                     }
                 });
             }
+
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', () => {
+                if (socket) {
+                    socket.disconnect();
+                }
+                if (isVideoJoined) {
+                    leaveVideoCall().catch(console.error);
+                }
+            });
         });
+
+        // Production optimizations
+        // Throttle resize events
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                updatePersonalTable();
+            }, 250);
+        });
+
+        // Memory cleanup
+        setInterval(() => {
+            // Cleanup old log messages
+            const gameMessages = document.getElementById('gameMessages');
+            if (gameMessages && gameMessages.children.length > 100) {
+                while (gameMessages.children.length > 50) {
+                    gameMessages.removeChild(gameMessages.firstChild);
+                }
+            }
+            
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages && chatMessages.children.length > 50) {
+                while (chatMessages.children.length > 25) {
+                    chatMessages.removeChild(chatMessages.firstChild);
+                }
+            }
+        }, 30000); // Clean up every 30 seconds
     </script>
 </body>
 </html>

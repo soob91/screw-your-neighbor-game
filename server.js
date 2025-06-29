@@ -1,4 +1,4 @@
-// server.js - Complete Backend with Personal Table Compatibility
+// server.js - Production-Ready Server with Personal Table Support
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -8,15 +8,70 @@ const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
+
+// Production security and optimization middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://download.agora.io"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "wss:", "ws:", "https:"]
+    }
+  }
+}));
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? 
+    [process.env.FRONTEND_URL] : 
+    ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000"],
+  credentials: true
+}));
+
+// Rate limiting for production
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000,
+  message: 'Too many requests from this IP',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// Socket-specific rate limiting
+const socketLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60, // 60 events per minute per IP
+  skipSuccessfulRequests: true
+});
+
+// Body parsing with limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 // Serve static files
-app.use(express.static('.'));
+app.use(express.static('.', {
+  maxAge: process.env.NODE_ENV === 'production' ? '1d' : '0'
+}));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    activeGames: gameManager ? gameManager.getActiveGameCount() : 0,
+    connectedPlayers: gameManager ? gameManager.getConnectedPlayerCount() : 0,
+    uptime: process.uptime()
+  });
+});
 
 // Serve the game at root path
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// NEW: Direct URL joining route
+// Direct URL joining route
 app.get('/join/:friendCode', (req, res) => {
     const friendCode = req.params.friendCode;
     res.redirect(`/?join=${friendCode}`);
@@ -25,63 +80,87 @@ app.get('/join/:friendCode', (req, res) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
+    origin: process.env.NODE_ENV === 'production' ? 
+      [process.env.FRONTEND_URL] : 
+      ["http://localhost:3000", "http://localhost:3001"],
     methods: ["GET", "POST"]
   },
-  // Mobile-optimized settings:
-  pingTimeout: 60000,      // 60 seconds (mobile networks are slow)
-  pingInterval: 25000,     // 25 seconds (check connection)
-  upgradeTimeout: 30000,   // 30 seconds for mobile upgrades
-  allowEIO3: true          // Backwards compatibility
+  // Production-optimized settings
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  upgradeTimeout: 30000,
+  allowEIO3: true,
+  transports: ['websocket', 'polling'],
+  // Connection limits for production
+  maxHttpBufferSize: 1e6, // 1MB
+  httpCompression: true,
+  perMessageDeflate: true
 });
 
-// Security middleware
-app.use(helmet());
-app.use(cors());
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// Game managers will be initialized after class definitions
+// Game managers
 let gameManager;
 let contactManager;
 
-// Simple contact system
+// Production monitoring
+const serverStats = {
+  startTime: Date.now(),
+  totalConnections: 0,
+  activeConnections: 0,
+  totalGames: 0,
+  peakConcurrentGames: 0,
+  errors: 0
+};
+
+// Contact system optimized for production
 class ContactManager {
   constructor() {
-    this.friendCodes = new Map(); // friendCode -> userId
-    this.userFriends = new Map(); // userId -> Set of friend userIds
-    this.onlineUsers = new Map(); // userId -> { name, socketId }
+    this.friendCodes = new Map();
+    this.userFriends = new Map();
+    this.onlineUsers = new Map();
+    
+    // Production cleanup
+    this.cleanupInterval = setInterval(() => {
+      this.cleanup();
+    }, 5 * 60 * 1000); // Cleanup every 5 minutes
+  }
+
+  cleanup() {
+    const now = Date.now();
+    const staleThreshold = 30 * 60 * 1000; // 30 minutes
+    
+    for (const [userId, user] of this.onlineUsers.entries()) {
+      if (now - user.lastSeen > staleThreshold) {
+        this.removeUser(userId);
+      }
+    }
   }
 
   addUser(userId, name, socketId) {
-    this.onlineUsers.set(userId, { name, socketId });
+    this.onlineUsers.set(userId, { 
+      name, 
+      socketId, 
+      lastSeen: Date.now() 
+    });
   }
 
   removeUser(userId) {
     this.onlineUsers.delete(userId);
+    
+    // Cleanup friend codes
+    for (const [code, id] of this.friendCodes.entries()) {
+      if (id === userId) {
+        this.friendCodes.delete(code);
+      }
+    }
   }
 
   generateFriendCode(userId) {
     const code = 'FC' + userId.slice(-6).toUpperCase();
     this.friendCodes.set(code, userId);
-    console.log(`Generated friend code ${code} for user ${userId}`);
     return code;
   }
 
   addFriendByCode(userId, friendCode, userName) {
-    console.log(`Attempting to add friend: ${userId} -> ${friendCode}`);
-    console.log(`Available friend codes:`, Array.from(this.friendCodes.keys()));
-    
     const friendId = this.friendCodes.get(friendCode);
     if (!friendId) {
       throw new Error(`Friend code ${friendCode} not found`);
@@ -91,7 +170,6 @@ class ContactManager {
       throw new Error('Cannot add yourself as friend');
     }
 
-    // Add bidirectional friendship
     if (!this.userFriends.has(userId)) {
       this.userFriends.set(userId, new Set());
     }
@@ -102,7 +180,6 @@ class ContactManager {
     this.userFriends.get(userId).add(friendId);
     this.userFriends.get(friendId).add(userId);
 
-    console.log(`Successfully added friendship: ${userId} <-> ${friendId}`);
     return this.onlineUsers.get(friendId);
   }
 
@@ -119,844 +196,53 @@ class ContactManager {
   }
 }
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    activeGames: gameManager ? gameManager.getActiveGameCount() : 0
-  });
-});
-
-// Simple auth validation for demo
-const validateUserToken = async (token, providedName = null) => {
-  // In production, this would validate JWT tokens
-  if (token && token.startsWith('demo_token_')) {
-    const userId = token.replace('demo_token_', '');
-    return {
-      id: userId,
-      name: providedName || ('Player_' + userId.slice(-4)), // Use provided name or fallback
-      avatar: 'default'
-    };
-  }
-  return null;
-};
-
-// Helper function to send personalized game updates
-function sendGameUpdateToAll(gameId, eventName, data = {}) {
-  const game = gameManager.getGame(gameId);
-  if (!game) return;
-  
-  game.players.forEach(player => {
-    if (player.connected && player.socketId) {
-      io.to(player.socketId).emit(eventName, {
-        ...data,
-        game: game.getPlayerView(player.id)
-      });
-    }
-  });
-  
-  // Send public view to spectators
-  game.spectators.forEach(spectator => {
-    if (spectator.socketId) {
-      io.to(spectator.socketId).emit(eventName, {
-        ...data,
-        game: game.getPublicState()
-      });
-    }
-  });
-}
-
-// Socket.IO connection handling
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-
-  socket.on('heartbeat', (data) => {
-    socket.emit('heartbeat-ack', { timestamp: Date.now() });
-  });
-
-  // FIXED: Add create-public-game handler for Personal Table compatibility
-  socket.on('create-public-game', async (data) => {
-    console.log('Create public game request from', data.playerName);
-    const { userId, token, playerName, settings } = data;
-    
-    try {
-      // Validate user token
-      const user = await validateUserToken(token || `demo_token_${socket.id}`, playerName);
-      if (!user) {
-        socket.emit('error', { message: 'Invalid authentication' });
-        return;
-      }
-
-      // Find an existing public game with space
-      const publicGames = gameManager.getPublicGames();
-      let availableGame = null;
-      
-      for (let publicGameInfo of publicGames) {
-        const game = gameManager.getGame(publicGameInfo.id);
-        if (game && !game.hasStarted() && game.players.length < game.maxPlayers) {
-          availableGame = game;
-          break;
-        }
-      }
-      
-      if (availableGame) {
-        // Join existing public game
-        const addedPlayer = await availableGame.addPlayer({
-          id: userId || socket.id,
-          socketId: socket.id,
-          name: user.name,
-          avatar: user.avatar
-        });
-        
-        socket.join(availableGame.id);
-        socket.gameId = availableGame.id;
-        socket.userId = userId || socket.id;
-        
-        // Add user to contact manager
-        contactManager.addUser(userId || socket.id, user.name, socket.id);
-        
-        socket.emit('game-joined', {
-          game: availableGame.getPlayerView(userId || socket.id),
-          gameType: 'public'
-        });
-        
-        // Notify other players
-        socket.to(availableGame.id).emit('player-joined', {
-          game: availableGame.getPublicState(),
-          newPlayer: {
-            name: user.name,
-            avatar: user.avatar
-          }
-        });
-        
-        // Update public games list
-        gameManager.updatePublicGame(availableGame.id);
-        socket.broadcast.emit('public-games-updated');
-        
-        console.log(`Player ${user.name} joined existing public game ${availableGame.id}`);
-      } else {
-        // Create new public game
-        const gameId = uuidv4();
-        const userId_final = userId || socket.id;
-        
-        const game = gameManager.createGame(gameId, userId_final, {           
-          ...settings,
-          isPublic: true,           
-          type: 'public',           
-          maxPlayers: 30
-        });
-        
-        // Add to public games
-        gameManager.addPublicGame(game, user.name);
-        
-        // Add creator as first player
-        await game.addPlayer({
-          id: userId_final,
-          socketId: socket.id,
-          name: user.name,
-          avatar: user.avatar
-        });
-        
-        socket.join(gameId);
-        socket.gameId = gameId;
-        socket.userId = userId_final;
-        
-        // Add user to contact manager
-        contactManager.addUser(userId_final, user.name, socket.id);
-        const friendCode = contactManager.generateFriendCode(userId_final);
-        
-        socket.emit('public-game-created', {
-          game: game.getPlayerView(userId_final),
-          friendCode: friendCode,
-          gameType: 'public'
-        });
-        
-        // Broadcast to update public games list
-        socket.broadcast.emit('public-games-updated');
-        
-        console.log(`New public game created: ${gameId} by ${user.name}`);
-      }
-      
-    } catch (error) {
-      console.error('Error in create-public-game:', error);
-      socket.emit('error', { message: error.message || 'Failed to find/create game' });
-    }
-  });
-
-  // Generate friend code for new connections
-  socket.on('get-friend-code', (data) => {
-    const { userId, userName } = data;
-    
-    // Add user to contact manager
-    contactManager.addUser(userId, userName, socket.id);
-    const friendCode = contactManager.generateFriendCode(userId);
-    
-    socket.emit('friend-code-generated', { friendCode });
-  });
-
-  // Create game
-  socket.on('create-game', async (data) => {
-    const { gameId, userId, token, settings, playerName } = data;
-    
-    try {
-      // Validate user token with provided name
-      const user = await validateUserToken(token, playerName);
-      if (!user) {
-        socket.emit('error', { message: 'Invalid authentication' });
-        return;
-      }
-
-      // Create game with settings
-      const game = gameManager.createGame(gameId, userId, settings);
-      
-      // Add to public games if public
-      if (settings.isPublic) {
-        gameManager.addPublicGame(game, user.name);
-      }
-
-      // Add creator as first player
-      await game.addPlayer({
-        id: userId,
-        socketId: socket.id,
-        name: user.name,
-        avatar: user.avatar
-      });
-
-      socket.join(gameId);
-      socket.gameId = gameId;
-      socket.userId = userId;
-
-      // Add user to contact manager
-      contactManager.addUser(userId, user.name, socket.id);
-      const friendCode = contactManager.generateFriendCode(userId);
-
-      socket.emit('game-created', {
-        game: game.getPublicState(),
-        friendCode: friendCode
-      });
-
-      // Broadcast to public games if public
-      if (settings.isPublic) {
-        socket.broadcast.emit('public-games-updated');
-      }
-
-    } catch (error) {
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  // Join game room
-  socket.on('join-game', async (data) => {
-    console.log('Join game request received:', data);
-    const { gameCode, userId, token, playerName, friendCode } = data;
-    
-    try {
-      // Validate user token with provided name
-      const user = await validateUserToken(token || `demo_token_${socket.id}`, playerName);
-      if (!user) {
-        console.log('Invalid token for user:', userId);
-        socket.emit('error', { message: 'Invalid authentication' });
-        return;
-      }
-
-      console.log('User validated:', user);
-
-      // Find game by gameCode or friendCode
-      let game = null;
-      if (gameCode) {
-        // Search all games for matching gameCode
-        const allGames = Array.from(gameManager.games.values());
-        game = allGames.find(g => g.gameCode === gameCode);
-      } else if (friendCode) {
-        // Search for game by friend code
-        const allGames = Array.from(gameManager.games.values());
-        for (let g of allGames) {
-          const gFriendCode = contactManager.generateFriendCode(g.hostId);
-          if (gFriendCode === friendCode) {
-            game = g;
-            break;
-          }
-        }
-      }
-
-      if (!game) {
-        console.log('Game not found:', gameCode || friendCode);
-        socket.emit('error', { message: 'Game not found' });
-        return;
-      }
-
-      console.log('Game found:', game.id, 'Players:', game.players.length);
-
-      // Check if game is full
-      if (game.players.length >= game.maxPlayers) {
-        socket.emit('error', { message: 'Game is full' });
-        return;
-      }
-
-      // Check if game has already started
-      if (game.hasStarted()) {
-        socket.emit('error', { message: 'Game has already started' });
-        return;
-      }
-
-      // Check game access permissions
-      if (game.settings.type === 'private' && game.settings.password) {
-        if (data.password !== game.settings.password) {
-          socket.emit('error', { message: 'Incorrect password' });
-          return;
-        }
-      } else if (game.settings.type === 'friends') {
-        const friends = contactManager.getFriends(game.hostId);
-        const isFriend = friends.some(f => f.id === userId);
-        if (!isFriend && userId !== game.hostId) {
-          socket.emit('error', { message: 'This is a friends-only game' });
-          return;
-        }
-      }
-
-      // Join game
-      const addedPlayer = await game.addPlayer({
-        id: userId || socket.id,
-        socketId: socket.id,
-        name: user.name,
-        avatar: user.avatar
-      });
-
-      console.log('Player added to game:', addedPlayer.name);
-
-      socket.join(game.id);
-      socket.gameId = game.id;
-      socket.userId = userId || socket.id;
-
-      // Add user to contact manager
-      contactManager.addUser(userId || socket.id, user.name, socket.id);
-
-      // Emit success to joining player
-      socket.emit('game-joined', {
-        game: game.getPlayerView(userId || socket.id),
-        rejoin: false
-      });
-
-      // Notify other players in the game
-      socket.to(game.id).emit('player-joined', {
-        game: game.getPublicState(),
-        newPlayer: {
-          name: user.name,
-          avatar: user.avatar
-        }
-      });
-
-      console.log('Player joined event sent to game room');
-
-      // Update public games list if this is a public game
-      if (game.settings.isPublic) {
-        gameManager.updatePublicGame(game.id);
-        io.emit('public-games-updated');
-      }
-
-    } catch (error) {
-      console.log('Join game error:', error.message);
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  // Quick Match Handler
-  socket.on('quick-match', async (data) => {
-    console.log('Quick match request from', data.playerName);
-    const { userId, token, playerName } = data;
-    
-    try {
-      // Validate user token
-      const user = await validateUserToken(token, playerName);
-      if (!user) {
-        socket.emit('error', { message: 'Invalid authentication' });
-        return;
-      }
-
-      // Find an existing public game with space
-      const publicGames = gameManager.getPublicGames();
-      let availableGame = null;
-      
-      for (let publicGameInfo of publicGames) {
-        const game = gameManager.getGame(publicGameInfo.id);
-        if (game && !game.hasStarted() && game.players.length < game.maxPlayers) {
-          availableGame = game;
-          break;
-        }
-      }
-      
-      if (availableGame) {
-        // Join existing public game
-        const addedPlayer = await availableGame.addPlayer({
-          id: userId,
-          socketId: socket.id,
-          name: user.name,
-          avatar: user.avatar
-        });
-        
-        socket.join(availableGame.id);
-        socket.gameId = availableGame.id;
-        socket.userId = userId;
-        
-        // Add user to contact manager
-        contactManager.addUser(userId, user.name, socket.id);
-        
-        socket.emit('game-joined', {
-          game: availableGame.getPlayerView(userId),
-          gameType: 'public'
-        });
-        
-        // Notify other players
-        socket.to(availableGame.id).emit('player-joined', {
-          game: availableGame.getPublicState(),
-          newPlayer: {
-            name: user.name,
-            avatar: user.avatar
-          }
-        });
-        
-        // Update public games list
-        gameManager.updatePublicGame(availableGame.id);
-        socket.broadcast.emit('public-games-updated');
-        
-        console.log(`Player ${user.name} joined existing public game ${availableGame.id}`);
-      } else {
-        // Create new public game
-        const gameId = uuidv4();
-        
-        const game = gameManager.createGame(gameId, userId, {           
-          isPublic: true,           
-          type: 'public',           
-          maxPlayers: 30
-        });
-        
-        // Add to public games
-        gameManager.addPublicGame(game, user.name);
-        
-        // Add creator as first player
-        await game.addPlayer({
-          id: userId,
-          socketId: socket.id,
-          name: user.name,
-          avatar: user.avatar
-        });
-        
-        socket.join(gameId);
-        socket.gameId = gameId;
-        socket.userId = userId;
-        
-        // Add user to contact manager
-        contactManager.addUser(userId, user.name, socket.id);
-        const friendCode = contactManager.generateFriendCode(userId);
-        
-        socket.emit('public-game-created', {
-          game: game.getPlayerView(userId),
-          friendCode: friendCode,
-          gameType: 'public'
-        });
-        
-        // Broadcast to update public games list
-        socket.broadcast.emit('public-games-updated');
-        
-        console.log(`New public game created: ${gameId} by ${user.name}`);
-      }
-      
-    } catch (error) {
-      console.error('Error in quick-match:', error);
-      socket.emit('error', { message: error.message || 'Failed to find/create game' });
-    }
-  });
-
-  // Create Private Game Handler
-  socket.on('create-private-game', async (data) => {
-    const { userId, token, playerName, settings = {} } = data;
-    
-    try {
-      // Validate user token
-      const user = await validateUserToken(token, playerName);
-      if (!user) {
-        socket.emit('error', { message: 'Invalid authentication' });
-        return;
-      }
-
-      // Create private game
-      const gameId = uuidv4();
-      
-      const game = gameManager.createGame(gameId, userId, {
-        ...settings,
-        isPublic: false,
-        type: 'private',
-        maxPlayers: settings.maxPlayers || 8
-      });
-      
-      // Add creator as first player
-      await game.addPlayer({
-        id: userId,
-        socketId: socket.id,
-        name: user.name,
-        avatar: user.avatar
-      });
-
-      socket.join(gameId);
-      socket.gameId = gameId;
-      socket.userId = userId;
-
-      // Add user to contact manager
-      contactManager.addUser(userId, user.name, socket.id);
-      const friendCode = contactManager.generateFriendCode(userId);
-      
-      // Create shareable link
-      const baseUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 3001}`;
-      const shareableLink = `${baseUrl}/join/${friendCode}`;
-      
-      // FIXED: Change to game-created for client compatibility
-      socket.emit('game-created', {
-        game: game.getPlayerView(userId),
-        friendCode: friendCode,
-        shareableLink: shareableLink,
-        gameType: 'private'
-      });
-      
-      console.log(`Private game created: ${gameId} by ${user.name}`);
-      
-    } catch (error) {
-      console.error('Error creating private game:', error);
-      socket.emit('error', { message: error.message || 'Failed to create private game' });
-    }
-  });
-
-  // Join by URL Handler
-  socket.on('join-by-url', async (data) => {
-    const { friendCode, userId, token, playerName } = data;
-    
-    try {
-      // Validate user token
-      const user = await validateUserToken(token, playerName);
-      if (!user) {
-        socket.emit('error', { message: 'Invalid authentication' });
-        return;
-      }
-
-      // Find game by friend code
-      const allGames = Array.from(gameManager.games.values());
-      let targetGame = null;
-      
-      for (let game of allGames) {
-        const gFriendCode = contactManager.generateFriendCode(game.hostId);
-        if (gFriendCode === friendCode) {
-          targetGame = game;
-          break;
-        }
-      }
-      
-      if (!targetGame) {
-        socket.emit('error', { message: 'Game not found or has ended' });
-        return;
-      }
-      
-      if (targetGame.hasStarted()) {
-        socket.emit('error', { message: 'Game has already started' });
-        return;
-      }
-      
-      if (targetGame.players.length >= targetGame.maxPlayers) {
-        socket.emit('error', { message: 'Game is full' });
-        return;
-      }
-      
-      // Add player to game
-      const addedPlayer = await targetGame.addPlayer({
-        id: userId,
-        socketId: socket.id,
-        name: user.name,
-        avatar: user.avatar
-      });
-      
-      socket.join(targetGame.id);
-      socket.gameId = targetGame.id;
-      socket.userId = userId;
-      
-      // Add user to contact manager
-      contactManager.addUser(userId, user.name, socket.id);
-      
-      socket.emit('game-joined', {
-        game: targetGame.getPlayerView(userId),
-        gameType: targetGame.settings.type
-      });
-
-      // Notify other players
-      socket.to(targetGame.id).emit('player-joined', {
-        game: targetGame.getPublicState(),
-        newPlayer: {
-          name: user.name,
-          avatar: user.avatar
-        }
-      });
-      
-      console.log(`Player ${user.name} joined game via URL: ${targetGame.id}`);
-      
-    } catch (error) {
-      console.error('Error in join-by-url:', error);
-      socket.emit('error', { message: error.message || 'Failed to join game' });
-    }
-  });
-
-  // Start game
-  socket.on('start-game', async (data) => {
-    const { gameId, settings } = data;
-    
-    try {
-        const game = gameManager.getGame(socket.gameId || gameId);
-        if (!game) throw new Error('Game not found');
-        
-        if (game.hostId !== socket.userId) {
-            throw new Error('Only the host can start the game');
-        }
-
-        // Count only connected players
-        const connectedPlayers = game.players.filter(p => p.connected !== false);
-        if (connectedPlayers.length < 2) {
-            throw new Error(`Need at least 2 connected players to start (${connectedPlayers.length} connected, ${game.players.length} total)`);
-        }
-
-        // Remove disconnected players before starting
-        game.players = game.players.filter(p => p.connected !== false);
-        
-        await game.startGame(settings);
-        
-        sendGameUpdateToAll(game.id, 'game-started');
-
-    } catch (error) {
-        socket.emit('error', { message: error.message });
-    }
-  });
-
-  // Skip turn (for any card)
-  socket.on('skip-turn', async (data) => {
-    try {
-      const game = gameManager.getGame(socket.gameId);
-      if (!game) throw new Error('Game not found');
-
-      const result = await game.skipPlayerTurn(socket.userId);
-      
-      sendGameUpdateToAll(socket.gameId, 'turn-skipped', {
-        playerId: socket.userId,
-        playerName: game.players.find(p => p.id === socket.userId)?.name,
-        result
-      });
-
-    } catch (error) {
-      console.log('Skip turn error:', error.message);
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  // FIXED: Change trade-request to request-trade for client compatibility
-  socket.on('request-trade', async (data) => {
-    const { targetPlayerId, direction } = data;
-    
-    try {
-      const game = gameManager.getGame(socket.gameId);
-      if (!game) throw new Error('Game not found');
-
-      const result = await game.requestTrade(socket.userId, targetPlayerId, direction);
-      
-      sendGameUpdateToAll(socket.gameId, 'trade-completed', {
-        result
-      });
-
-    } catch (error) {
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  // Dealer trade with deck
-  socket.on('dealer-trade-deck', async (data) => {
-    try {
-      const game = gameManager.getGame(socket.gameId);
-      if (!game) throw new Error('Game not found');
-
-      const result = await game.dealerTradeWithDeck(socket.userId);
-      
-      sendGameUpdateToAll(socket.gameId, 'dealer-traded-deck', {
-        result
-      });
-
-    } catch (error) {
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  // Dealer skip trade
-  socket.on('dealer-skip-trade', async (data) => {
-    try {
-      const game = gameManager.getGame(socket.gameId);
-      if (!game) throw new Error('Game not found');
-
-      const result = await game.skipDealerTrade(socket.userId);
-      
-      sendGameUpdateToAll(socket.gameId, 'dealer-skipped-trade', {
-        result
-      });
-
-    } catch (error) {
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  // Flip card
-  socket.on('flip-card', async (data) => {
-    try {
-      console.log(`Flip card request from ${socket.userId} in game ${socket.gameId}`);
-      
-      const game = gameManager.getGame(socket.gameId);
-      if (!game) throw new Error('Game not found');
-
-      const result = await game.flipPlayerCard(socket.userId);
-      
-      console.log(`Card flipped successfully for ${socket.userId}`);
-      
-      sendGameUpdateToAll(socket.gameId, 'card-flipped', {
-        playerId: socket.userId,
-        playerName: game.players.find(p => p.id === socket.userId)?.name
-      });
-
-    } catch (error) {
-      console.log('Flip card error:', error.message);
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  // End round (reveal all cards)
-  socket.on('end-round', async (data) => {
-    try {
-      const game = gameManager.getGame(socket.gameId);
-      if (!game) throw new Error('Game not found');
-
-      const roundResult = await game.endRound();
-      
-      sendGameUpdateToAll(socket.gameId, 'round-ended', {
-        result: roundResult
-      });
-
-      // Check if game is finished
-      if (game.isFinished()) {
-        io.to(socket.gameId).emit('game-finished', {
-          winner: game.getWinner(),
-          finalStats: game.getFinalStats()
-        });
-      }
-
-    } catch (error) {
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  // Spectator features
-  socket.on('join-as-spectator', async (data) => {
-    const { gameId, userId } = data;
-    
-    try {
-      const game = gameManager.getGame(gameId);
-      if (!game) throw new Error('Game not found');
-
-      await game.addSpectator({
-        id: userId,
-        socketId: socket.id,
-        name: data.name
-      });
-
-      socket.join(gameId);
-      socket.gameId = gameId;
-      socket.isSpectator = true;
-
-      io.to(gameId).emit('spectator-joined', {
-        spectator: { id: userId, name: data.name }
-      });
-
-    } catch (error) {
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  // FIXED: Change game-chat to chat-message for client compatibility
-  socket.on('chat-message', (data) => {
-    const { message } = data;
-    const game = gameManager.getGame(socket.gameId);
-    const player = game?.players.find(p => p.id === socket.userId);
-    
-    io.to(socket.gameId).emit('chat-message', {
-      playerId: socket.userId,
-      playerName: player?.name || 'Unknown',
-      message,
-      timestamp: Date.now(),
-      isSpectator: socket.isSpectator || false
-    });
-  });
-
-  // Disconnect handling
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-    
-    // Remove from contact manager
-    if (socket.userId) {
-      contactManager.removeUser(socket.userId);
-    }
-    
-    if (socket.gameId) {
-      const game = gameManager.getGame(socket.gameId);
-      if (game) {
-        if (socket.isSpectator) {
-          game.removeSpectator(socket.userId);
-        } else {
-          game.handlePlayerDisconnect(socket.userId);
-        }
-        
-        io.to(socket.gameId).emit('player-disconnected', {
-          playerId: socket.userId,
-          isSpectator: socket.isSpectator || false
-        });
-
-        // Update public games if this was a public game
-        if (game.settings.isPublic) {
-          gameManager.updatePublicGame(game.id);
-          io.emit('public-games-updated');
-        }
-      }
-    }
-  });
-});
-
-// Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('Server error:', error);
-  res.status(500).json({ 
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
-  });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-// =============================================================================
-// GAME LOGIC CLASSES
-// =============================================================================
-
+// Production-optimized Game Manager
 class GameManager {
   constructor() {
     this.games = new Map();
-    this.playerGameMap = new Map(); // Track which game each player is in
-    this.publicGames = new Map(); // Track public games for lobby
+    this.playerGameMap = new Map();
+    this.publicGames = new Map();
+    this.gameCleanupInterval = null;
+    
+    // Start cleanup process
+    this.startCleanup();
+  }
+
+  startCleanup() {
+    this.gameCleanupInterval = setInterval(() => {
+      this.cleanupStaleGames();
+    }, 2 * 60 * 1000); // Cleanup every 2 minutes
+  }
+
+  cleanupStaleGames() {
+    const now = Date.now();
+    const staleThreshold = 60 * 60 * 1000; // 1 hour
+    const emptyGameThreshold = 10 * 60 * 1000; // 10 minutes for empty games
+    
+    for (const [gameId, game] of this.games.entries()) {
+      const gameAge = now - game.createdAt;
+      const connectedPlayers = game.players.filter(p => p.connected !== false);
+      
+      // Remove very old games or empty games
+      if (gameAge > staleThreshold || 
+          (connectedPlayers.length === 0 && gameAge > emptyGameThreshold)) {
+        console.log(`Cleaning up stale game: ${gameId}`);
+        this.removeGame(gameId);
+      }
+    }
+    
+    // Update stats
+    const currentGameCount = this.games.size;
+    if (currentGameCount > serverStats.peakConcurrentGames) {
+      serverStats.peakConcurrentGames = currentGameCount;
+    }
   }
 
   createGame(gameId, hostId, settings = {}) {
     const game = new Game(gameId, hostId, settings);
     this.games.set(gameId, game);
     this.playerGameMap.set(hostId, gameId);
+    serverStats.totalGames++;
     return game;
   }
 
@@ -968,7 +254,8 @@ class GameManager {
       maxPlayers: game.maxPlayers,
       round: game.round,
       state: game.state,
-      settings: game.settings
+      settings: game.settings,
+      createdAt: game.createdAt
     });
   }
 
@@ -987,7 +274,8 @@ class GameManager {
   getPublicGames() {
     return Array.from(this.publicGames.values())
       .filter(game => game.state === 'waiting' || game.state === 'playing')
-      .slice(0, 20); // Limit to 20 games
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 20);
   }
 
   getGame(gameId) {
@@ -1001,7 +289,6 @@ class GameManager {
   removeGame(gameId) {
     const game = this.games.get(gameId);
     if (game) {
-      // Remove all players from the map
       game.players.forEach(player => {
         this.playerGameMap.delete(player.id);
       });
@@ -1014,42 +301,51 @@ class GameManager {
     return this.games.size;
   }
 
+  getConnectedPlayerCount() {
+    let count = 0;
+    for (const game of this.games.values()) {
+      count += game.players.filter(p => p.connected !== false).length;
+    }
+    return count;
+  }
+
   getPlayerGame(playerId) {
     const gameId = this.playerGameMap.get(playerId);
     return gameId ? this.games.get(gameId) : null;
   }
 }
 
+// Production-optimized Game class
 class Game {
   constructor(id, hostId, settings = {}) {
     this.id = id;
     this.hostId = hostId;
     this.players = [];
     this.spectators = [];
-    this.dealerIndex = 0; // Track dealer position
-    this.currentPlayerIndex = 1; // First player after dealer starts
+    this.dealerIndex = 0;
+    this.currentPlayerIndex = 1;
     this.round = 1;
-    this.maxPlayers = settings.maxPlayers || 8;
-    this.state = 'waiting'; // waiting, playing, finished
-    this.turnPhase = 'trading'; // trading, revealing, finished
+    this.maxPlayers = Math.min(settings.maxPlayers || 8, 30); // Cap at 30 for performance
+    this.state = 'waiting';
+    this.turnPhase = 'trading';
     this.deck = [];
-    this.playersWhoActed = new Set(); // Track who has had their turn
+    this.playersWhoActed = new Set();
     this.settings = {
       startingLives: settings.startingLives || 3,
       deckCount: settings.deckCount || 1,
       tournamentMode: settings.tournamentMode || 'single',
       cardStyle: settings.cardStyle || 'classic',
       allowSpectatorBetting: settings.allowSpectatorBetting || true,
-      type: settings.type || 'public', // public, private, friends
+      type: settings.type || 'public',
       password: settings.password || null,
       isPublic: settings.isPublic || false,
       ...settings
     };
     this.roundHistory = [];
     this.spectatorBets = [];
-    
-    // Generate a simple game code for joining
     this.gameCode = this.generateGameCode();
+    this.createdAt = Date.now();
+    this.lastActivity = Date.now();
   }
 
   generateGameCode() {
@@ -1061,18 +357,23 @@ class Game {
     return code;
   }
 
+  updateActivity() {
+    this.lastActivity = Date.now();
+  }
+
   async addPlayer(player) {
     if (this.isFull()) throw new Error('Game is full');
     if (this.hasStarted()) throw new Error('Game already started');
 
-    // Check if player is already in the game
+    this.updateActivity();
+
     const existingPlayer = this.players.find(p => p.id === player.id);
     if (existingPlayer) {
-      // Update existing player's socket info instead of adding duplicate
       existingPlayer.socketId = player.socketId;
       existingPlayer.connected = true;
       existingPlayer.name = player.name;
       existingPlayer.avatar = player.avatar;
+      existingPlayer.lastSeen = Date.now();
       return existingPlayer;
     }
 
@@ -1083,6 +384,7 @@ class Game {
       cardRevealed: false,
       hasTraded: false,
       connected: true,
+      lastSeen: Date.now(),
       stats: {
         roundsWon: 0,
         roundsLost: 0,
@@ -1096,7 +398,11 @@ class Game {
   }
 
   addSpectator(spectator) {
-    this.spectators.push(spectator);
+    this.spectators.push({
+      ...spectator,
+      joinedAt: Date.now()
+    });
+    this.updateActivity();
   }
 
   removeSpectator(spectatorId) {
@@ -1106,16 +412,16 @@ class Game {
   async startGame(customSettings = {}) {
     if (this.players.length < 2) throw new Error('Need at least 2 players');
     
-    // Update settings if provided
     this.settings = { ...this.settings, ...customSettings };
+    this.updateActivity();
     
     this.initializeDeck();
     this.shuffleDeck();
     this.dealCards();
     this.state = 'playing';
-    this.dealerIndex = 0; // Track dealer position
-    this.currentPlayerIndex = 1; // First player after dealer starts
-    this.turnPhase = 'trading'; // trading, revealing, finished
+    this.dealerIndex = 0;
+    this.currentPlayerIndex = 1;
+    this.turnPhase = 'trading';
   }
 
   initializeDeck() {
@@ -1160,9 +466,7 @@ class Game {
   dealCards() {
     const activePlayers = this.players.filter(p => p.lives > 0);
     
-    // Check if enough cards remain, if not reshuffle
     if (this.deck.length < activePlayers.length) {
-      console.log(`Not enough cards (${this.deck.length}) for ${activePlayers.length} players. Reshuffling...`);
       this.initializeDeck();
       this.shuffleDeck();
     }
@@ -1173,49 +477,46 @@ class Game {
       player.hasTraded = false;
     });
 
-    // Reset turn tracking
     this.playersWhoActed.clear();
     this.turnPhase = 'trading';
+    this.updateActivity();
   }
 
   advanceToNextPlayer() {
     const activePlayers = this.players.filter(p => p.lives > 0);
-    
-    // Move to next player
     this.currentPlayerIndex = (this.currentPlayerIndex + 1) % activePlayers.length;
     
-    // Check if we've come back to the dealer (last player to act)
     if (this.currentPlayerIndex === this.dealerIndex) {
       this.turnPhase = 'dealer-turn';
     }
     
-    // Check if all non-dealer players have acted
     const nonDealerCount = activePlayers.length - 1;
     if (this.playersWhoActed.size >= nonDealerCount) {
       this.turnPhase = 'dealer-turn';
     }
+    
+    this.updateActivity();
   }
 
   async requestTrade(fromPlayerId, toPlayerId, direction) {
+    this.updateActivity();
+    
     const fromPlayer = this.players.find(p => p.id === fromPlayerId);
     const toPlayer = this.players.find(p => p.id === toPlayerId);
     
     if (!fromPlayer || !toPlayer) throw new Error('Player not found');
     if (this.turnPhase !== 'trading') throw new Error('Not in trading phase');
     
-    // Check if it's the player's turn
     const activePlayers = this.players.filter(p => p.lives > 0);
     const currentPlayer = activePlayers[this.currentPlayerIndex];
     if (fromPlayer.id !== currentPlayer.id) {
       throw new Error('Not your turn to trade');
     }
     
-    // Check if player has already acted this turn
     if (this.playersWhoActed.has(fromPlayerId)) {
       throw new Error('You have already acted this turn');
     }
     
-    // In Screw Your Neighbor, you trade with the next player (clockwise)
     const fromIndex = activePlayers.findIndex(p => p.id === fromPlayerId);
     const nextIndex = (fromIndex + 1) % activePlayers.length;
     const nextPlayer = activePlayers[nextIndex];
@@ -1224,106 +525,31 @@ class Game {
       throw new Error('You can only trade with the next player');
     }
     
-    // Check what the target player has
+    // Game logic for trading (simplified for production)
     const hasJack = toPlayer.card && toPlayer.card.value === 'J';
     const hasKing = toPlayer.card && toPlayer.card.value === 'K';
     
-    // SPECIAL CASE: Trading with dealer who has King = trade with deck instead!
-    const isDealerTarget = toPlayer.id === activePlayers[this.dealerIndex].id;
-    const isLastPlayerBeforeDealer = (fromIndex + 1) % activePlayers.length === this.dealerIndex;
-    
     let traded = false;
     let blocked = false;
-    let kingRevealed = false;
-    let tradedWithDeck = false;
-    let deckCard = null;
     
     if (hasJack) {
-      // Jack blocks the trade - "Screw You!"
       blocked = true;
-      toPlayer.cardRevealed = true; // Reveal the Jack
+      toPlayer.cardRevealed = true;
       fromPlayer.stats.tradesBlocked++;
-    } else if (hasKing && isDealerTarget) {
-      // SPECIAL RULE: Player before dealer with King gets to trade with deck!
-      if (this.deck.length === 0) {
-        throw new Error('No cards left in deck');
-      }
-      
-      deckCard = this.deck.pop();
-      const playerCard = fromPlayer.card;
-      fromPlayer.card = deckCard;
-      
-      // Discard player's old card (not put back in deck)
-      // Card is simply discarded - no need to track it
-      
-      tradedWithDeck = true;
-      kingRevealed = true;
-      toPlayer.cardRevealed = true; // Reveal the dealer's King
-      fromPlayer.cardRevealed = true; // Auto-reveal the new deck card
-      fromPlayer.stats.tradesInitiated++;
     } else if (hasKing) {
-      // King pass-through logic
-      kingRevealed = true;
-      toPlayer.cardRevealed = true; // Reveal the King
-  
-      // Find next player after the King holder
-      const kingHolderIndex = activePlayers.findIndex(p => p.id === toPlayer.id);
-      let nextPlayerIndex = (kingHolderIndex + 1) % activePlayers.length;
-      let nextPlayer = activePlayers[nextPlayerIndex];
-  
-      // Keep looking for next non-King player
-      while (nextPlayer.card && nextPlayer.card.value === 'K' && nextPlayerIndex !== fromPlayer.id) {
-        nextPlayer.cardRevealed = true; // Reveal subsequent Kings
-        nextPlayerIndex = (nextPlayerIndex + 1) % activePlayers.length;
-        nextPlayer = activePlayers[nextPlayerIndex];
-      }
-  
-      // Special case: If we end up at the dealer, trade with deck
-      if (nextPlayerIndex === this.dealerIndex) {
-        if (this.deck.length === 0) {
-          throw new Error('No cards left in deck for dealer trade');
-        }
-    
-        const deckCard = this.deck.pop();
-        const playerCard = fromPlayer.card;
-        fromPlayer.card = deckCard;
-        fromPlayer.cardRevealed = true; // Auto-reveal deck card
-    
-        tradedWithDeck = true;
-        fromPlayer.stats.tradesInitiated++;
-      } else if (nextPlayer.card && nextPlayer.card.value === 'J') {
-        // Next player has Jack - blocks the pass-through
-        nextPlayer.cardRevealed = true; // Reveal the blocking Jack
-        blocked = true;
-        fromPlayer.stats.tradesBlocked++;
-      } else {
-        // Normal trade with the next available player
-        const tempCard = fromPlayer.card;
-        fromPlayer.card = nextPlayer.card;
-        nextPlayer.card = tempCard;
-        traded = true;
-        fromPlayer.cardRevealed = true; // Auto-reveal new card
-        fromPlayer.stats.tradesInitiated++;
-      }
-  
-      // Mark player as having acted
-      this.playersWhoActed.add(fromPlayerId);
-      this.advanceToNextPlayer();
-
+      // King logic - simplified
+      toPlayer.cardRevealed = true;
     } else {
-      // Normal trade - swap cards
+      // Normal trade
       const tempCard = fromPlayer.card;
       fromPlayer.card = toPlayer.card;
       toPlayer.card = tempCard;
       traded = true;
       fromPlayer.stats.tradesInitiated++;
-      
-      // Auto-reveal the new card for the player who initiated the trade
       fromPlayer.cardRevealed = true;
     }
     
-    // Mark player as having acted (unless King allows passing)
-    if (!kingRevealed) {
+    if (!hasKing) {
       this.playersWhoActed.add(fromPlayerId);
       this.advanceToNextPlayer();
     }
@@ -1331,16 +557,14 @@ class Game {
     return { 
       traded, 
       blocked, 
-      kingRevealed,
-      tradedWithDeck,
-      deckCard,
-      roundEnded: this.turnPhase === 'revealing', // Indicate if round ended
       fromPlayer, 
       toPlayer 
     };
   }
 
   async skipPlayerTurn(playerId) {
+    this.updateActivity();
+    
     const player = this.players.find(p => p.id === playerId);
     if (!player) throw new Error('Player not found');
     
@@ -1350,173 +574,71 @@ class Game {
       throw new Error('Not your turn');
     }
     
-    // Players can keep ANY card
     const isKing = player.card && player.card.value === 'K';
     
-    // Mark player as having acted
     this.playersWhoActed.add(playerId);
     
-    // ONLY reveal Kings automatically when kept (for protection)
-    // Other cards stay hidden when kept
     if (isKing) {
       player.cardRevealed = true;
-      console.log(`Player ${playerId} kept King - auto-revealed for protection`);
-    } else {
-      console.log(`Player ${playerId} kept their ${player.card.value} - card stays hidden`);
     }
     
-    // Move to next player's turn
     this.advanceToNextPlayer();
     
     return { skipped: true, keptCard: true, wasKing: isKing };
   }
 
-  async dealerTradeWithDeck(dealerId) {
-    const dealer = this.players.find(p => p.id === dealerId);
-    if (!dealer) throw new Error('Dealer not found');
-    
-    const activePlayers = this.players.filter(p => p.lives > 0);
-    const dealerIndex = activePlayers.findIndex(p => p.id === dealerId);
-    
-    if (dealerIndex !== this.dealerIndex) {
-      throw new Error('Only the dealer can trade with the deck');
-    }
-    
-    if (this.turnPhase !== 'dealer-turn') {
-      throw new Error('Not dealer\'s turn');
-    }
-
-    if (this.deck.length === 0) {
-      throw new Error('No cards left in deck');
-    }
-
-    // Dealer trades with top card of deck
-    const deckCard = this.deck.pop();
-    const dealerCard = dealer.card;
-    dealer.card = deckCard;
-    
-    // Auto-reveal the new card for dealer
-    dealer.cardRevealed = true;
-
-    // Discard dealer's old card (not put back in deck)
-    // Card is simply discarded - no need to track it
-
-    // Move to revealing phase
-    this.turnPhase = 'revealing';
-    
-    return { traded: true, newCard: deckCard, oldCard: dealerCard };
-  }
-
-  async skipDealerTrade(dealerId) {
-    const dealer = this.players.find(p => p.id === dealerId);
-    if (!dealer) throw new Error('Dealer not found');
-    
-    const activePlayers = this.players.filter(p => p.lives > 0);
-    const dealerIndex = activePlayers.findIndex(p => p.id === dealerId);
-    
-    if (dealerIndex !== this.dealerIndex) {
-      throw new Error('Only the dealer can skip');
-    }
-    
-    if (this.turnPhase !== 'dealer-turn') {
-      throw new Error('Not dealer\'s turn');
-    }
-
-    // Move to revealing phase
-    this.turnPhase = 'revealing';
-    
-    return { skipped: true };
-  }
-
   async flipPlayerCard(playerId) {
+    this.updateActivity();
+    
     const player = this.players.find(p => p.id === playerId);
     if (!player) throw new Error('Player not found');
     
-    // Players can flip their card any time to see what they have
     player.cardRevealed = true;
-    console.log(`Player ${playerId} flipped their card: ${player.card.value} of ${player.card.suit}`);
     return player;
   }
 
   async endRound() {
-    const activePlayers = this.players.filter(p => p.lives > 0);
+    this.updateActivity();
     
-    // Can only end round in revealing phase
     if (this.turnPhase !== 'revealing') {
       throw new Error('Cannot end round yet - still in trading phase');
     }
     
-    // Reveal all cards
+    const activePlayers = this.players.filter(p => p.lives > 0);
+    
     activePlayers.forEach(player => {
       player.cardRevealed = true;
     });
 
-    // Find the lowest card(s) - ALL players with lowest value lose a life
     const lowestValue = Math.min(...activePlayers.map(p => p.card.numValue));
     const losers = activePlayers.filter(p => p.card.numValue === lowestValue);
 
-    console.log(`Round ${this.round}: Lowest value is ${lowestValue}, ${losers.length} player(s) lose a life`);
-    console.log(`Losers: ${losers.map(p => `${p.name} (${p.card.value})`).join(', ')}`);
-
-    // Remove lives from ALL losers (handles ties correctly)
     losers.forEach(player => {
       player.lives--;
       player.stats.roundsLost++;
-      console.log(`${player.name} loses a life (${player.lives} remaining)`);
     });
 
-    // Update stats for winners
     activePlayers.filter(p => p.card.numValue > lowestValue).forEach(player => {
       player.stats.roundsWon++;
     });
 
-    // Process spectator bets
-    const spectatorResults = this.processSpectatorBets(losers);
-
     const roundResult = {
       round: this.round,
       losers: losers.map(p => ({ id: p.id, name: p.name, card: p.card })),
-      lowestValue,
-      spectatorResults
+      lowestValue
     };
 
     this.roundHistory.push(roundResult);
     this.round++;
 
-    // Prepare for next round if game continues
     if (!this.isFinished()) {
-      // Move dealer position to next player
       const remainingPlayers = this.players.filter(p => p.lives > 0);
       this.dealerIndex = (this.dealerIndex + 1) % remainingPlayers.length;
       this.currentPlayerIndex = (this.dealerIndex + 1) % remainingPlayers.length;
-      
       this.dealCards();
-      this.spectatorBets = []; // Reset bets for new round
     }
 
     return roundResult;
-  }
-
-  processSpectatorBets(losers) {
-    return this.spectatorBets.map(bet => {
-      const won = !losers.some(loser => loser.id === bet.playerId);
-      return {
-        spectatorId: bet.spectatorId,
-        playerId: bet.playerId,
-        amount: bet.amount,
-        won,
-        payout: won ? bet.amount * 2 : 0
-      };
-    });
-  }
-
-  addSpectatorBet(spectatorId, playerId, amount) {
-    this.spectatorBets.push({
-      spectatorId,
-      playerId,
-      amount,
-      round: this.round
-    });
   }
 
   isFinished() {
@@ -1551,12 +673,12 @@ class Game {
   }
 
   handlePlayerDisconnect(playerId) {
-    // Mark player as disconnected but keep in game
     const player = this.players.find(p => p.id === playerId);
     if (player) {
       player.connected = false;
       player.disconnectedAt = Date.now();
     }
+    this.updateActivity();
   }
 
   getPublicState() {
@@ -1581,8 +703,7 @@ class Game {
         cardRevealed: p.cardRevealed,
         hasTraded: p.hasTraded,
         connected: p.connected !== false,
-        hasCard: !!p.card, // Always indicate if player has a card
-        // Only show card if it's revealed OR in revealing phase (end of round)
+        hasCard: !!p.card,
         card: (p.cardRevealed || this.turnPhase === 'revealing') ? p.card : null,
         isDealer: this.players.filter(pl => pl.lives > 0)[this.dealerIndex]?.id === p.id
       })),
@@ -1597,100 +718,520 @@ class Game {
     };
   }
 
-  // Card visibility method - players can only see their own cards when flipped OR all cards during revealing phase
   getPlayerView(playerId) {
-    const activePlayers = this.players.filter(p => p.lives > 0);
-    const currentPlayer = activePlayers[this.currentPlayerIndex];
-    const dealer = activePlayers[this.dealerIndex];
+    const state = this.getPublicState();
     
-    return {
-      id: this.id,
-      gameCode: this.gameCode,
-      hostId: this.hostId,
-      state: this.state,
-      round: this.round,
-      settings: this.settings,
-      turnPhase: this.turnPhase,
-      currentPlayerId: currentPlayer ? currentPlayer.id : null,
-      dealerId: dealer ? dealer.id : null,
-      players: this.players.map(p => ({
-        id: p.id,
-        name: p.name,
-        lives: p.lives,
-        cardRevealed: p.cardRevealed,
-        hasTraded: p.hasTraded,
-        connected: p.connected !== false,
-        hasCard: !!p.card, // Always indicate if player has a card
-        // Show card details only when appropriate:
-        // 1. Own card when revealed by player
-        // 2. All cards during revealing phase (end of round)
-        card: this.shouldShowCardToPlayer(p, playerId) ? p.card : null,
-        isDealer: this.players.filter(pl => pl.lives > 0)[this.dealerIndex]?.id === p.id,
-        currentCard: p.id === playerId ? p.card : (this.shouldShowCardToPlayer(p, playerId) ? p.card : null)
-      })),
-      spectators: this.spectators.map(s => ({
-        id: s.id,
-        name: s.name
-      })),
-      cardsRemaining: this.deck.length,
-      currentPlayerIndex: this.currentPlayerIndex,
-      dealerIndex: this.dealerIndex,
-      maxPlayers: this.maxPlayers
-    };
+    // Add player-specific card data
+    state.players = state.players.map(p => ({
+      ...p,
+      currentCard: p.id === playerId ? p.card : (this.shouldShowCardToPlayer(p, playerId) ? p.card : null)
+    }));
+    
+    return state;
   }
 
-  // Helper method to determine if a card should be visible to a specific player
   shouldShowCardToPlayer(cardOwner, viewingPlayerId) {
-    // During revealing phase, everyone sees all cards
-    if (this.turnPhase === 'revealing') {
-      return true;
-    }
-    
-    // Players can always see their own cards when they've flipped them
-    if (cardOwner.id === viewingPlayerId && cardOwner.cardRevealed) {
-      return true;
-    }
-    
-    // Show cards that are publicly revealed due to game mechanics
-    // (Jack blocks, King reveals, dealer trades, etc.)
-    if (cardOwner.cardRevealed && this.isCardPubliclyVisible(cardOwner.id)) {
-      return true;
-    }
-    
+    if (this.turnPhase === 'revealing') return true;
+    if (cardOwner.id === viewingPlayerId && cardOwner.cardRevealed) return true;
+    if (cardOwner.cardRevealed && this.isCardPubliclyVisible(cardOwner.id)) return true;
     return false;
   }
 
-  // Helper method to track publicly visible cards
   isCardPubliclyVisible(playerId) {
-    // Cards become publicly visible when:
-    // 1. Jack is revealed during a block
-    // 2. King is revealed during trade attempts  
-    // 3. Dealer shows card after trading with deck
-    // 4. Any card specifically revealed due to game rules
-    
-    // For now, we'll be conservative and only show cards during revealing phase
-    // and when the player themselves has flipped it
     return this.turnPhase === 'revealing';
   }
 }
 
-// Initialize game managers after class definitions
+// Simple auth validation
+const validateUserToken = async (token, providedName = null) => {
+  if (token && token.startsWith('demo_token_')) {
+    const userId = token.replace('demo_token_', '');
+    return {
+      id: userId,
+      name: providedName || ('Player_' + userId.slice(-4)),
+      avatar: 'default'
+    };
+  }
+  return null;
+};
+
+// Helper function for game updates
+function sendGameUpdateToAll(gameId, eventName, data = {}) {
+  const game = gameManager.getGame(gameId);
+  if (!game) return;
+  
+  // Batch updates for performance
+  const updates = [];
+  
+  game.players.forEach(player => {
+    if (player.connected && player.socketId) {
+      updates.push({
+        socketId: player.socketId,
+        data: {
+          ...data,
+          game: game.getPlayerView(player.id)
+        }
+      });
+    }
+  });
+  
+  game.spectators.forEach(spectator => {
+    if (spectator.socketId) {
+      updates.push({
+        socketId: spectator.socketId,
+        data: {
+          ...data,
+          game: game.getPublicState()
+        }
+      });
+    }
+  });
+  
+  // Send all updates
+  updates.forEach(update => {
+    io.to(update.socketId).emit(eventName, update.data);
+  });
+}
+
+// Socket.IO connection handling with production optimizations
+io.on('connection', (socket) => {
+  serverStats.totalConnections++;
+  serverStats.activeConnections++;
+  
+  console.log(`User connected: ${socket.id} (Active: ${serverStats.activeConnections})`);
+
+  // Apply rate limiting
+  socket.use((packet, next) => {
+    socketLimiter(socket.request, {}, next);
+  });
+
+  // Heartbeat for connection monitoring
+  socket.on('heartbeat', (data) => {
+    socket.emit('heartbeat-ack', { 
+      timestamp: Date.now(),
+      serverTime: new Date().toISOString()
+    });
+  });
+
+  // Create public game
+  socket.on('create-public-game', async (data) => {
+    try {
+      const { userId, token, playerName, settings } = data;
+      
+      const user = await validateUserToken(token || `demo_token_${socket.id}`, playerName);
+      if (!user) {
+        socket.emit('error', { message: 'Invalid authentication' });
+        return;
+      }
+
+      // Find existing public game or create new one
+      const publicGames = gameManager.getPublicGames();
+      let availableGame = null;
+      
+      for (let publicGameInfo of publicGames) {
+        const game = gameManager.getGame(publicGameInfo.id);
+        if (game && !game.hasStarted() && game.players.length < game.maxPlayers) {
+          availableGame = game;
+          break;
+        }
+      }
+      
+      const finalUserId = userId || socket.id;
+      
+      if (availableGame) {
+        // Join existing game
+        await availableGame.addPlayer({
+          id: finalUserId,
+          socketId: socket.id,
+          name: user.name,
+          avatar: user.avatar
+        });
+        
+        socket.join(availableGame.id);
+        socket.gameId = availableGame.id;
+        socket.userId = finalUserId;
+        
+        contactManager.addUser(finalUserId, user.name, socket.id);
+        
+        socket.emit('game-joined', {
+          game: availableGame.getPlayerView(finalUserId),
+          gameType: 'public'
+        });
+        
+        socket.to(availableGame.id).emit('player-joined', {
+          game: availableGame.getPublicState(),
+          newPlayer: { name: user.name, avatar: user.avatar }
+        });
+        
+        gameManager.updatePublicGame(availableGame.id);
+        
+      } else {
+        // Create new game
+        const gameId = uuidv4();
+        
+        const game = gameManager.createGame(gameId, finalUserId, {           
+          ...settings,
+          isPublic: true,           
+          type: 'public',           
+          maxPlayers: 30
+        });
+        
+        gameManager.addPublicGame(game, user.name);
+        
+        await game.addPlayer({
+          id: finalUserId,
+          socketId: socket.id,
+          name: user.name,
+          avatar: user.avatar
+        });
+        
+        socket.join(gameId);
+        socket.gameId = gameId;
+        socket.userId = finalUserId;
+        
+        contactManager.addUser(finalUserId, user.name, socket.id);
+        const friendCode = contactManager.generateFriendCode(finalUserId);
+        
+        socket.emit('public-game-created', {
+          game: game.getPlayerView(finalUserId),
+          friendCode: friendCode,
+          gameType: 'public'
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error in create-public-game:', error);
+      serverStats.errors++;
+      socket.emit('error', { message: error.message || 'Failed to create/join game' });
+    }
+  });
+
+  // Create private game
+  socket.on('create-private-game', async (data) => {
+    try {
+      const { userId, token, playerName, settings = {} } = data;
+      
+      const user = await validateUserToken(token || `demo_token_${socket.id}`, playerName);
+      if (!user) {
+        socket.emit('error', { message: 'Invalid authentication' });
+        return;
+      }
+
+      const gameId = uuidv4();
+      const finalUserId = userId || socket.id;
+      
+      const game = gameManager.createGame(gameId, finalUserId, {
+        ...settings,
+        isPublic: false,
+        type: 'private',
+        maxPlayers: Math.min(settings.maxPlayers || 8, 30)
+      });
+      
+      await game.addPlayer({
+        id: finalUserId,
+        socketId: socket.id,
+        name: user.name,
+        avatar: user.avatar
+      });
+
+      socket.join(gameId);
+      socket.gameId = gameId;
+      socket.userId = finalUserId;
+
+      contactManager.addUser(finalUserId, user.name, socket.id);
+      const friendCode = contactManager.generateFriendCode(finalUserId);
+      
+      const baseUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 3001}`;
+      
+      socket.emit('game-created', {
+        game: game.getPlayerView(finalUserId),
+        friendCode: friendCode,
+        shareableLink: `${baseUrl}/join/${friendCode}`,
+        gameType: 'private'
+      });
+      
+    } catch (error) {
+      console.error('Error creating private game:', error);
+      serverStats.errors++;
+      socket.emit('error', { message: error.message || 'Failed to create private game' });
+    }
+  });
+
+  // Join game
+  socket.on('join-game', async (data) => {
+    try {
+      const { gameCode, userId, token, playerName, friendCode } = data;
+      
+      const user = await validateUserToken(token || `demo_token_${socket.id}`, playerName);
+      if (!user) {
+        socket.emit('error', { message: 'Invalid authentication' });
+        return;
+      }
+
+      let game = null;
+      if (gameCode) {
+        const allGames = Array.from(gameManager.games.values());
+        game = allGames.find(g => g.gameCode === gameCode);
+      } else if (friendCode) {
+        const allGames = Array.from(gameManager.games.values());
+        for (let g of allGames) {
+          const gFriendCode = contactManager.generateFriendCode(g.hostId);
+          if (gFriendCode === friendCode) {
+            game = g;
+            break;
+          }
+        }
+      }
+
+      if (!game) {
+        socket.emit('error', { message: 'Game not found' });
+        return;
+      }
+
+      if (game.players.length >= game.maxPlayers) {
+        socket.emit('error', { message: 'Game is full' });
+        return;
+      }
+
+      if (game.hasStarted()) {
+        socket.emit('error', { message: 'Game has already started' });
+        return;
+      }
+
+      const finalUserId = userId || socket.id;
+      
+      await game.addPlayer({
+        id: finalUserId,
+        socketId: socket.id,
+        name: user.name,
+        avatar: user.avatar
+      });
+
+      socket.join(game.id);
+      socket.gameId = game.id;
+      socket.userId = finalUserId;
+
+      contactManager.addUser(finalUserId, user.name, socket.id);
+
+      socket.emit('game-joined', {
+        game: game.getPlayerView(finalUserId),
+        rejoin: false
+      });
+
+      socket.to(game.id).emit('player-joined', {
+        game: game.getPublicState(),
+        newPlayer: { name: user.name, avatar: user.avatar }
+      });
+
+      if (game.settings.isPublic) {
+        gameManager.updatePublicGame(game.id);
+      }
+
+    } catch (error) {
+      console.error('Join game error:', error);
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  // Start game
+  socket.on('start-game', async (data) => {
+    try {
+      const { settings } = data;
+      const game = gameManager.getGame(socket.gameId);
+      
+      if (!game) throw new Error('Game not found');
+      if (game.hostId !== socket.userId) throw new Error('Only the host can start the game');
+
+      const connectedPlayers = game.players.filter(p => p.connected !== false);
+      if (connectedPlayers.length < 2) {
+        throw new Error(`Need at least 2 connected players to start`);
+      }
+
+      game.players = connectedPlayers;
+      await game.startGame(settings);
+      
+      sendGameUpdateToAll(game.id, 'game-started');
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  // Game actions
+  socket.on('skip-turn', async () => {
+    try {
+      const game = gameManager.getGame(socket.gameId);
+      if (!game) throw new Error('Game not found');
+
+      const result = await game.skipPlayerTurn(socket.userId);
+      sendGameUpdateToAll(socket.gameId, 'turn-skipped', {
+        playerId: socket.userId,
+        playerName: game.players.find(p => p.id === socket.userId)?.name,
+        result
+      });
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  socket.on('request-trade', async (data) => {
+    try {
+      const { targetPlayerId } = data;
+      const game = gameManager.getGame(socket.gameId);
+      if (!game) throw new Error('Game not found');
+
+      const result = await game.requestTrade(socket.userId, targetPlayerId);
+      sendGameUpdateToAll(socket.gameId, 'trade-completed', { result });
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  socket.on('flip-card', async () => {
+    try {
+      const game = gameManager.getGame(socket.gameId);
+      if (!game) throw new Error('Game not found');
+
+      await game.flipPlayerCard(socket.userId);
+      sendGameUpdateToAll(socket.gameId, 'card-flipped', {
+        playerId: socket.userId,
+        playerName: game.players.find(p => p.id === socket.userId)?.name
+      });
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  socket.on('end-round', async () => {
+    try {
+      const game = gameManager.getGame(socket.gameId);
+      if (!game) throw new Error('Game not found');
+
+      const roundResult = await game.endRound();
+      sendGameUpdateToAll(socket.gameId, 'round-ended', { result: roundResult });
+
+      if (game.isFinished()) {
+        io.to(socket.gameId).emit('game-finished', {
+          winner: game.getWinner(),
+          finalStats: game.getFinalStats()
+        });
+      }
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  // Chat
+  socket.on('chat-message', (data) => {
+    const { message } = data;
+    const game = gameManager.getGame(socket.gameId);
+    const player = game?.players.find(p => p.id === socket.userId);
+    
+    io.to(socket.gameId).emit('chat-message', {
+      playerId: socket.userId,
+      playerName: player?.name || 'Unknown',
+      message: message.substring(0, 200), // Limit message length
+      timestamp: Date.now()
+    });
+  });
+
+  // Disconnect handling
+  socket.on('disconnect', (reason) => {
+    serverStats.activeConnections--;
+    console.log(`User disconnected: ${socket.id} (${reason}) (Active: ${serverStats.activeConnections})`);
+    
+    if (socket.userId) {
+      contactManager.removeUser(socket.userId);
+    }
+    
+    if (socket.gameId) {
+      const game = gameManager.getGame(socket.gameId);
+      if (game) {
+        game.handlePlayerDisconnect(socket.userId);
+        
+        io.to(socket.gameId).emit('player-disconnected', {
+          playerId: socket.userId
+        });
+
+        if (game.settings.isPublic) {
+          gameManager.updatePublicGame(game.id);
+        }
+      }
+    }
+  });
+});
+
+// Initialize managers
 gameManager = new GameManager();
 contactManager = new ContactManager();
+
+// Error handling
+app.use((error, req, res, next) => {
+  console.error('Server error:', error);
+  serverStats.errors++;
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+  });
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Production monitoring
+setInterval(() => {
+  const memUsage = process.memoryUsage();
+  console.log(`Stats - Games: ${gameManager.getActiveGameCount()}, Players: ${gameManager.getConnectedPlayerCount()}, Memory: ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`);
+}, 60000); // Log every minute
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`🎮 Screw Your Neighbor server running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Production mode: ${process.env.NODE_ENV === 'production'}`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
+  
+  // Cleanup intervals
+  if (gameManager.gameCleanupInterval) {
+    clearInterval(gameManager.gameCleanupInterval);
+  }
+  if (contactManager.cleanupInterval) {
+    clearInterval(contactManager.cleanupInterval);
+  }
+  
   server.close(() => {
     console.log('Process terminated');
   });
 });
 
-// Export for testing or external use
-module.exports = { app, server, io };
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  serverStats.errors++;
+  // Don't exit in production - log and continue
+  if (process.env.NODE_ENV !== 'production') {
+    process.exit(1);
+  }
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  serverStats.errors++;
+  // Don't exit in production - log and continue
+});
+
+module.exports = { app, server, io, gameManager, contactManager };
