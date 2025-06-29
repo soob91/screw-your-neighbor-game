@@ -1736,24 +1736,27 @@
 
         // Game actions
         function startGame() {
-            if (!socket || !currentGame) {
-                showToast('Game not ready', 'error');
-                return;
-            }
-            
-            if (currentGame.hostId !== playerId) {
-                showToast('Only the host can start the game', 'error');
-                return;
-            }
+    if (!socket || !currentGame) {
+        showToast('Game not ready', 'error');
+        return;
+    }
+    
+    // FIXED: Handle host ID with potential timestamp
+    const isHost = currentGame.hostId === playerId || currentGame.hostId.startsWith(playerId);
+    
+    if (!isHost) {
+        showToast('Only the host can start the game', 'error');
+        return;
+    }
 
-            const settings = { startingLives: 3, deckCount: 1 };
+    const settings = { startingLives: 3, deckCount: 1 };
 
-            socket.emit('start-game', { 
-                gameId: currentGame.id,
-                settings 
-            });
-            log('🚀 Starting game...');
-        }
+    socket.emit('start-game', { 
+        gameId: currentGame.id,
+        settings 
+    });
+    log('🚀 Starting game...');
+}
 
         function flipCard() {
             if (!socket || !currentGame) return;
