@@ -1298,21 +1298,19 @@
             const cardDisplay = document.createElement('div');
             cardDisplay.className = 'card-display';
             
-            if (player.currentCard && player.cardRevealed) {
-                const card = player.currentCard;
-                cardDisplay.className += card.suit === '♥' || card.suit === '♦' ? ' red revealed' : ' black revealed';
-                cardDisplay.textContent = `${card.value}${card.suit}`;
-            } else if (player.card && player.cardRevealed) {
-                const card = player.card;
-                cardDisplay.className += card.suit === '♥' || card.suit === '♦' ? ' red revealed' : ' black revealed';
-                cardDisplay.textContent = `${card.value}${card.suit}`;
-            } else if (player.card || player.currentCard) {
-                cardDisplay.className += ' face-down';
-                cardDisplay.textContent = '🂠';
-                cardDisplay.onclick = () => flipCard();
-            } else {
-                cardDisplay.textContent = 'No Card';
-            }
+            if (player.hasCard || player.card || player.currentCard) {
+    if (player.cardRevealed && (player.card || player.currentCard)) {
+        const card = player.card || player.currentCard;
+        cardDisplay.className += card.suit === '♥' || card.suit === '♦' ? ' red revealed' : ' black revealed';
+        cardDisplay.textContent = `${card.value}${card.suit}`;
+  } else {
+        cardDisplay.className += ' face-down';
+        cardDisplay.textContent = '🂠';
+        cardDisplay.onclick = () => flipCard();
+    }
+  } else {
+    cardDisplay.textContent = 'No Card';
+}
 
             slot.appendChild(videoContainer);
             slot.appendChild(playerInfo);
