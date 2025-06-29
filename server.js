@@ -1,4 +1,4 @@
-// server.js - Production-Ready Server with Personal Table Support
+// server.js - Complete Backend with All Functionality Restored
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -30,14 +30,6 @@ app.use(cors({
     ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000"],
   credentials: true
 }));
-
-// Rate limiting for production
-// Rate limiting disabled for Railway compatibility
-// const limiter = rateLimit({...});
-// app.use(limiter);
-
-// Socket-specific rate limiting disabled
-// const socketLimiter = rateLimit({...});
 
 // Body parsing with limits
 app.use(express.json({ limit: '10mb' }));
@@ -84,8 +76,7 @@ const io = socketIo(server, {
   upgradeTimeout: 30000,
   allowEIO3: true,
   transports: ['websocket', 'polling'],
-  // Connection limits for production
-  maxHttpBufferSize: 1e6, // 1MB
+  maxHttpBufferSize: 1e6,
   httpCompression: true,
   perMessageDeflate: true
 });
@@ -104,7 +95,7 @@ const serverStats = {
   errors: 0
 };
 
-// Contact system optimized for production
+// Contact system for friend codes
 class ContactManager {
   constructor() {
     this.friendCodes = new Map();
@@ -308,7 +299,7 @@ class GameManager {
   }
 }
 
-// Production-optimized Game class
+// Complete Game class with all functionality
 class Game {
   constructor(id, hostId, settings = {}) {
     this.id = id;
@@ -318,7 +309,7 @@ class Game {
     this.dealerIndex = 0;
     this.currentPlayerIndex = 1;
     this.round = 1;
-    this.maxPlayers = Math.min(settings.maxPlayers || 8, 30); // Cap at 30 for performance
+    this.maxPlayers = Math.min(settings.maxPlayers || 8, 30);
     this.state = 'waiting';
     this.turnPhase = 'trading';
     this.deck = [];
@@ -518,22 +509,61 @@ class Game {
       throw new Error('You can only trade with the next player');
     }
     
-    // Game logic for trading (simplified for production)
+    // Game logic for trading
     const hasJack = toPlayer.card && toPlayer.card.value === 'J';
     const hasKing = toPlayer.card && toPlayer.card.value === 'K';
     
+    // SPECIAL CASE: Trading with dealer who has King = trade with deck instead!
+    const isDealerTarget = toPlayer.id === activePlayers[this.dealerIndex].id;
+    const isLastPlayerBeforeDealer = (fromIndex + 1) % activePlayers.length === this.dealerIndex;
+    
     let traded = false;
     let blocked = false;
+    let kingRevealed = false;
+    let tradedWithDeck = false;
+    let deckCard = null;
     
     if (hasJack) {
+      // Jack blocks the trade - "Screw You!"
       blocked = true;
       toPlayer.cardRevealed = true;
       fromPlayer.stats.tradesBlocked++;
-    } else if (hasKing) {
-      // King logic - simplified
+    } else if (hasKing && isDealerTarget) {
+      // SPECIAL RULE: Player before dealer with King gets to trade with deck!
+      if (this.deck.length === 0) {
+        throw new Error('No cards left in deck');
+      }
+      
+      deckCard = this.deck.pop();
+      const playerCard = fromPlayer.card;
+      fromPlayer.card = deckCard;
+      
+      tradedWithDeck = true;
       toPlayer.cardRevealed = true;
+      fromPlayer.cardRevealed = true;
+      fromPlayer.stats.tradesInitiated++;
+    } else if (hasKing) {
+      // Regular King - gets revealed and allows passing to next player
+      kingRevealed = true;
+      toPlayer.cardRevealed = true;
+      
+      // Check if this is a pass-through to the dealer (special case)
+      const kingHolderIndex = activePlayers.findIndex(p => p.id === toPlayer.id);
+      const nextAfterKingIndex = (kingHolderIndex + 1) % activePlayers.length;
+      const nextAfterKing = activePlayers[nextAfterKingIndex];
+      
+      // SPECIAL CASE: If next player after King is the dealer AND has Jack
+      const isNextPlayerDealer = nextAfterKingIndex === this.dealerIndex;
+      
+      if (isNextPlayerDealer && nextAfterKing.card && nextAfterKing.card.value === 'J') {
+        // Dealer has Jack - this blocks the pass and ends the round
+        nextAfterKing.cardRevealed = true;
+        this.playersWhoActed.add(fromPlayerId);
+        this.turnPhase = 'revealing';
+        console.log(`Dealer's Jack blocks pass-through! Trading phase ends immediately.`);
+      }
     } else {
-      // Normal trade
+      // Normal trade - swap cards
       const tempCard = fromPlayer.card;
       fromPlayer.card = toPlayer.card;
       toPlayer.card = tempCard;
@@ -542,7 +572,8 @@ class Game {
       fromPlayer.cardRevealed = true;
     }
     
-    if (!hasKing) {
+    // Mark player as having acted (unless King allows passing)
+    if (!kingRevealed) {
       this.playersWhoActed.add(fromPlayerId);
       this.advanceToNextPlayer();
     }
@@ -550,6 +581,10 @@ class Game {
     return { 
       traded, 
       blocked, 
+      kingRevealed,
+      tradedWithDeck,
+      deckCard,
+      roundEnded: this.turnPhase === 'revealing',
       fromPlayer, 
       toPlayer 
     };
@@ -588,6 +623,59 @@ class Game {
     
     player.cardRevealed = true;
     return player;
+  }
+
+  async dealerTradeWithDeck(dealerId) {
+    this.updateActivity();
+    
+    const dealer = this.players.find(p => p.id === dealerId);
+    if (!dealer) throw new Error('Dealer not found');
+    
+    const activePlayers = this.players.filter(p => p.lives > 0);
+    const dealerIndex = activePlayers.findIndex(p => p.id === dealerId);
+    
+    if (dealerIndex !== this.dealerIndex) {
+      throw new Error('Only the dealer can trade with the deck');
+    }
+    
+    if (this.turnPhase !== 'dealer-turn') {
+      throw new Error('Not dealer\'s turn');
+    }
+
+    if (this.deck.length === 0) {
+      throw new Error('No cards left in deck');
+    }
+
+    const deckCard = this.deck.pop();
+    const dealerCard = dealer.card;
+    dealer.card = deckCard;
+    dealer.cardRevealed = true;
+
+    this.turnPhase = 'revealing';
+    
+    return { traded: true, newCard: deckCard, oldCard: dealerCard };
+  }
+
+  async skipDealerTrade(dealerId) {
+    this.updateActivity();
+    
+    const dealer = this.players.find(p => p.id === dealerId);
+    if (!dealer) throw new Error('Dealer not found');
+    
+    const activePlayers = this.players.filter(p => p.lives > 0);
+    const dealerIndex = activePlayers.findIndex(p => p.id === dealerId);
+    
+    if (dealerIndex !== this.dealerIndex) {
+      throw new Error('Only the dealer can skip');
+    }
+    
+    if (this.turnPhase !== 'dealer-turn') {
+      throw new Error('Not dealer\'s turn');
+    }
+
+    this.turnPhase = 'revealing';
+    
+    return { skipped: true };
   }
 
   async endRound() {
@@ -793,10 +881,6 @@ io.on('connection', (socket) => {
   
   console.log(`User connected: ${socket.id} (Active: ${serverStats.activeConnections})`);
 
-  // Apply rate limiting
-  // socket.use((packet, next) => {
-//   socketLimiter(socket.request, {}, next);
-// });
   // Heartbeat for connection monitoring
   socket.on('heartbeat', (data) => {
     socket.emit('heartbeat-ack', { 
@@ -805,10 +889,20 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Create public game
-  socket.on('create-public-game', async (data) => {
+  // Generate friend code for new connections
+  socket.on('get-friend-code', (data) => {
+    const { userId, userName } = data;
+    
+    contactManager.addUser(userId, userName, socket.id);
+    const friendCode = contactManager.generateFriendCode(userId);
+    
+    socket.emit('friend-code-generated', { friendCode });
+  });
+
+  // Quick Match Handler
+  socket.on('quick-match', async (data) => {
     try {
-      const { userId, token, playerName, settings } = data;
+      const { userId, token, playerName } = data;
       
       const user = await validateUserToken(token || `demo_token_${socket.id}`, playerName);
       if (!user) {
@@ -816,7 +910,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Find existing public game or create new one
       const publicGames = gameManager.getPublicGames();
       let availableGame = null;
       
@@ -831,7 +924,6 @@ io.on('connection', (socket) => {
       const finalUserId = userId || socket.id;
       
       if (availableGame) {
-        // Join existing game
         await availableGame.addPlayer({
           id: finalUserId,
           socketId: socket.id,
@@ -858,11 +950,9 @@ io.on('connection', (socket) => {
         gameManager.updatePublicGame(availableGame.id);
         
       } else {
-        // Create new game
         const gameId = uuidv4();
         
         const game = gameManager.createGame(gameId, finalUserId, {           
-          ...settings,
           isPublic: true,           
           type: 'public',           
           maxPlayers: 30
@@ -892,7 +982,7 @@ io.on('connection', (socket) => {
       }
       
     } catch (error) {
-      console.error('Error in create-public-game:', error);
+      console.error('Error in quick-match:', error);
       serverStats.errors++;
       socket.emit('error', { message: error.message || 'Failed to create/join game' });
     }
@@ -935,7 +1025,7 @@ io.on('connection', (socket) => {
       
       const baseUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 3001}`;
       
-      socket.emit('game-created', {
+      socket.emit('private-game-created', {
         game: game.getPlayerView(finalUserId),
         friendCode: friendCode,
         shareableLink: `${baseUrl}/join/${friendCode}`,
@@ -952,7 +1042,7 @@ io.on('connection', (socket) => {
   // Join game
   socket.on('join-game', async (data) => {
     try {
-      const { gameCode, userId, token, playerName, friendCode } = data;
+      const { gameId, userId, token, playerName, friendCode } = data;
       
       const user = await validateUserToken(token || `demo_token_${socket.id}`, playerName);
       if (!user) {
@@ -961,9 +1051,8 @@ io.on('connection', (socket) => {
       }
 
       let game = null;
-      if (gameCode) {
-        const allGames = Array.from(gameManager.games.values());
-        game = allGames.find(g => g.gameCode === gameCode);
+      if (gameId) {
+        game = gameManager.getGame(gameId);
       } else if (friendCode) {
         const allGames = Array.from(gameManager.games.values());
         for (let g of allGames) {
@@ -1026,6 +1115,75 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Join by URL Handler
+  socket.on('join-by-url', async (data) => {
+    try {
+      const { friendCode, userId, token, playerName } = data;
+      
+      const user = await validateUserToken(token || `demo_token_${socket.id}`, playerName);
+      if (!user) {
+        socket.emit('error', { message: 'Invalid authentication' });
+        return;
+      }
+
+      const allGames = Array.from(gameManager.games.values());
+      let targetGame = null;
+      
+      for (let game of allGames) {
+        const gFriendCode = contactManager.generateFriendCode(game.hostId);
+        if (gFriendCode === friendCode) {
+          targetGame = game;
+          break;
+        }
+      }
+      
+      if (!targetGame) {
+        socket.emit('error', { message: 'Game not found or has ended' });
+        return;
+      }
+      
+      if (targetGame.hasStarted()) {
+        socket.emit('error', { message: 'Game has already started' });
+        return;
+      }
+      
+      if (targetGame.players.length >= targetGame.maxPlayers) {
+        socket.emit('error', { message: 'Game is full' });
+        return;
+      }
+      
+      const finalUserId = userId || socket.id;
+      
+      await targetGame.addPlayer({
+        id: finalUserId,
+        socketId: socket.id,
+        name: user.name,
+        avatar: user.avatar
+      });
+      
+      socket.join(targetGame.id);
+      socket.gameId = targetGame.id;
+      socket.userId = finalUserId;
+      
+      contactManager.addUser(finalUserId, user.name, socket.id);
+      
+      socket.emit('game-joined', {
+        game: targetGame.getPlayerView(finalUserId),
+        gameType: targetGame.settings.type
+      });
+      
+      socket.to(targetGame.id).emit('player-joined', {
+        game: targetGame.getPublicState(),
+        newPlayer: { name: user.name, avatar: user.avatar }
+      });
+      
+    } catch (error) {
+      console.error('Error in join-by-url:', error);
+      serverStats.errors++;
+      socket.emit('error', { message: error.message || 'Failed to join game' });
+    }
+  });
+
   // Start game
   socket.on('start-game', async (data) => {
     try {
@@ -1070,7 +1228,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('request-trade', async (data) => {
+  socket.on('trade-request', async (data) => {
     try {
       const { targetPlayerId } = data;
       const game = gameManager.getGame(socket.gameId);
@@ -1102,6 +1260,34 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('dealer-trade-deck', async () => {
+    try {
+      const game = gameManager.getGame(socket.gameId);
+      if (!game) throw new Error('Game not found');
+
+      const result = await game.dealerTradeWithDeck(socket.userId);
+      sendGameUpdateToAll(socket.gameId, 'dealer-traded-deck', { result });
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  socket.on('dealer-skip-trade', async () => {
+    try {
+      const game = gameManager.getGame(socket.gameId);
+      if (!game) throw new Error('Game not found');
+
+      const result = await game.skipDealerTrade(socket.userId);
+      sendGameUpdateToAll(socket.gameId, 'dealer-skipped-trade', { result });
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
   socket.on('end-round', async () => {
     try {
       const game = gameManager.getGame(socket.gameId);
@@ -1123,8 +1309,35 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Chat
-  socket.on('chat-message', (data) => {
+  // Spectator features
+  socket.on('join-as-spectator', async (data) => {
+    try {
+      const { userId, name } = data;
+      const game = gameManager.getGame(socket.gameId);
+      
+      if (!game) throw new Error('Game not found');
+
+      await game.addSpectator({
+        id: userId || `spectator_${socket.id}`,
+        socketId: socket.id,
+        name: name || `Spectator_${socket.id.substr(-4)}`
+      });
+
+      socket.join(socket.gameId);
+      socket.isSpectator = true;
+
+      io.to(socket.gameId).emit('spectator-joined', {
+        spectator: { id: userId, name: name }
+      });
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  // Chat messages
+  socket.on('game-chat', (data) => {
     const { message } = data;
     const game = gameManager.getGame(socket.gameId);
     const player = game?.players.find(p => p.id === socket.userId);
@@ -1132,8 +1345,9 @@ io.on('connection', (socket) => {
     io.to(socket.gameId).emit('chat-message', {
       playerId: socket.userId,
       playerName: player?.name || 'Unknown',
-      message: message.substring(0, 200), // Limit message length
-      timestamp: Date.now()
+      message: message.substring(0, 200),
+      timestamp: Date.now(),
+      isSpectator: socket.isSpectator || false
     });
   });
 
@@ -1149,10 +1363,15 @@ io.on('connection', (socket) => {
     if (socket.gameId) {
       const game = gameManager.getGame(socket.gameId);
       if (game) {
-        game.handlePlayerDisconnect(socket.userId);
+        if (socket.isSpectator) {
+          game.removeSpectator(socket.userId);
+        } else {
+          game.handlePlayerDisconnect(socket.userId);
+        }
         
         io.to(socket.gameId).emit('player-disconnected', {
-          playerId: socket.userId
+          playerId: socket.userId,
+          isSpectator: socket.isSpectator || false
         });
 
         if (game.settings.isPublic) {
@@ -1185,7 +1404,7 @@ app.use((req, res) => {
 setInterval(() => {
   const memUsage = process.memoryUsage();
   console.log(`Stats - Games: ${gameManager.getActiveGameCount()}, Players: ${gameManager.getConnectedPlayerCount()}, Memory: ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`);
-}, 60000); // Log every minute
+}, 60000);
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
@@ -1198,7 +1417,6 @@ server.listen(PORT, () => {
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
   
-  // Cleanup intervals
   if (gameManager.gameCleanupInterval) {
     clearInterval(gameManager.gameCleanupInterval);
   }
@@ -1214,7 +1432,6 @@ process.on('SIGTERM', () => {
 process.on('uncaughtException', (error) => {
   console.error('Uncaught exception:', error);
   serverStats.errors++;
-  // Don't exit in production - log and continue
   if (process.env.NODE_ENV !== 'production') {
     process.exit(1);
   }
@@ -1223,7 +1440,6 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled rejection at:', promise, 'reason:', reason);
   serverStats.errors++;
-  // Don't exit in production - log and continue
 });
 
 module.exports = { app, server, io, gameManager, contactManager };
