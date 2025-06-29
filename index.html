@@ -1279,15 +1279,12 @@
 
             playerName = document.getElementById('playerName').value.trim() || 'Player';
             
-            // CRITICAL: Use timestamp to ensure unique game creation
-            const uniqueUserId = `${socket.id}_${Date.now()}`;
-            
-            log(`🎮 Creating FRESH public game for ${playerName} (${uniqueUserId})`);
+            log(`🎮 Creating FRESH public game for ${playerName} (${socket.id})`);
 
             socket.emit('quick-match', {
                 playerName: playerName,
-                userId: uniqueUserId, // Ensure uniqueness
-                token: `demo_token_${uniqueUserId}`
+                userId: socket.id, // ← NEW: Just socket.id
+                token: `demo_token_${socket.id}` // ← NEW: Just socket.id
             });
         }
 
