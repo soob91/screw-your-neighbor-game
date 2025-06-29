@@ -158,6 +158,46 @@
             font-size: 0.7rem;
         }
 
+        /* Enhanced Video Controls */
+        .video-controls {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            right: 2px;
+            display: flex;
+            gap: 2px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .focus-slot:hover .video-controls {
+            opacity: 1;
+        }
+
+        .video-control-btn {
+            padding: 2px 4px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            flex: 1;
+        }
+
+        .video-control-btn:hover {
+            background: rgba(0,0,0,1);
+        }
+
+        .video-control-btn.active {
+            background: #4caf50;
+        }
+
+        .video-control-btn.muted {
+            background: #f44336;
+        }
+
         .player-info {
             display: flex;
             justify-content: space-between;
@@ -177,25 +217,31 @@
             font-size: 0.7rem;
         }
 
+        /* ENHANCED CARD DESIGN - Half Size & Playing Card Look */
         .card-display {
             width: 100%;
-            height: 50px;
-            background: #fff;
-            border-radius: 6px;
+            height: 35px; /* Half the original 50px height */
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border: 1px solid #ddd;
+            border-radius: 4px; /* Smaller radius for playing card look */
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             color: #333;
             font-weight: bold;
             margin-bottom: 5px;
-            border: 1px solid #ddd;
             transition: all 0.2s ease;
+            font-family: 'Times New Roman', serif; /* Classic playing card font */
+            font-size: 0.7rem; /* Smaller text for smaller card */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         .card-display.face-down {
-            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            background: linear-gradient(145deg, #1a237e, #303f9f);
             color: white;
             cursor: pointer;
+            font-size: 0.9rem;
         }
 
         .card-display.face-down:hover {
@@ -203,15 +249,30 @@
         }
 
         .card-display.red {
-            color: #d73027;
+            color: #d32f2f; /* Playing card red */
+            background: linear-gradient(145deg, #ffffff, #f8f8f8);
         }
 
         .card-display.black {
-            color: #333;
+            color: #212121; /* Playing card black */
+            background: linear-gradient(145deg, #ffffff, #f8f8f8);
         }
 
         .card-display.revealed {
-            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+            box-shadow: 0 0 8px rgba(255,215,0,0.6);
+            transform: scale(1.02);
+        }
+
+        /* Card content styling for better playing card appearance */
+        .card-value {
+            font-size: 0.65rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .card-suit {
+            font-size: 0.75rem;
+            margin-top: -2px;
         }
 
         .action-button {
@@ -356,27 +417,36 @@
             font-weight: bold;
         }
 
+        /* ENHANCED MINI CARD - Half Size & Playing Card Look */
         .available-player .mini-card {
             width: 100%;
-            height: 25px;
-            background: #fff;
-            border-radius: 3px;
+            height: 18px; /* Half the original size */
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border: 1px solid #ddd;
+            border-radius: 2px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #333;
-            font-size: 0.6rem;
+            font-size: 0.55rem; /* Smaller font */
             font-weight: bold;
             margin-bottom: 2px;
+            font-family: 'Times New Roman', serif;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
         .available-player .mini-card.face-down {
-            background: #1e3c72;
+            background: linear-gradient(145deg, #1a237e, #303f9f);
             color: white;
+            font-size: 0.6rem;
         }
 
         .available-player .mini-card.red {
-            color: #d73027;
+            color: #d32f2f;
+        }
+
+        .available-player .mini-card.black {
+            color: #212121;
         }
 
         .available-player .mini-lives {
@@ -610,6 +680,16 @@
             .game-status {
                 font-size: 0.8rem;
             }
+
+            .card-display {
+                height: 30px; /* Even smaller on mobile */
+                font-size: 0.6rem;
+            }
+
+            .available-player .mini-card {
+                height: 15px;
+                font-size: 0.5rem;
+            }
         }
 
         /* Hidden elements */
@@ -798,6 +878,7 @@
         let localVideoTrack = null;
         let localAudioTrack = null;
         let remoteUsers = {};
+        let videoStates = {}; // For enhanced video controls
 
         // Production optimizations
         let updateTimeout = null;
@@ -1287,7 +1368,7 @@
                 return slot;
             }
 
-            // Video container
+            // Video container with enhanced controls
             const videoContainer = document.createElement('div');
             videoContainer.className = 'video-container';
             const videoElement = document.createElement('div');
@@ -1300,7 +1381,17 @@
             placeholder.textContent = '📹';
             videoElement.appendChild(placeholder);
             
+            // Enhanced video controls
+            const videoControls = document.createElement('div');
+            videoControls.className = 'video-controls';
+            videoControls.innerHTML = `
+                <button class="video-control-btn" onclick="startVideoForPlayer('${player.id}')" title="Start Video">📷</button>
+                <button class="video-control-btn" onclick="toggleMuteForPlayer('${player.id}')" title="Mute/Unmute">🎤</button>
+                <button class="video-control-btn" onclick="endVideoForPlayer('${player.id}')" title="End Video">❌</button>
+            `;
+            
             videoContainer.appendChild(videoElement);
+            videoContainer.appendChild(videoControls);
 
             // Player info
             const playerInfo = document.createElement('div');
@@ -1311,15 +1402,21 @@
                 <span class="player-lives">❤️ ${player.lives || 3}</span>
             `;
 
-            // Card display - FIXED LOGIC TO HIDE CARDS PROPERLY
+            // ENHANCED Card display with playing card design
             const cardDisplay = document.createElement('div');
             cardDisplay.className = 'card-display';
             
             // Show card only if it's revealed OR if it's the end of round OR if it's my own card
             if (player.card && (player.cardRevealed || currentGame.turnPhase === 'revealing' || (player.id === playerId && player.cardRevealed))) {
                 const card = player.card;
-                cardDisplay.className += card.suit === '♥' || card.suit === '♦' ? ' red revealed' : ' black revealed';
-                cardDisplay.textContent = `${card.value}${card.suit}`;
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                cardDisplay.className += isRed ? ' red revealed' : ' black revealed';
+                
+                // Enhanced card content with separate value and suit
+                cardDisplay.innerHTML = `
+                    <div class="card-value">${card.value}</div>
+                    <div class="card-suit">${card.suit}</div>
+                `;
             } else if (player.hasCard || player.card) {
                 // Show face-down card
                 cardDisplay.className += ' face-down';
@@ -1406,9 +1503,10 @@
                 const miniCard = document.createElement('div');
                 miniCard.className = 'mini-card';
                 
-                // FIXED CARD VISIBILITY - Only show cards when appropriate
+                // ENHANCED mini card visibility with playing card design
                 if (player.card && (player.cardRevealed || currentGame.turnPhase === 'revealing' || (player.id === playerId && player.cardRevealed))) {
-                    miniCard.className += player.card.suit === '♥' || player.card.suit === '♦' ? ' red' : ' black';
+                    const isRed = player.card.suit === '♥' || player.card.suit === '♦';
+                    miniCard.className += isRed ? ' red' : ' black';
                     miniCard.textContent = `${player.card.value}${player.card.suit}`;
                 } else if (player.hasCard || player.card) {
                     miniCard.className += ' face-down';
@@ -1458,6 +1556,37 @@
 
             renderPersonalTable();
             renderAvailablePlayers();
+        }
+
+        // Enhanced Video Controls Functions
+        function startVideoForPlayer(playerId) {
+            if (playerId === playerId) {
+                // Start own video
+                initializeVideoCall();
+            }
+            showToast(`📹 Video starting for player`, 'info');
+        }
+
+        function toggleMuteForPlayer(playerId) {
+            if (playerId === playerId && localAudioTrack) {
+                const enabled = localAudioTrack.enabled;
+                localAudioTrack.setEnabled(!enabled);
+                showToast(`🎤 ${enabled ? 'Muted' : 'Unmuted'}`, 'info');
+                
+                // Update button state
+                const btn = document.querySelector(`[onclick="toggleMuteForPlayer('${playerId}')"]`);
+                if (btn) {
+                    btn.className = enabled ? 'video-control-btn muted' : 'video-control-btn';
+                    btn.textContent = enabled ? '🔇' : '🎤';
+                }
+            }
+        }
+
+        function endVideoForPlayer(playerId) {
+            if (playerId === playerId) {
+                leaveVideoCall();
+            }
+            showToast(`📹 Video ended for player`, 'info');
         }
 
         // Game actions
