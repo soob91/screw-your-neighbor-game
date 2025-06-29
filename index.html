@@ -1378,10 +1378,13 @@
         }
 
         function showHostControls() {
-            if (currentGame?.hostId === playerId && currentGame?.state === 'waiting') {
-                document.getElementById('hostControls')?.classList.remove('hidden');
-            }
-        }
+    // FIXED: Handle host ID with potential timestamp
+    const isHost = currentGame?.hostId === playerId || currentGame?.hostId?.startsWith(playerId);
+    
+    if (isHost && currentGame?.state === 'waiting') {
+        document.getElementById('hostControls')?.classList.remove('hidden');
+    }
+}
 
         function hideHostControls() {
             document.getElementById('hostControls')?.classList.add('hidden');
@@ -1750,6 +1753,13 @@
     }
 
     const settings = { startingLives: 3, deckCount: 1 };
+
+    socket.emit('start-game', { 
+        gameId: currentGame.id,
+        settings 
+    });
+    log('🚀 Starting game...');
+}
 
     socket.emit('start-game', { 
         gameId: currentGame.id,
