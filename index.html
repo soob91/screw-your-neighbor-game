@@ -130,12 +130,31 @@
             margin-bottom: 5px;
         }
 
+        /* FIXED: Card + Video Side-by-Side Layout */
+        .player-content {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+            height: 100%;
+        }
+
+        .card-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .video-section {
+            width: 80px;
+            flex-shrink: 0;
+        }
+
         .video-container {
             width: 100%;
             height: 60px;
             background: #333;
             border-radius: 8px;
-            margin-bottom: 5px;
             overflow: hidden;
             position: relative;
         }
@@ -165,7 +184,7 @@
             left: 2px;
             right: 2px;
             display: flex;
-            gap: 2px;
+            gap: 1px;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -175,12 +194,12 @@
         }
 
         .video-control-btn {
-            padding: 2px 4px;
+            padding: 1px 2px;
             background: rgba(0,0,0,0.8);
             color: white;
             border: none;
-            border-radius: 3px;
-            font-size: 0.6rem;
+            border-radius: 2px;
+            font-size: 0.5rem;
             cursor: pointer;
             transition: background 0.3s ease;
             flex: 1;
@@ -208,6 +227,10 @@
 
         .player-name {
             font-weight: bold;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .player-lives {
@@ -215,33 +238,41 @@
             padding: 2px 6px;
             border-radius: 10px;
             font-size: 0.7rem;
+            flex-shrink: 0;
         }
 
-        /* ENHANCED CARD DESIGN - Half Size & Playing Card Look */
+        /* FIXED: Proper Playing Card Design - Perfect Size */
         .card-display {
             width: 100%;
-            height: 35px; /* Half the original 50px height */
-            background: linear-gradient(145deg, #ffffff, #f0f0f0);
-            border: 1px solid #ddd;
-            border-radius: 4px; /* Smaller radius for playing card look */
+            max-width: 120px;
+            height: 75px;
+            background: linear-gradient(145deg, #ffffff, #f8f8f8);
+            border: 2px solid #ddd;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: #333;
             font-weight: bold;
-            margin-bottom: 5px;
-            transition: all 0.2s ease;
-            font-family: 'Times New Roman', serif; /* Classic playing card font */
-            font-size: 0.7rem; /* Smaller text for smaller card */
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            margin: 8px 0;
+            transition: all 0.3s ease;
+            font-family: 'Times New Roman', serif;
+            font-size: 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .card-display:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
         }
 
         .card-display.face-down {
             background: linear-gradient(145deg, #1a237e, #303f9f);
             color: white;
-            cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 1.5rem;
         }
 
         .card-display.face-down:hover {
@@ -249,35 +280,43 @@
         }
 
         .card-display.red {
-            color: #d32f2f; /* Playing card red */
-            background: linear-gradient(145deg, #ffffff, #f8f8f8);
+            color: #d32f2f;
+            background: linear-gradient(145deg, #ffffff, #fafafa);
         }
 
         .card-display.black {
-            color: #212121; /* Playing card black */
-            background: linear-gradient(145deg, #ffffff, #f8f8f8);
+            color: #212121;
+            background: linear-gradient(145deg, #ffffff, #fafafa);
         }
 
         .card-display.revealed {
-            box-shadow: 0 0 8px rgba(255,215,0,0.6);
+            box-shadow: 0 0 15px rgba(255,215,0,0.6);
             transform: scale(1.02);
         }
 
-        /* Card content styling for better playing card appearance */
+        /* Card content styling for authentic playing card */
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
         .card-value {
-            font-size: 0.65rem;
+            font-size: 1.1rem;
             font-weight: bold;
             line-height: 1;
+            margin-bottom: 2px;
         }
 
         .card-suit {
-            font-size: 0.75rem;
-            margin-top: -2px;
+            font-size: 1.3rem;
+            line-height: 1;
         }
 
         .action-button {
             width: 100%;
-            padding: 4px 8px;
+            padding: 6px 8px;
             background: #00a8ff;
             border: none;
             border-radius: 4px;
@@ -285,7 +324,7 @@
             font-size: 0.7rem;
             cursor: pointer;
             transition: all 0.2s;
-            margin-top: 2px;
+            margin-top: 5px;
         }
 
         .action-button:hover {
@@ -417,28 +456,28 @@
             font-weight: bold;
         }
 
-        /* ENHANCED MINI CARD - Half Size & Playing Card Look */
+        /* FIXED: Perfect Mini Cards */
         .available-player .mini-card {
             width: 100%;
-            height: 18px; /* Half the original size */
+            height: 25px;
             background: linear-gradient(145deg, #ffffff, #f0f0f0);
             border: 1px solid #ddd;
-            border-radius: 2px;
+            border-radius: 3px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #333;
-            font-size: 0.55rem; /* Smaller font */
+            font-size: 0.65rem;
             font-weight: bold;
             margin-bottom: 2px;
             font-family: 'Times New Roman', serif;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         .available-player .mini-card.face-down {
             background: linear-gradient(145deg, #1a237e, #303f9f);
             color: white;
-            font-size: 0.6rem;
+            font-size: 0.7rem;
         }
 
         .available-player .mini-card.red {
@@ -664,6 +703,10 @@
             .video-container {
                 height: 50px;
             }
+
+            .video-section {
+                width: 60px;
+            }
             
             .game-controls {
                 grid-template-columns: repeat(2, 1fr);
@@ -682,13 +725,13 @@
             }
 
             .card-display {
-                height: 30px; /* Even smaller on mobile */
-                font-size: 0.6rem;
+                height: 60px;
+                font-size: 0.9rem;
             }
 
             .available-player .mini-card {
-                height: 15px;
-                font-size: 0.5rem;
+                height: 20px;
+                font-size: 0.6rem;
             }
         }
 
@@ -863,7 +906,7 @@
         let playerId = null;
         let playerName = '';
         
-        // Personal Table state
+        // FIXED: Personal Table state with proper cleanup
         let focusedPlayers = {
             leftNeighbor: null,
             currentTurn: null,
@@ -878,7 +921,7 @@
         let localVideoTrack = null;
         let localAudioTrack = null;
         let remoteUsers = {};
-        let videoStates = {}; // For enhanced video controls
+        let videoStates = {};
 
         // Production optimizations
         let updateTimeout = null;
@@ -900,7 +943,6 @@
                 gameMessages.appendChild(messageDiv);
                 gameMessages.scrollTop = gameMessages.scrollHeight;
                 
-                // Cleanup old messages for performance
                 while (gameMessages.children.length > 100) {
                     gameMessages.removeChild(gameMessages.firstChild);
                 }
@@ -915,7 +957,6 @@
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
                 
-                // Cleanup old messages for performance
                 while (chatMessages.children.length > 50) {
                     chatMessages.removeChild(chatMessages.firstChild);
                 }
@@ -933,6 +974,33 @@
                     toast.parentNode.removeChild(toast);
                 }
             }, 3000);
+        }
+
+        // FIXED: Complete cleanup function
+        function cleanupGameState() {
+            // Clear all game state
+            currentGame = null;
+            playerId = null;
+            
+            // Clear personal table
+            focusedPlayers = {
+                leftNeighbor: null,
+                currentTurn: null,
+                rightNeighbor: null,
+                custom1: null,
+                custom2: null
+            };
+            
+            // Clear video state
+            videoStates = {};
+            remoteUsers = {};
+            
+            // Clear UI
+            const focusGrid = document.getElementById('focusGrid');
+            if (focusGrid) focusGrid.innerHTML = '';
+            
+            const playersScroll = document.getElementById('playersScroll');
+            if (playersScroll) playersScroll.innerHTML = '';
         }
 
         // Menu navigation
@@ -965,11 +1033,15 @@
             document.getElementById('gameContent').classList.remove('hidden');
         }
 
-        // Server connection with production error handling
+        // FIXED: Server connection with proper cleanup
         function connectToServer() {
+            // Disconnect existing socket first
             if (socket && socket.connected) {
-                return; // Already connected
+                socket.disconnect();
             }
+            
+            // Clean up any existing state
+            cleanupGameState();
 
             log('🔄 Attempting to connect to server...');
             
@@ -979,7 +1051,8 @@
                 reconnection: true,
                 reconnectionDelay: 1000,
                 reconnectionAttempts: 5,
-                maxReconnectionAttempts: 10
+                maxReconnectionAttempts: 10,
+                forceNew: true // Force new connection
             });
             
             socket.on('connect', () => {
@@ -994,7 +1067,6 @@
                 log(`❌ Disconnected from server: ${reason}`);
                 document.getElementById('connectionStatus').innerHTML = '🔴 Disconnected';
                 
-                // Cleanup video on disconnect
                 if (isVideoJoined) {
                     leaveVideoCall().catch(console.error);
                 }
@@ -1008,7 +1080,7 @@
             setupSocketEvents();
         }
 
-        // Socket event handlers with production optimizations
+        // Socket event handlers
         function setupSocketEvents() {
             socket.on('public-game-created', function(data) {
                 log('🎮 Public game created! Waiting for players...');
@@ -1052,7 +1124,6 @@
                 updateGameDisplay();
                 updatePersonalTable();
                 
-                // Show host controls if you're the host
                 if (currentGame.hostId === playerId) {
                     showHostControls();
                 }
@@ -1072,7 +1143,6 @@
                 updateGameDisplay();
                 updatePersonalTable();
                 
-                // Initialize video after game starts
                 setTimeout(() => {
                     initializeVideoCall();
                 }, 1000);
@@ -1150,7 +1220,6 @@
                     showToast(`Winner: ${data.winner.name}!`, 'success');
                 }
                 
-                // Cleanup video
                 setTimeout(() => {
                     leaveVideoCall().catch(console.error);
                 }, 5000);
@@ -1230,11 +1299,10 @@
             });
         }
 
-        // Game display updates with production optimizations
+        // Game display updates
         function updateGameDisplay() {
             if (!currentGame) return;
 
-            // Throttle updates for performance
             if (updateTimeout) {
                 clearTimeout(updateTimeout);
             }
@@ -1247,11 +1315,9 @@
         function performGameDisplayUpdate() {
             if (!currentGame) return;
 
-            // Update header
             document.getElementById('gameCodeDisplay').innerHTML = `Game: <strong>${currentGame.gameCode || currentGame.id || 'UNKNOWN'}</strong>`;
             document.getElementById('playerCount').innerHTML = `Players: <strong>${currentGame.players?.length || 0}/${currentGame.maxPlayers || 8}</strong>`;
 
-            // Update button states
             updateButtonStates();
         }
 
@@ -1282,11 +1348,10 @@
             document.getElementById('hostControls')?.classList.add('hidden');
         }
 
-        // Personal Table management with production optimizations
+        // FIXED: Personal Table management - no more duplicates
         function updatePersonalTable() {
             if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
 
-            // Calculate player positions and roles
             const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
             if (myPlayerIndex === -1) return;
 
@@ -1296,15 +1361,20 @@
             const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
             const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
             
-            // Find current turn player
             const currentTurnPlayer = currentGame.players.find(p => p.id === currentGame.currentPlayerId);
 
-            // Auto-assign core players
-            focusedPlayers.leftNeighbor = currentGame.players[leftNeighborIndex];
-            focusedPlayers.rightNeighbor = currentGame.players[rightNeighborIndex];
-            focusedPlayers.currentTurn = currentTurnPlayer;
+            // FIXED: Only auto-assign if not already set
+            if (!focusedPlayers.leftNeighbor || !currentGame.players.find(p => p.id === focusedPlayers.leftNeighbor.id)) {
+                focusedPlayers.leftNeighbor = currentGame.players[leftNeighborIndex];
+            }
+            if (!focusedPlayers.rightNeighbor || !currentGame.players.find(p => p.id === focusedPlayers.rightNeighbor.id)) {
+                focusedPlayers.rightNeighbor = currentGame.players[rightNeighborIndex];
+            }
+            if (!focusedPlayers.currentTurn || focusedPlayers.currentTurn.id !== currentTurnPlayer?.id) {
+                focusedPlayers.currentTurn = currentTurnPlayer;
+            }
 
-            // Auto-assign dealer if not already in focus
+            // Auto-assign dealer if not in focus
             const dealer = currentGame.players.find(p => p.id === currentGame.dealerId);
             if (dealer && !isPlayerInFocus(dealer.id)) {
                 if (!focusedPlayers.custom1) {
@@ -1328,23 +1398,18 @@
             
             focusGrid.innerHTML = '';
 
-            // Left neighbor
             const leftSlot = createFocusSlot('left-neighbor', focusedPlayers.leftNeighbor, false);
             focusGrid.appendChild(leftSlot);
 
-            // Current turn (center)
             const currentSlot = createFocusSlot('current-turn', focusedPlayers.currentTurn, false);
             focusGrid.appendChild(currentSlot);
 
-            // Right neighbor
             const rightSlot = createFocusSlot('right-neighbor', focusedPlayers.rightNeighbor, false);
             focusGrid.appendChild(rightSlot);
 
-            // Custom slot 1
             const custom1Slot = createFocusSlot('custom', focusedPlayers.custom1, true);
             focusGrid.appendChild(custom1Slot);
 
-            // Custom slot 2
             const custom2Slot = createFocusSlot('custom', focusedPlayers.custom2, true);
             focusGrid.appendChild(custom2Slot);
         }
@@ -1368,32 +1433,14 @@
                 return slot;
             }
 
-            // Video container with enhanced controls
-            const videoContainer = document.createElement('div');
-            videoContainer.className = 'video-container';
-            const videoElement = document.createElement('div');
-            videoElement.className = 'video-element';
-            videoElement.id = `video-${player.id}`;
-            
-            // Add placeholder content
-            const placeholder = document.createElement('div');
-            placeholder.className = 'video-placeholder';
-            placeholder.textContent = '📹';
-            videoElement.appendChild(placeholder);
-            
-            // Enhanced video controls
-            const videoControls = document.createElement('div');
-            videoControls.className = 'video-controls';
-            videoControls.innerHTML = `
-                <button class="video-control-btn" onclick="startVideoForPlayer('${player.id}')" title="Start Video">📷</button>
-                <button class="video-control-btn" onclick="toggleMuteForPlayer('${player.id}')" title="Mute/Unmute">🎤</button>
-                <button class="video-control-btn" onclick="endVideoForPlayer('${player.id}')" title="End Video">❌</button>
-            `;
-            
-            videoContainer.appendChild(videoElement);
-            videoContainer.appendChild(videoControls);
+            // FIXED: Side-by-side layout
+            const playerContent = document.createElement('div');
+            playerContent.className = 'player-content';
 
-            // Player info
+            // Card section (left)
+            const cardSection = document.createElement('div');
+            cardSection.className = 'card-section';
+
             const playerInfo = document.createElement('div');
             playerInfo.className = 'player-info';
             const dealerText = (player.id === currentGame?.dealerId) ? ' (Dealer)' : '';
@@ -1402,23 +1449,23 @@
                 <span class="player-lives">❤️ ${player.lives || 3}</span>
             `;
 
-            // ENHANCED Card display with playing card design
+            // FIXED: Beautiful playing card display
             const cardDisplay = document.createElement('div');
             cardDisplay.className = 'card-display';
             
-            // Show card only if it's revealed OR if it's the end of round OR if it's my own card
             if (player.card && (player.cardRevealed || currentGame.turnPhase === 'revealing' || (player.id === playerId && player.cardRevealed))) {
                 const card = player.card;
                 const isRed = card.suit === '♥' || card.suit === '♦';
                 cardDisplay.className += isRed ? ' red revealed' : ' black revealed';
                 
-                // Enhanced card content with separate value and suit
-                cardDisplay.innerHTML = `
+                const cardContent = document.createElement('div');
+                cardContent.className = 'card-content';
+                cardContent.innerHTML = `
                     <div class="card-value">${card.value}</div>
                     <div class="card-suit">${card.suit}</div>
                 `;
+                cardDisplay.appendChild(cardContent);
             } else if (player.hasCard || player.card) {
-                // Show face-down card
                 cardDisplay.className += ' face-down';
                 cardDisplay.textContent = '🂠';
                 if (player.id === playerId) {
@@ -1428,9 +1475,8 @@
                 cardDisplay.textContent = 'No Card';
             }
 
-            slot.appendChild(videoContainer);
-            slot.appendChild(playerInfo);
-            slot.appendChild(cardDisplay);
+            cardSection.appendChild(playerInfo);
+            cardSection.appendChild(cardDisplay);
 
             // Action button for right neighbor
             if (type === 'right-neighbor' && canTradeWith(player)) {
@@ -1438,8 +1484,39 @@
                 actionBtn.className = 'action-button trade';
                 actionBtn.textContent = 'Trade →';
                 actionBtn.onclick = () => requestTrade(player.id);
-                slot.appendChild(actionBtn);
+                cardSection.appendChild(actionBtn);
             }
+
+            // Video section (right)
+            const videoSection = document.createElement('div');
+            videoSection.className = 'video-section';
+
+            const videoContainer = document.createElement('div');
+            videoContainer.className = 'video-container';
+            const videoElement = document.createElement('div');
+            videoElement.className = 'video-element';
+            videoElement.id = `video-${player.id}`;
+            
+            const placeholder = document.createElement('div');
+            placeholder.className = 'video-placeholder';
+            placeholder.textContent = '📹';
+            videoElement.appendChild(placeholder);
+            
+            const videoControls = document.createElement('div');
+            videoControls.className = 'video-controls';
+            videoControls.innerHTML = `
+                <button class="video-control-btn" onclick="startVideoForPlayer('${player.id}')" title="Start Video">📷</button>
+                <button class="video-control-btn" onclick="toggleMuteForPlayer('${player.id}')" title="Mute">🎤</button>
+                <button class="video-control-btn" onclick="endVideoForPlayer('${player.id}')" title="End">❌</button>
+            `;
+            
+            videoContainer.appendChild(videoElement);
+            videoContainer.appendChild(videoControls);
+            videoSection.appendChild(videoContainer);
+
+            playerContent.appendChild(cardSection);
+            playerContent.appendChild(videoSection);
+            slot.appendChild(playerContent);
 
             // Remove button for custom slots
             if (removable) {
@@ -1503,7 +1580,6 @@
                 const miniCard = document.createElement('div');
                 miniCard.className = 'mini-card';
                 
-                // ENHANCED mini card visibility with playing card design
                 if (player.card && (player.cardRevealed || currentGame.turnPhase === 'revealing' || (player.id === playerId && player.cardRevealed))) {
                     const isRed = player.card.suit === '♥' || player.card.suit === '♦';
                     miniCard.className += isRed ? ' red' : ' black';
@@ -1526,6 +1602,7 @@
             });
         }
 
+        // FIXED: No more duplicates in focus
         function addToFocus(player) {
             if (isPlayerInFocus(player.id)) return;
 
@@ -1534,14 +1611,12 @@
             } else if (!focusedPlayers.custom2) {
                 focusedPlayers.custom2 = player;
             } else {
-                // Replace custom1 with this player
                 focusedPlayers.custom1 = player;
             }
 
             renderPersonalTable();
             renderAvailablePlayers();
             
-            // Try to initialize video for this player
             setTimeout(() => {
                 initializeVideoForPlayer(player.id);
             }, 100);
@@ -1558,10 +1633,9 @@
             renderAvailablePlayers();
         }
 
-        // Enhanced Video Controls Functions
+        // Video Controls
         function startVideoForPlayer(playerId) {
             if (playerId === playerId) {
-                // Start own video
                 initializeVideoCall();
             }
             showToast(`📹 Video starting for player`, 'info');
@@ -1573,7 +1647,6 @@
                 localAudioTrack.setEnabled(!enabled);
                 showToast(`🎤 ${enabled ? 'Muted' : 'Unmuted'}`, 'info');
                 
-                // Update button state
                 const btn = document.querySelector(`[onclick="toggleMuteForPlayer('${playerId}')"]`);
                 if (btn) {
                     btn.className = enabled ? 'video-control-btn muted' : 'video-control-btn';
@@ -1601,10 +1674,7 @@
                 return;
             }
 
-            const settings = {
-                startingLives: 3,
-                deckCount: 1
-            };
+            const settings = { startingLives: 3, deckCount: 1 };
 
             socket.emit('start-game', { 
                 gameId: currentGame.id,
@@ -1615,17 +1685,13 @@
 
         function flipCard() {
             if (!socket || !currentGame) return;
-            socket.emit('flip-card', {
-                gameId: currentGame.id
-            });
+            socket.emit('flip-card', { gameId: currentGame.id });
             log('🎴 Flipping your card...');
         }
 
         function keepCard() {
             if (!socket || !currentGame) return;
-            socket.emit('skip-turn', {
-                gameId: currentGame.id
-            });
+            socket.emit('skip-turn', { gameId: currentGame.id });
             log('✋ Keeping your card...');
         }
 
@@ -1640,29 +1706,20 @@
 
         function endRound() {
             if (!socket || !currentGame) return;
-            socket.emit('end-round', {
-                gameId: currentGame.id
-            });
+            socket.emit('end-round', { gameId: currentGame.id });
             log('⏰ Ending round...');
         }
 
+        // FIXED: Proper leave game with complete cleanup
         function leaveGame() {
             if (confirm('Are you sure you want to leave the game?')) {
                 if (socket) {
                     socket.disconnect();
                 }
                 leaveVideoCall().catch(console.error);
+                cleanupGameState(); // Complete cleanup
                 showMainMenu();
-                
-                // Cleanup
-                currentGame = null;
-                focusedPlayers = {
-                    leftNeighbor: null,
-                    currentTurn: null,
-                    rightNeighbor: null,
-                    custom1: null,
-                    custom2: null
-                };
+                log('🚪 Left game completely');
             }
         }
 
@@ -1680,7 +1737,7 @@
             }
         }
 
-        // Video integration with production optimizations
+        // Video integration (add your Agora token later)
         function initializeVideoCall() {
             if (isVideoJoined) return;
 
@@ -1698,7 +1755,6 @@
                 joinVideoChannel();
             } catch (error) {
                 log(`❌ Error initializing video: ${error.message}`);
-                // Continue without video
             }
         }
 
@@ -1706,29 +1762,25 @@
             try {
                 const channelName = currentGame?.gameCode || currentGame?.id || 'test123';
                 const uid = Math.floor(Math.random() * 1000000);
-                const appId = 'cfef8101dcc14802a8f97d8805b3ebc9';
+                const appId = 'YOUR_AGORA_APP_ID'; // Add your token here
 
                 log(`📹 Attempting to join channel: ${channelName}`);
 
                 await agoraClient.join(appId, channelName, null, uid);
                 log('📹 Successfully joined channel');
 
-                // Create local tracks
                 try {
                     localVideoTrack = await AgoraRTC.createCameraVideoTrack();
                     localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                     log('📹 Media tracks created');
 
-                    // Play local video
                     const myVideoElement = document.getElementById(`video-${playerId}`);
                     if (myVideoElement && localVideoTrack) {
                         localVideoTrack.play(myVideoElement);
-                        // Remove placeholder
                         const placeholder = myVideoElement.querySelector('.video-placeholder');
                         if (placeholder) placeholder.remove();
                     }
 
-                    // Publish tracks
                     await agoraClient.publish([localVideoTrack, localAudioTrack]);
                     log('📹 Tracks published successfully');
 
@@ -1737,12 +1789,10 @@
 
                 } catch (mediaError) {
                     log(`❌ Media error: ${mediaError.message}`);
-                    // Continue without local video/audio
                 }
 
             } catch (error) {
                 log(`❌ Error joining video channel: ${error.message}`);
-                // Continue without video
             }
         }
 
@@ -1756,7 +1806,6 @@
                     const videoElement = document.getElementById(`video-${user.uid}`);
                     if (videoElement && user.videoTrack) {
                         user.videoTrack.play(videoElement);
-                        // Remove placeholder
                         const placeholder = videoElement.querySelector('.video-placeholder');
                         if (placeholder) placeholder.remove();
                     }
@@ -1774,7 +1823,6 @@
             if (mediaType === 'video') {
                 const videoElement = document.getElementById(`video-${user.uid}`);
                 if (videoElement) {
-                    // Add placeholder back
                     const placeholder = document.createElement('div');
                     placeholder.className = 'video-placeholder';
                     placeholder.textContent = '📹';
@@ -1790,7 +1838,6 @@
             
             const videoElement = document.getElementById(`video-${user.uid}`);
             if (videoElement) {
-                // Add placeholder back
                 const placeholder = document.createElement('div');
                 placeholder.className = 'video-placeholder';
                 placeholder.textContent = '📹';
@@ -1805,7 +1852,6 @@
                 const videoElement = document.getElementById(`video-${playerId}`);
                 if (videoElement) {
                     remoteUser.videoTrack.play(videoElement);
-                    // Remove placeholder
                     const placeholder = videoElement.querySelector('.video-placeholder');
                     if (placeholder) placeholder.remove();
                 }
@@ -1845,7 +1891,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             log('🎮 Game loaded with Personal Table integration!');
             
-            // Set up chat input handler
             const chatInput = document.getElementById('chatInput');
             if (chatInput) {
                 chatInput.addEventListener('keypress', function(e) {
@@ -1855,7 +1900,6 @@
                 });
             }
 
-            // Cleanup on page unload
             window.addEventListener('beforeunload', () => {
                 if (socket) {
                     socket.disconnect();
@@ -1867,7 +1911,6 @@
         });
 
         // Production optimizations
-        // Throttle resize events
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
@@ -1878,7 +1921,6 @@
 
         // Memory cleanup
         setInterval(() => {
-            // Cleanup old log messages
             const gameMessages = document.getElementById('gameMessages');
             if (gameMessages && gameMessages.children.length > 100) {
                 while (gameMessages.children.length > 50) {
@@ -1892,7 +1934,7 @@
                     chatMessages.removeChild(chatMessages.firstChild);
                 }
             }
-        }, 30000); // Clean up every 30 seconds
+        }, 30000);
     </script>
 </body>
 </html>
