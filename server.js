@@ -32,23 +32,12 @@ app.use(cors({
 }));
 
 // Rate limiting for production
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000,
-  message: 'Too many requests from this IP',
-  standardHeaders: true,
-  legacyHeaders: false,
-  trustProxy: true, // Add this line
-  skipFailedRequests: true // Add this line
-});
-app.use(limiter);
+// Rate limiting disabled for Railway compatibility
+// const limiter = rateLimit({...});
+// app.use(limiter);
 
-// Socket-specific rate limiting
-const socketLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 60, // 60 events per minute per IP
-  skipSuccessfulRequests: true
-});
+// Socket-specific rate limiting disabled
+// const socketLimiter = rateLimit({...});
 
 // Body parsing with limits
 app.use(express.json({ limit: '10mb' }));
@@ -805,10 +794,9 @@ io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id} (Active: ${serverStats.activeConnections})`);
 
   // Apply rate limiting
-  socket.use((packet, next) => {
-    socketLimiter(socket.request, {}, next);
-  });
-
+  // socket.use((packet, next) => {
+//   socketLimiter(socket.request, {}, next);
+// });
   // Heartbeat for connection monitoring
   socket.on('heartbeat', (data) => {
     socket.emit('heartbeat-ack', { 
