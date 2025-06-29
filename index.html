@@ -130,7 +130,7 @@
             margin-bottom: 5px;
         }
 
-        /* FIXED: Card + Video Side-by-Side Layout */
+        /* Card + Video Side-by-Side Layout */
         .player-content {
             display: flex;
             gap: 8px;
@@ -241,7 +241,7 @@
             flex-shrink: 0;
         }
 
-        /* FIXED: Proper Playing Card Design - Perfect Size */
+        /* Playing Card Design */
         .card-display {
             width: 100%;
             max-width: 120px;
@@ -294,7 +294,7 @@
             transform: scale(1.02);
         }
 
-        /* Card content styling for authentic playing card */
+        /* Card content styling */
         .card-content {
             display: flex;
             flex-direction: column;
@@ -456,7 +456,7 @@
             font-weight: bold;
         }
 
-        /* FIXED: Perfect Mini Cards */
+        /* Mini Cards */
         .available-player .mini-card {
             width: 100%;
             height: 25px;
@@ -906,7 +906,7 @@
         let playerId = null;
         let playerName = '';
         
-        // Personal Table state with bulletproof cleanup
+        // FIXED: Personal Table state with bulletproof cleanup
         let focusedPlayers = null;
         
         // Video state
@@ -921,7 +921,7 @@
         let updateTimeout = null;
         let lastGameState = null;
 
-        // Initialize clean focus state
+        // FIXED: Initialize clean focus state
         function initializeFocusState() {
             focusedPlayers = {
                 leftNeighbor: null,
@@ -981,13 +981,13 @@
             }, 3000);
         }
 
-        // BULLETPROOF cleanup function - NO MORE DUPLICATES
+        // FIXED: BULLETPROOF cleanup function - NO MORE DUPLICATES
         function completeCleanup() {
             log('🧹 Performing complete cleanup...');
             
             // 1. Disconnect socket completely
             if (socket) {
-                socket.removeAllListeners();
+                socket.removeAllListeners(); // Remove ALL event listeners
                 socket.disconnect();
                 socket = null;
             }
@@ -1033,16 +1033,17 @@
 
         // Menu navigation
         function showMainMenu() {
-            completeCleanup();
+            completeCleanup(); // Always cleanup when going to main menu
             document.querySelectorAll('.menu-screen, #gameContent').forEach(el => el.classList.add('hidden'));
             document.getElementById('main-menu').classList.remove('hidden');
         }
 
         function showQuickMatch() {
-            completeCleanup();
+            completeCleanup(); // CRITICAL: Complete cleanup before new game
             document.querySelectorAll('.menu-screen').forEach(el => el.classList.add('hidden'));
             document.getElementById('quick-match').classList.remove('hidden');
             
+            // Small delay to ensure cleanup is complete
             setTimeout(() => {
                 connectToServer();
                 setTimeout(() => {
@@ -1066,10 +1067,11 @@
             document.getElementById('gameContent').classList.remove('hidden');
         }
 
-        // Server connection with GUARANTEED fresh start
+        // FIXED: Server connection with GUARANTEED fresh start
         function connectToServer() {
             log('🔄 Creating FRESH server connection...');
             
+            // Ensure we start completely fresh
             if (socket) {
                 socket.removeAllListeners();
                 socket.disconnect();
@@ -1083,7 +1085,7 @@
                 reconnectionDelay: 1000,
                 reconnectionAttempts: 5,
                 maxReconnectionAttempts: 10,
-                forceNew: true
+                forceNew: true // CRITICAL: Force completely new connection
             });
             
             socket.on('connect', () => {
@@ -1266,7 +1268,7 @@
             });
         }
 
-        // Game creation with proper cleanup
+        // FIXED: Game creation with proper cleanup (no timestamp)
         function createPublicGame() {
             if (!socket || !socket.connected) {
                 log('❌ No socket connection - reconnecting...');
@@ -1281,7 +1283,7 @@
 
             socket.emit('quick-match', {
                 playerName: playerName,
-                userId: socket.id,
+                userId: socket.id, // Keep original ID for host detection
                 token: `demo_token_${socket.id}`
             });
         }
@@ -1373,9 +1375,7 @@
         }
 
         function showHostControls() {
-            const isHost = currentGame?.hostId === playerId || currentGame?.hostId?.startsWith(playerId);
-            
-            if (isHost && currentGame?.state === 'waiting') {
+            if (currentGame?.hostId === playerId && currentGame?.state === 'waiting') {
                 document.getElementById('hostControls')?.classList.remove('hidden');
             }
         }
@@ -1384,7 +1384,7 @@
             document.getElementById('hostControls')?.classList.add('hidden');
         }
 
-        // Personal Table management - ABSOLUTELY NO DUPLICATES
+        // FIXED: Personal Table management - ABSOLUTELY NO DUPLICATES
         function updatePersonalTable() {
             if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
             if (!focusedPlayers) initializeFocusState();
@@ -1397,24 +1397,15 @@
 
             log(`🔄 Updating table: ${playerCount} players total`);
 
-            const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
-            const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
+            // FIXED: Calculate unique player assignments
+            const uniquePlayersForFocus = calculateUniquePlayerSlots(myPlayerIndex, playerCount);
             
-            const currentTurnPlayer = currentGame.players.find(p => p.id === currentGame.currentPlayerId);
+            // Update focused players with unique assignments
+            focusedPlayers.leftNeighbor = uniquePlayersForFocus.leftNeighbor;
+            focusedPlayers.currentTurn = uniquePlayersForFocus.currentTurn;
+            focusedPlayers.rightNeighbor = uniquePlayersForFocus.rightNeighbor;
 
-            const leftNeighbor = currentGame.players[leftNeighborIndex];
-            const rightNeighbor = currentGame.players[rightNeighborIndex];
-
-            if (!focusedPlayers.leftNeighbor || focusedPlayers.leftNeighbor.id !== leftNeighbor.id) {
-                focusedPlayers.leftNeighbor = leftNeighbor;
-            }
-            if (!focusedPlayers.rightNeighbor || focusedPlayers.rightNeighbor.id !== rightNeighbor.id) {
-                focusedPlayers.rightNeighbor = rightNeighbor;
-            }
-            if (!focusedPlayers.currentTurn || focusedPlayers.currentTurn.id !== currentTurnPlayer?.id) {
-                focusedPlayers.currentTurn = currentTurnPlayer;
-            }
-
+            // Clean custom slots if player no longer exists
             if (focusedPlayers.custom1 && !currentGame.players.find(p => p.id === focusedPlayers.custom1.id)) {
                 focusedPlayers.custom1 = null;
             }
@@ -1422,6 +1413,7 @@
                 focusedPlayers.custom2 = null;
             }
 
+            // Auto-assign dealer if not in focus and slots available
             const dealer = currentGame.players.find(p => p.id === currentGame.dealerId);
             if (dealer && !isPlayerInFocus(dealer.id)) {
                 if (!focusedPlayers.custom1) {
@@ -1433,6 +1425,59 @@
 
             renderPersonalTable();
             renderAvailablePlayers();
+        }
+
+        // FIXED: Calculate unique player slots to prevent duplicates
+        function calculateUniquePlayerSlots(myPlayerIndex, playerCount) {
+            const players = currentGame.players;
+            const currentTurnPlayer = players.find(p => p.id === currentGame.currentPlayerId);
+            
+            let leftNeighbor = null;
+            let rightNeighbor = null;
+            let currentTurn = currentTurnPlayer;
+            
+            if (playerCount === 2) {
+                // With 2 players: other player is both left and right neighbor
+                // Only show them once in the current turn slot if they're current player
+                // Otherwise show them in left neighbor slot
+                const otherPlayerIndex = myPlayerIndex === 0 ? 1 : 0;
+                const otherPlayer = players[otherPlayerIndex];
+                
+                if (currentTurnPlayer && currentTurnPlayer.id === otherPlayer.id) {
+                    // Other player is current turn - show them in center
+                    currentTurn = otherPlayer;
+                    leftNeighbor = null;
+                    rightNeighbor = null;
+                } else {
+                    // Show other player as left neighbor, no current turn or right neighbor
+                    leftNeighbor = otherPlayer;
+                    currentTurn = null;
+                    rightNeighbor = null;
+                }
+            } else if (playerCount >= 3) {
+                // With 3+ players: calculate normal neighbors
+                const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
+                const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
+                
+                leftNeighbor = players[leftNeighborIndex];
+                rightNeighbor = players[rightNeighborIndex];
+                
+                // If current turn player is same as a neighbor, only show them in current turn slot
+                if (currentTurnPlayer) {
+                    if (currentTurnPlayer.id === leftNeighbor.id) {
+                        leftNeighbor = null;
+                    }
+                    if (currentTurnPlayer.id === rightNeighbor.id) {
+                        rightNeighbor = null;
+                    }
+                }
+            }
+            
+            return {
+                leftNeighbor,
+                currentTurn,
+                rightNeighbor
+            };
         }
 
         function isPlayerInFocus(playerId) {
@@ -1581,7 +1626,7 @@
             return isMyTurn && player.lives > 0 && currentGame.state === 'playing' && currentGame.turnPhase === 'trading';
         }
 
-        // Available players rendering - NO DUPLICATES
+        // FIXED: Available players rendering - NO DUPLICATES
         function renderAvailablePlayers() {
             const playersScroll = document.getElementById('playersScroll');
             if (!playersScroll) return;
@@ -1590,9 +1635,11 @@
 
             if (!currentGame || !currentGame.players) return;
 
+            // CRITICAL: Create Set to track already added players
             const addedPlayerIds = new Set();
 
             currentGame.players.forEach(player => {
+                // PREVENT DUPLICATES: Skip if already added
                 if (addedPlayerIds.has(player.id)) {
                     log(`⚠️ Skipping duplicate player: ${player.name} (${player.id})`);
                     return;
@@ -1655,6 +1702,7 @@
             log(`✅ Rendered ${addedPlayerIds.size} unique players`);
         }
 
+        // FIXED: Add to focus - prevent duplicates
         function addToFocus(player) {
             if (!focusedPlayers) initializeFocusState();
             
@@ -1724,16 +1772,14 @@
             showToast(`📹 Video ended for player`, 'info');
         }
 
-        // CLEAN Game actions
+        // Game actions
         function startGame() {
             if (!socket || !currentGame) {
                 showToast('Game not ready', 'error');
                 return;
             }
             
-            const isHost = currentGame.hostId === playerId || currentGame.hostId.startsWith(playerId);
-            
-            if (!isHost) {
+            if (currentGame.hostId !== playerId) {
                 showToast('Only the host can start the game', 'error');
                 return;
             }
@@ -1774,10 +1820,11 @@
             log('⏰ Ending round...');
         }
 
+        // FIXED: Leave game with complete cleanup
         function leaveGame() {
             if (confirm('Are you sure you want to leave the game?')) {
                 leaveVideoCall().catch(console.error);
-                completeCleanup();
+                completeCleanup(); // Complete cleanup
                 showMainMenu();
                 log('🚪 Left game and cleaned up completely');
             }
@@ -1797,7 +1844,7 @@
             }
         }
 
-        // Video integration
+        // Video integration (add your Agora token)
         function initializeVideoCall() {
             if (isVideoJoined) return;
 
@@ -1822,7 +1869,7 @@
             try {
                 const channelName = currentGame?.gameCode || currentGame?.id || 'test123';
                 const uid = Math.floor(Math.random() * 1000000);
-                const appId = 'YOUR_AGORA_APP_ID';
+                const appId = 'YOUR_AGORA_APP_ID'; // Add your token here
 
                 log(`📹 Attempting to join channel: ${channelName}`);
 
@@ -1947,10 +1994,11 @@
             }
         }
 
-        // Initialize
+        // FIXED: Initialize with clean state
         document.addEventListener('DOMContentLoaded', function() {
             log('🎮 Game initialized with bulletproof cleanup!');
             
+            // Initialize clean state
             initializeFocusState();
             
             const chatInput = document.getElementById('chatInput');
@@ -1964,6 +2012,17 @@
 
             window.addEventListener('beforeunload', () => {
                 completeCleanup();
+            });
+            
+            // Handle page refresh - force complete cleanup
+            window.addEventListener('beforeunload', () => {
+                if (socket) {
+                    socket.removeAllListeners();
+                    socket.disconnect();
+                }
+                if (isVideoJoined) {
+                    leaveVideoCall().catch(console.error);
+                }
             });
         });
 
