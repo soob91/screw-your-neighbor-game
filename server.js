@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
+app.set('trust proxy', true);
 
 // Production security and optimization middleware
 app.use(helmet({
@@ -32,11 +33,13 @@ app.use(cors({
 
 // Rate limiting for production
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: process.env.NODE_ENV === 'production' ? 100 : 1000,
   message: 'Too many requests from this IP',
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: true, // Add this line
+  skipFailedRequests: true // Add this line
 });
 app.use(limiter);
 
