@@ -906,7 +906,7 @@
         let playerId = null;
         let playerName = '';
         
-        // FIXED: Personal Table state with bulletproof cleanup
+        // Personal Table state with bulletproof cleanup
         let focusedPlayers = null;
         
         // Video state
@@ -921,7 +921,7 @@
         let updateTimeout = null;
         let lastGameState = null;
 
-        // FIXED: Initialize clean focus state
+        // Initialize clean focus state
         function initializeFocusState() {
             focusedPlayers = {
                 leftNeighbor: null,
@@ -981,13 +981,13 @@
             }, 3000);
         }
 
-        // FIXED: BULLETPROOF cleanup function - NO MORE DUPLICATES
+        // BULLETPROOF cleanup function - NO MORE DUPLICATES
         function completeCleanup() {
             log('🧹 Performing complete cleanup...');
             
             // 1. Disconnect socket completely
             if (socket) {
-                socket.removeAllListeners(); // Remove ALL event listeners
+                socket.removeAllListeners();
                 socket.disconnect();
                 socket = null;
             }
@@ -1033,17 +1033,16 @@
 
         // Menu navigation
         function showMainMenu() {
-            completeCleanup(); // Always cleanup when going to main menu
+            completeCleanup();
             document.querySelectorAll('.menu-screen, #gameContent').forEach(el => el.classList.add('hidden'));
             document.getElementById('main-menu').classList.remove('hidden');
         }
 
         function showQuickMatch() {
-            completeCleanup(); // CRITICAL: Complete cleanup before new game
+            completeCleanup();
             document.querySelectorAll('.menu-screen').forEach(el => el.classList.add('hidden'));
             document.getElementById('quick-match').classList.remove('hidden');
             
-            // Small delay to ensure cleanup is complete
             setTimeout(() => {
                 connectToServer();
                 setTimeout(() => {
@@ -1067,11 +1066,10 @@
             document.getElementById('gameContent').classList.remove('hidden');
         }
 
-        // FIXED: Server connection with GUARANTEED fresh start
+        // Server connection with GUARANTEED fresh start
         function connectToServer() {
             log('🔄 Creating FRESH server connection...');
             
-            // Ensure we start completely fresh
             if (socket) {
                 socket.removeAllListeners();
                 socket.disconnect();
@@ -1085,7 +1083,7 @@
                 reconnectionDelay: 1000,
                 reconnectionAttempts: 5,
                 maxReconnectionAttempts: 10,
-                forceNew: true // CRITICAL: Force completely new connection
+                forceNew: true
             });
             
             socket.on('connect', () => {
@@ -1268,7 +1266,7 @@
             });
         }
 
-        // FIXED: Game creation with GUARANTEED fresh game
+        // Game creation with proper cleanup
         function createPublicGame() {
             if (!socket || !socket.connected) {
                 log('❌ No socket connection - reconnecting...');
@@ -1283,8 +1281,8 @@
 
             socket.emit('quick-match', {
                 playerName: playerName,
-                userId: socket.id, // ← NEW: Just socket.id
-                token: `demo_token_${socket.id}` // ← NEW: Just socket.id
+                userId: socket.id,
+                token: `demo_token_${socket.id}`
             });
         }
 
@@ -1375,19 +1373,18 @@
         }
 
         function showHostControls() {
-    // FIXED: Handle host ID with potential timestamp
-    const isHost = currentGame?.hostId === playerId || currentGame?.hostId?.startsWith(playerId);
-    
-    if (isHost && currentGame?.state === 'waiting') {
-        document.getElementById('hostControls')?.classList.remove('hidden');
-    }
-}
+            const isHost = currentGame?.hostId === playerId || currentGame?.hostId?.startsWith(playerId);
+            
+            if (isHost && currentGame?.state === 'waiting') {
+                document.getElementById('hostControls')?.classList.remove('hidden');
+            }
+        }
 
         function hideHostControls() {
             document.getElementById('hostControls')?.classList.add('hidden');
         }
 
-        // FIXED: Personal Table management - ABSOLUTELY NO DUPLICATES
+        // Personal Table management - ABSOLUTELY NO DUPLICATES
         function updatePersonalTable() {
             if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
             if (!focusedPlayers) initializeFocusState();
@@ -1405,11 +1402,9 @@
             
             const currentTurnPlayer = currentGame.players.find(p => p.id === currentGame.currentPlayerId);
 
-            // CRITICAL: Check if players still exist before assigning
             const leftNeighbor = currentGame.players[leftNeighborIndex];
             const rightNeighbor = currentGame.players[rightNeighborIndex];
 
-            // Only update if player changed or doesn't exist
             if (!focusedPlayers.leftNeighbor || focusedPlayers.leftNeighbor.id !== leftNeighbor.id) {
                 focusedPlayers.leftNeighbor = leftNeighbor;
             }
@@ -1420,7 +1415,6 @@
                 focusedPlayers.currentTurn = currentTurnPlayer;
             }
 
-            // Clean custom slots if player no longer exists
             if (focusedPlayers.custom1 && !currentGame.players.find(p => p.id === focusedPlayers.custom1.id)) {
                 focusedPlayers.custom1 = null;
             }
@@ -1428,7 +1422,6 @@
                 focusedPlayers.custom2 = null;
             }
 
-            // Auto-assign dealer if not in focus and slots available
             const dealer = currentGame.players.find(p => p.id === currentGame.dealerId);
             if (dealer && !isPlayerInFocus(dealer.id)) {
                 if (!focusedPlayers.custom1) {
@@ -1588,7 +1581,7 @@
             return isMyTurn && player.lives > 0 && currentGame.state === 'playing' && currentGame.turnPhase === 'trading';
         }
 
-        // FIXED: Available players rendering - NO DUPLICATES
+        // Available players rendering - NO DUPLICATES
         function renderAvailablePlayers() {
             const playersScroll = document.getElementById('playersScroll');
             if (!playersScroll) return;
@@ -1597,11 +1590,9 @@
 
             if (!currentGame || !currentGame.players) return;
 
-            // CRITICAL: Create Set to track already added players
             const addedPlayerIds = new Set();
 
             currentGame.players.forEach(player => {
-                // PREVENT DUPLICATES: Skip if already added
                 if (addedPlayerIds.has(player.id)) {
                     log(`⚠️ Skipping duplicate player: ${player.name} (${player.id})`);
                     return;
@@ -1664,7 +1655,6 @@
             log(`✅ Rendered ${addedPlayerIds.size} unique players`);
         }
 
-        // FIXED: Add to focus - prevent duplicates
         function addToFocus(player) {
             if (!focusedPlayers) initializeFocusState();
             
@@ -1734,36 +1724,28 @@
             showToast(`📹 Video ended for player`, 'info');
         }
 
-        // Game actions
+        // CLEAN Game actions
         function startGame() {
-    if (!socket || !currentGame) {
-        showToast('Game not ready', 'error');
-        return;
-    }
-    
-    // FIXED: Handle host ID with potential timestamp
-    const isHost = currentGame.hostId === playerId || currentGame.hostId.startsWith(playerId);
-    
-    if (!isHost) {
-        showToast('Only the host can start the game', 'error');
-        return;
-    }
+            if (!socket || !currentGame) {
+                showToast('Game not ready', 'error');
+                return;
+            }
+            
+            const isHost = currentGame.hostId === playerId || currentGame.hostId.startsWith(playerId);
+            
+            if (!isHost) {
+                showToast('Only the host can start the game', 'error');
+                return;
+            }
 
-    const settings = { startingLives: 3, deckCount: 1 };
+            const settings = { startingLives: 3, deckCount: 1 };
 
-    socket.emit('start-game', { 
-        gameId: currentGame.id,
-        settings 
-    });
-    log('🚀 Starting game...');
-}
-
-    socket.emit('start-game', { 
-        gameId: currentGame.id,
-        settings 
-    });
-    log('🚀 Starting game...');
-}
+            socket.emit('start-game', { 
+                gameId: currentGame.id,
+                settings 
+            });
+            log('🚀 Starting game...');
+        }
 
         function flipCard() {
             if (!socket || !currentGame) return;
@@ -1792,11 +1774,10 @@
             log('⏰ Ending round...');
         }
 
-        // FIXED: Leave game with complete cleanup
         function leaveGame() {
             if (confirm('Are you sure you want to leave the game?')) {
                 leaveVideoCall().catch(console.error);
-                completeCleanup(); // Complete cleanup
+                completeCleanup();
                 showMainMenu();
                 log('🚪 Left game and cleaned up completely');
             }
@@ -1816,7 +1797,7 @@
             }
         }
 
-        // Video integration (add your Agora token)
+        // Video integration
         function initializeVideoCall() {
             if (isVideoJoined) return;
 
@@ -1841,7 +1822,7 @@
             try {
                 const channelName = currentGame?.gameCode || currentGame?.id || 'test123';
                 const uid = Math.floor(Math.random() * 1000000);
-                const appId = 'YOUR_AGORA_APP_ID'; // Add your token here
+                const appId = 'YOUR_AGORA_APP_ID';
 
                 log(`📹 Attempting to join channel: ${channelName}`);
 
@@ -1966,11 +1947,10 @@
             }
         }
 
-        // FIXED: Initialize with clean state
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             log('🎮 Game initialized with bulletproof cleanup!');
             
-            // Initialize clean state
             initializeFocusState();
             
             const chatInput = document.getElementById('chatInput');
@@ -1984,17 +1964,6 @@
 
             window.addEventListener('beforeunload', () => {
                 completeCleanup();
-            });
-            
-            // Handle page refresh - force complete cleanup
-            window.addEventListener('beforeunload', () => {
-                if (socket) {
-                    socket.removeAllListeners();
-                    socket.disconnect();
-                }
-                if (isVideoJoined) {
-                    leaveVideoCall().catch(console.error);
-                }
             });
         });
 
