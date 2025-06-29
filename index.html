@@ -241,11 +241,10 @@
             flex-shrink: 0;
         }
 
-        /* Playing Card Design */
+        /* Playing Card Design - Proper Card Proportions */
         .card-display {
-            width: 100%;
-            max-width: 120px;
-            height: 75px;
+            width: 80px;
+            height: 110px;
             background: linear-gradient(145deg, #ffffff, #f8f8f8);
             border: 2px solid #ddd;
             border-radius: 8px;
@@ -255,7 +254,7 @@
             justify-content: center;
             color: #333;
             font-weight: bold;
-            margin: 8px 0;
+            margin: 8px auto;
             transition: all 0.3s ease;
             font-family: 'Times New Roman', serif;
             font-size: 1rem;
@@ -435,6 +434,17 @@
             background: rgba(255,215,0,0.1);
         }
 
+        .available-player.tradeable {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+            animation: tradeGlow 2s infinite;
+        }
+
+        @keyframes tradeGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(231, 76, 60, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(231, 76, 60, 0.6); }
+        }
+
         .available-player .check-mark {
             position: absolute;
             top: -5px;
@@ -456,10 +466,10 @@
             font-weight: bold;
         }
 
-        /* Mini Cards */
+        /* Mini Cards - Proper Proportions */
         .available-player .mini-card {
-            width: 100%;
-            height: 25px;
+            width: 30px;
+            height: 42px;
             background: linear-gradient(145deg, #ffffff, #f0f0f0);
             border: 1px solid #ddd;
             border-radius: 3px;
@@ -467,9 +477,9 @@
             align-items: center;
             justify-content: center;
             color: #333;
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: bold;
-            margin-bottom: 2px;
+            margin: 2px auto;
             font-family: 'Times New Roman', serif;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
@@ -725,13 +735,15 @@
             }
 
             .card-display {
-                height: 60px;
-                font-size: 0.9rem;
+                width: 60px;
+                height: 85px;
+                font-size: 0.8rem;
             }
 
             .available-player .mini-card {
-                height: 20px;
-                font-size: 0.6rem;
+                width: 25px;
+                height: 35px;
+                font-size: 0.5rem;
             }
         }
 
@@ -1431,29 +1443,24 @@
         function calculateUniquePlayerSlots(myPlayerIndex, playerCount) {
             const players = currentGame.players;
             const currentTurnPlayer = players.find(p => p.id === currentGame.currentPlayerId);
+            const myPlayer = players[myPlayerIndex];
             
             let leftNeighbor = null;
             let rightNeighbor = null;
-            let currentTurn = currentTurnPlayer;
+            let currentTurn = null;
             
             if (playerCount === 2) {
-                // With 2 players: other player is both left and right neighbor
-                // Only show them once in the current turn slot if they're current player
-                // Otherwise show them in left neighbor slot
+                // With 2 players: I'm always in the middle, other player on right for trading
                 const otherPlayerIndex = myPlayerIndex === 0 ? 1 : 0;
                 const otherPlayer = players[otherPlayerIndex];
                 
-                if (currentTurnPlayer && currentTurnPlayer.id === otherPlayer.id) {
-                    // Other player is current turn - show them in center
-                    currentTurn = otherPlayer;
-                    leftNeighbor = null;
-                    rightNeighbor = null;
-                } else {
-                    // Show other player as left neighbor, no current turn or right neighbor
-                    leftNeighbor = otherPlayer;
-                    currentTurn = null;
-                    rightNeighbor = null;
-                }
+                // I'm always in the middle (current turn slot)
+                currentTurn = myPlayer;
+                
+                // Other player goes on the right so trade button appears
+                rightNeighbor = otherPlayer;
+                leftNeighbor = null;
+                
             } else if (playerCount >= 3) {
                 // With 3+ players: calculate normal neighbors
                 const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
@@ -1462,14 +1469,20 @@
                 leftNeighbor = players[leftNeighborIndex];
                 rightNeighbor = players[rightNeighborIndex];
                 
-                // If current turn player is same as a neighbor, only show them in current turn slot
-                if (currentTurnPlayer) {
-                    if (currentTurnPlayer.id === leftNeighbor.id) {
+                // Show current turn player in center if it's not me
+                if (currentTurnPlayer && currentTurnPlayer.id !== myPlayer.id) {
+                    currentTurn = currentTurnPlayer;
+                    
+                    // Remove from neighbor slots if they're the current turn player
+                    if (currentTurnPlayer.id === leftNeighbor?.id) {
                         leftNeighbor = null;
                     }
-                    if (currentTurnPlayer.id === rightNeighbor.id) {
+                    if (currentTurnPlayer.id === rightNeighbor?.id) {
                         rightNeighbor = null;
                     }
+                } else {
+                    // I'm the current turn player, show myself in center
+                    currentTurn = myPlayer;
                 }
             }
             
@@ -1568,7 +1581,8 @@
             cardSection.appendChild(playerInfo);
             cardSection.appendChild(cardDisplay);
 
-            if (type === 'right-neighbor' && canTradeWith(player)) {
+            // Show trade button if this player can be traded with
+            if (canTradeWith(player)) {
                 const actionBtn = document.createElement('button');
                 actionBtn.className = 'action-button trade';
                 actionBtn.textContent = 'Trade →';
@@ -1623,7 +1637,12 @@
         function canTradeWith(player) {
             if (!currentGame) return false;
             const isMyTurn = currentGame.currentPlayerId === playerId;
-            return isMyTurn && player.lives > 0 && currentGame.state === 'playing' && currentGame.turnPhase === 'trading';
+            const gameStarted = currentGame.state === 'playing';
+            const tradingPhase = currentGame.turnPhase === 'trading';
+            
+            // In a 2-player game, if it's my turn, I can trade with the other player
+            // In 3+ player game, I can trade with my right neighbor
+            return isMyTurn && player.lives > 0 && gameStarted && tradingPhase;
         }
 
         // FIXED: Available players rendering - NO DUPLICATES
@@ -1659,6 +1678,10 @@
                 
                 if (player.id === currentGame.dealerId) {
                     playerClasses += ' dealer';
+                }
+                
+                if (canTradeWith(player)) {
+                    playerClasses += ' tradeable';
                 }
                 
                 playerDiv.className = playerClasses;
