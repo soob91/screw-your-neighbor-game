@@ -901,19 +901,13 @@
     
     <script>
         // Global variables
-        let socket;
+        let socket = null;
         let currentGame = null;
         let playerId = null;
         let playerName = '';
         
-        // FIXED: Personal Table state with proper cleanup
-        let focusedPlayers = {
-            leftNeighbor: null,
-            currentTurn: null,
-            rightNeighbor: null,
-            custom1: null,
-            custom2: null
-        };
+        // FIXED: Personal Table state with bulletproof cleanup
+        let focusedPlayers = null;
         
         // Video state
         let isVideoJoined = false;
@@ -926,6 +920,17 @@
         // Production optimizations
         let updateTimeout = null;
         let lastGameState = null;
+
+        // FIXED: Initialize clean focus state
+        function initializeFocusState() {
+            focusedPlayers = {
+                leftNeighbor: null,
+                currentTurn: null,
+                rightNeighbor: null,
+                custom1: null,
+                custom2: null
+            };
+        }
 
         // Utility functions
         function log(message) {
@@ -976,46 +981,75 @@
             }, 3000);
         }
 
-        // FIXED: Complete cleanup function
-        function cleanupGameState() {
-            // Clear all game state
+        // FIXED: BULLETPROOF cleanup function - NO MORE DUPLICATES
+        function completeCleanup() {
+            log('🧹 Performing complete cleanup...');
+            
+            // 1. Disconnect socket completely
+            if (socket) {
+                socket.removeAllListeners(); // Remove ALL event listeners
+                socket.disconnect();
+                socket = null;
+            }
+            
+            // 2. Clear ALL game state
             currentGame = null;
             playerId = null;
+            lastGameState = null;
             
-            // Clear personal table
-            focusedPlayers = {
-                leftNeighbor: null,
-                currentTurn: null,
-                rightNeighbor: null,
-                custom1: null,
-                custom2: null
-            };
+            // 3. Reinitialize focus state completely
+            initializeFocusState();
             
-            // Clear video state
+            // 4. Clear video state
             videoStates = {};
             remoteUsers = {};
+            isVideoJoined = false;
             
-            // Clear UI
+            // 5. Clear all UI elements
             const focusGrid = document.getElementById('focusGrid');
             if (focusGrid) focusGrid.innerHTML = '';
             
             const playersScroll = document.getElementById('playersScroll');
             if (playersScroll) playersScroll.innerHTML = '';
+            
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) chatMessages.innerHTML = '';
+            
+            const gameMessages = document.getElementById('gameMessages');
+            if (gameMessages) gameMessages.innerHTML = '';
+            
+            // 6. Reset connection status
+            const connectionStatus = document.getElementById('connectionStatus');
+            if (connectionStatus) connectionStatus.innerHTML = '🔴 Disconnected';
+            
+            // 7. Clear any timeouts
+            if (updateTimeout) {
+                clearTimeout(updateTimeout);
+                updateTimeout = null;
+            }
+            
+            log('🧹 Complete cleanup finished');
         }
 
         // Menu navigation
         function showMainMenu() {
+            completeCleanup(); // Always cleanup when going to main menu
             document.querySelectorAll('.menu-screen, #gameContent').forEach(el => el.classList.add('hidden'));
             document.getElementById('main-menu').classList.remove('hidden');
         }
 
         function showQuickMatch() {
+            completeCleanup(); // CRITICAL: Complete cleanup before new game
             document.querySelectorAll('.menu-screen').forEach(el => el.classList.add('hidden'));
             document.getElementById('quick-match').classList.remove('hidden');
-            connectToServer();
+            
+            // Small delay to ensure cleanup is complete
             setTimeout(() => {
-                createPublicGame();
-            }, 1000);
+                connectToServer();
+                setTimeout(() => {
+                    createPublicGame();
+                }, 1000);
+            }, 100);
         }
 
         function showCreateGame() {
@@ -1033,17 +1067,16 @@
             document.getElementById('gameContent').classList.remove('hidden');
         }
 
-        // FIXED: Server connection with proper cleanup
+        // FIXED: Server connection with GUARANTEED fresh start
         function connectToServer() {
-            // Disconnect existing socket first
-            if (socket && socket.connected) {
-                socket.disconnect();
-            }
+            log('🔄 Creating FRESH server connection...');
             
-            // Clean up any existing state
-            cleanupGameState();
-
-            log('🔄 Attempting to connect to server...');
+            // Ensure we start completely fresh
+            if (socket) {
+                socket.removeAllListeners();
+                socket.disconnect();
+                socket = null;
+            }
             
             socket = io({
                 transports: ['websocket', 'polling'],
@@ -1052,11 +1085,11 @@
                 reconnectionDelay: 1000,
                 reconnectionAttempts: 5,
                 maxReconnectionAttempts: 10,
-                forceNew: true // Force new connection
+                forceNew: true // CRITICAL: Force completely new connection
             });
             
             socket.on('connect', () => {
-                log('✅ Connected to server! Transport: ' + socket.io.engine.transport.name);
+                log('✅ FRESH connection established! ID: ' + socket.id);
                 document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
                 
                 playerName = document.getElementById('playerName').value || 'Player';
@@ -1064,7 +1097,7 @@
             });
 
             socket.on('disconnect', (reason) => {
-                log(`❌ Disconnected from server: ${reason}`);
+                log(`❌ Disconnected: ${reason}`);
                 document.getElementById('connectionStatus').innerHTML = '🔴 Disconnected';
                 
                 if (isVideoJoined) {
@@ -1083,7 +1116,7 @@
         // Socket event handlers
         function setupSocketEvents() {
             socket.on('public-game-created', function(data) {
-                log('🎮 Public game created! Waiting for players...');
+                log('🎮 FRESH public game created! ID: ' + data.game.id);
                 currentGame = data.game;
                 showGameContent();
                 updateGameDisplay();
@@ -1092,7 +1125,7 @@
             });
 
             socket.on('private-game-created', function(data) {
-                log('🎮 Private game created!');
+                log('🎮 FRESH private game created! ID: ' + data.game.id);
                 currentGame = data.game;
                 showGameContent();
                 updateGameDisplay();
@@ -1105,7 +1138,7 @@
             });
 
             socket.on('game-created', function(data) {
-                log('🎮 Game created successfully!');
+                log('🎮 FRESH game created! ID: ' + data.game.id);
                 currentGame = data.game;
                 showGameContent();
                 updateGameDisplay();
@@ -1118,7 +1151,7 @@
             });
 
             socket.on('game-joined', function(data) {
-                log('🎮 Successfully joined game!');
+                log('🎮 Joined game! ID: ' + data.game.id);
                 currentGame = data.game;
                 showGameContent();
                 updateGameDisplay();
@@ -1235,20 +1268,26 @@
             });
         }
 
-        // Game creation and joining
+        // FIXED: Game creation with GUARANTEED fresh game
         function createPublicGame() {
-            if (!socket) {
+            if (!socket || !socket.connected) {
+                log('❌ No socket connection - reconnecting...');
                 connectToServer();
                 setTimeout(createPublicGame, 1000);
                 return;
             }
 
             playerName = document.getElementById('playerName').value.trim() || 'Player';
+            
+            // CRITICAL: Use timestamp to ensure unique game creation
+            const uniqueUserId = `${socket.id}_${Date.now()}`;
+            
+            log(`🎮 Creating FRESH public game for ${playerName} (${uniqueUserId})`);
 
             socket.emit('quick-match', {
                 playerName: playerName,
-                userId: socket.id,
-                token: `demo_token_${socket.id}`
+                userId: uniqueUserId, // Ensure uniqueness
+                token: `demo_token_${uniqueUserId}`
             });
         }
 
@@ -1348,9 +1387,10 @@
             document.getElementById('hostControls')?.classList.add('hidden');
         }
 
-        // FIXED: Personal Table management - no more duplicates
+        // FIXED: Personal Table management - ABSOLUTELY NO DUPLICATES
         function updatePersonalTable() {
             if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
+            if (!focusedPlayers) initializeFocusState();
 
             const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
             if (myPlayerIndex === -1) return;
@@ -1358,23 +1398,37 @@
             const playerCount = currentGame.players.length;
             if (playerCount < 2) return;
 
+            log(`🔄 Updating table: ${playerCount} players total`);
+
             const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
             const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
             
             const currentTurnPlayer = currentGame.players.find(p => p.id === currentGame.currentPlayerId);
 
-            // FIXED: Only auto-assign if not already set
-            if (!focusedPlayers.leftNeighbor || !currentGame.players.find(p => p.id === focusedPlayers.leftNeighbor.id)) {
-                focusedPlayers.leftNeighbor = currentGame.players[leftNeighborIndex];
+            // CRITICAL: Check if players still exist before assigning
+            const leftNeighbor = currentGame.players[leftNeighborIndex];
+            const rightNeighbor = currentGame.players[rightNeighborIndex];
+
+            // Only update if player changed or doesn't exist
+            if (!focusedPlayers.leftNeighbor || focusedPlayers.leftNeighbor.id !== leftNeighbor.id) {
+                focusedPlayers.leftNeighbor = leftNeighbor;
             }
-            if (!focusedPlayers.rightNeighbor || !currentGame.players.find(p => p.id === focusedPlayers.rightNeighbor.id)) {
-                focusedPlayers.rightNeighbor = currentGame.players[rightNeighborIndex];
+            if (!focusedPlayers.rightNeighbor || focusedPlayers.rightNeighbor.id !== rightNeighbor.id) {
+                focusedPlayers.rightNeighbor = rightNeighbor;
             }
             if (!focusedPlayers.currentTurn || focusedPlayers.currentTurn.id !== currentTurnPlayer?.id) {
                 focusedPlayers.currentTurn = currentTurnPlayer;
             }
 
-            // Auto-assign dealer if not in focus
+            // Clean custom slots if player no longer exists
+            if (focusedPlayers.custom1 && !currentGame.players.find(p => p.id === focusedPlayers.custom1.id)) {
+                focusedPlayers.custom1 = null;
+            }
+            if (focusedPlayers.custom2 && !currentGame.players.find(p => p.id === focusedPlayers.custom2.id)) {
+                focusedPlayers.custom2 = null;
+            }
+
+            // Auto-assign dealer if not in focus and slots available
             const dealer = currentGame.players.find(p => p.id === currentGame.dealerId);
             if (dealer && !isPlayerInFocus(dealer.id)) {
                 if (!focusedPlayers.custom1) {
@@ -1389,12 +1443,13 @@
         }
 
         function isPlayerInFocus(playerId) {
+            if (!focusedPlayers) return false;
             return Object.values(focusedPlayers).some(player => player && player.id === playerId);
         }
 
         function renderPersonalTable() {
             const focusGrid = document.getElementById('focusGrid');
-            if (!focusGrid) return;
+            if (!focusGrid || !focusedPlayers) return;
             
             focusGrid.innerHTML = '';
 
@@ -1433,11 +1488,9 @@
                 return slot;
             }
 
-            // FIXED: Side-by-side layout
             const playerContent = document.createElement('div');
             playerContent.className = 'player-content';
 
-            // Card section (left)
             const cardSection = document.createElement('div');
             cardSection.className = 'card-section';
 
@@ -1449,7 +1502,6 @@
                 <span class="player-lives">❤️ ${player.lives || 3}</span>
             `;
 
-            // FIXED: Beautiful playing card display
             const cardDisplay = document.createElement('div');
             cardDisplay.className = 'card-display';
             
@@ -1478,7 +1530,6 @@
             cardSection.appendChild(playerInfo);
             cardSection.appendChild(cardDisplay);
 
-            // Action button for right neighbor
             if (type === 'right-neighbor' && canTradeWith(player)) {
                 const actionBtn = document.createElement('button');
                 actionBtn.className = 'action-button trade';
@@ -1487,7 +1538,6 @@
                 cardSection.appendChild(actionBtn);
             }
 
-            // Video section (right)
             const videoSection = document.createElement('div');
             videoSection.className = 'video-section';
 
@@ -1518,7 +1568,6 @@
             playerContent.appendChild(videoSection);
             slot.appendChild(playerContent);
 
-            // Remove button for custom slots
             if (removable) {
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-button';
@@ -1539,6 +1588,7 @@
             return isMyTurn && player.lives > 0 && currentGame.state === 'playing' && currentGame.turnPhase === 'trading';
         }
 
+        // FIXED: Available players rendering - NO DUPLICATES
         function renderAvailablePlayers() {
             const playersScroll = document.getElementById('playersScroll');
             if (!playersScroll) return;
@@ -1547,7 +1597,17 @@
 
             if (!currentGame || !currentGame.players) return;
 
+            // CRITICAL: Create Set to track already added players
+            const addedPlayerIds = new Set();
+
             currentGame.players.forEach(player => {
+                // PREVENT DUPLICATES: Skip if already added
+                if (addedPlayerIds.has(player.id)) {
+                    log(`⚠️ Skipping duplicate player: ${player.name} (${player.id})`);
+                    return;
+                }
+                addedPlayerIds.add(player.id);
+
                 const playerDiv = document.createElement('div');
                 let playerClasses = 'available-player';
                 
@@ -1600,18 +1660,28 @@
                 playerDiv.onclick = () => addToFocus(player);
                 playersScroll.appendChild(playerDiv);
             });
+
+            log(`✅ Rendered ${addedPlayerIds.size} unique players`);
         }
 
-        // FIXED: No more duplicates in focus
+        // FIXED: Add to focus - prevent duplicates
         function addToFocus(player) {
-            if (isPlayerInFocus(player.id)) return;
+            if (!focusedPlayers) initializeFocusState();
+            
+            if (isPlayerInFocus(player.id)) {
+                log(`Player ${player.name} already in focus`);
+                return;
+            }
 
             if (!focusedPlayers.custom1) {
                 focusedPlayers.custom1 = player;
+                log(`Added ${player.name} to custom1`);
             } else if (!focusedPlayers.custom2) {
                 focusedPlayers.custom2 = player;
+                log(`Added ${player.name} to custom2`);
             } else {
                 focusedPlayers.custom1 = player;
+                log(`Replaced custom1 with ${player.name}`);
             }
 
             renderPersonalTable();
@@ -1623,6 +1693,8 @@
         }
 
         function removeFromFocus(playerId) {
+            if (!focusedPlayers) return;
+            
             if (focusedPlayers.custom1 && focusedPlayers.custom1.id === playerId) {
                 focusedPlayers.custom1 = null;
             } else if (focusedPlayers.custom2 && focusedPlayers.custom2.id === playerId) {
@@ -1710,16 +1782,13 @@
             log('⏰ Ending round...');
         }
 
-        // FIXED: Proper leave game with complete cleanup
+        // FIXED: Leave game with complete cleanup
         function leaveGame() {
             if (confirm('Are you sure you want to leave the game?')) {
-                if (socket) {
-                    socket.disconnect();
-                }
                 leaveVideoCall().catch(console.error);
-                cleanupGameState(); // Complete cleanup
+                completeCleanup(); // Complete cleanup
                 showMainMenu();
-                log('🚪 Left game completely');
+                log('🚪 Left game and cleaned up completely');
             }
         }
 
@@ -1737,7 +1806,7 @@
             }
         }
 
-        // Video integration (add your Agora token later)
+        // Video integration (add your Agora token)
         function initializeVideoCall() {
             if (isVideoJoined) return;
 
@@ -1887,9 +1956,12 @@
             }
         }
 
-        // Initialize on page load
+        // FIXED: Initialize with clean state
         document.addEventListener('DOMContentLoaded', function() {
-            log('🎮 Game loaded with Personal Table integration!');
+            log('🎮 Game initialized with bulletproof cleanup!');
+            
+            // Initialize clean state
+            initializeFocusState();
             
             const chatInput = document.getElementById('chatInput');
             if (chatInput) {
@@ -1901,22 +1973,19 @@
             }
 
             window.addEventListener('beforeunload', () => {
+                completeCleanup();
+            });
+            
+            // Handle page refresh - force complete cleanup
+            window.addEventListener('beforeunload', () => {
                 if (socket) {
+                    socket.removeAllListeners();
                     socket.disconnect();
                 }
                 if (isVideoJoined) {
                     leaveVideoCall().catch(console.error);
                 }
             });
-        });
-
-        // Production optimizations
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                updatePersonalTable();
-            }, 250);
         });
 
         // Memory cleanup
