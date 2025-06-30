@@ -548,7 +548,7 @@
         /* Game Controls */
         .game-controls {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 8px;
             margin-bottom: 15px;
         }
@@ -761,7 +761,13 @@
             }
             
             .game-controls {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+            
+            .control-button {
+                padding: 8px 4px;
+                font-size: 0.7rem;
             }
             
             .bottom-section {
@@ -911,11 +917,14 @@
 
         <!-- Game Controls -->
         <div class="game-controls">
-            <button class="control-button" id="flipCardBtn" onclick="flipCard()" disabled>
+            <button class="control-button" id="flipCardBtn" onclick="handleFlipClick()" disabled>
                 🎴 Flip Card
             </button>
-            <button class="control-button" id="keepCardBtn" onclick="keepCard()" disabled>
+            <button class="control-button" id="keepCardBtn" onclick="handleKeepClick()" disabled>
                 ✋ Keep Card
+            </button>
+            <button class="control-button" id="tradeCardBtn" onclick="handleTradeClick()" disabled>
+                🔄 Trade Card
             </button>
             <button class="control-button warning" id="endRoundBtn" onclick="endRound()" disabled>
                 ⏰ End Round
@@ -1867,14 +1876,44 @@
             const isMyTurn = currentGame.currentPlayerId === playerId;
             const gameStarted = currentGame.state === 'playing';
             const canEndRound = gameStarted && currentGame.turnPhase === 'revealing';
+            const canTrade = canPerformTrade();
 
+            // Main control buttons
             const flipBtn = document.getElementById('flipCardBtn');
             const keepBtn = document.getElementById('keepCardBtn');
+            const tradeBtn = document.getElementById('tradeCardBtn');
             const endBtn = document.getElementById('endRoundBtn');
 
-            if (flipBtn) flipBtn.disabled = !gameStarted || !myPlayer || !myPlayer.hasCard;
-            if (keepBtn) keepBtn.disabled = !isMyTurn || !gameStarted;
-            if (endBtn) endBtn.disabled = !canEndRound;
+            if (flipBtn) {
+                flipBtn.disabled = !gameStarted || !myPlayer || !myPlayer.hasCard;
+                flipBtn.style.opacity = flipBtn.disabled ? '0.5' : '1';
+            }
+            if (keepBtn) {
+                keepBtn.disabled = !isMyTurn || !gameStarted;
+                keepBtn.style.opacity = keepBtn.disabled ? '0.5' : '1';
+            }
+            if (tradeBtn) {
+                tradeBtn.disabled = !canTrade;
+                tradeBtn.style.opacity = tradeBtn.disabled ? '0.5' : '1';
+            }
+            if (endBtn) {
+                endBtn.disabled = !canEndRound;
+                endBtn.style.opacity = endBtn.disabled ? '0.5' : '1';
+            }
+
+            // Update all card action buttons
+            document.querySelectorAll('.action-button').forEach(btn => {
+                if (btn.textContent.includes('Keep')) {
+                    btn.disabled = !isMyTurn || !gameStarted;
+                    btn.style.opacity = btn.disabled ? '0.5' : '1';
+                }
+                if (btn.textContent.includes('Trade')) {
+                    btn.disabled = !canTrade;
+                    btn.style.opacity = btn.disabled ? '0.5' : '1';
+                }
+            });
+
+            log(`🔄 Button states updated: myTurn=${isMyTurn}, gameStarted=${gameStarted}, phase=${currentGame.turnPhase}, canTrade=${canTrade}`);
         }
 
         function showHostControls() {
@@ -2116,11 +2155,56 @@
             cardSection.appendChild(cardDisplay);
             cardSection.setAttribute('data-player-id', player.id);
 
-            if (canTradeWith(player)) {
+            // Add action buttons for my own card
+            if (player.id === playerId) {
+                const actionContainer = document.createElement('div');
+                actionContainer.style.display = 'flex';
+                actionContainer.style.gap = '4px';
+                actionContainer.style.marginTop = '4px';
+
+                // Keep Card button
+                const keepBtn = document.createElement('button');
+                keepBtn.className = 'action-button';
+                keepBtn.textContent = '✋ Keep';
+                keepBtn.style.fontSize = '0.6rem';
+                keepBtn.style.padding = '4px 6px';
+                keepBtn.disabled = currentGame?.currentPlayerId !== playerId;
+                keepBtn.onclick = () => {
+                    log(`✋ Keep button clicked`);
+                    keepCard();
+                };
+                actionContainer.appendChild(keepBtn);
+
+                // Trade button
+                const tradeBtn = document.createElement('button');
+                tradeBtn.className = 'action-button trade';
+                tradeBtn.textContent = '🔄 Trade';
+                tradeBtn.style.fontSize = '0.6rem';
+                tradeBtn.style.padding = '4px 6px';
+                tradeBtn.disabled = !canPerformTrade();
+                tradeBtn.onclick = () => {
+                    log(`🔄 Trade button clicked`);
+                    const nextPlayer = getNextTradeablePlayer();
+                    if (nextPlayer) {
+                        requestTrade(nextPlayer.id);
+                    } else {
+                        showToast('No valid trade target!', 'warning');
+                    }
+                };
+                actionContainer.appendChild(tradeBtn);
+
+                cardSection.appendChild(actionContainer);
+            }
+
+            // Add trade button for other players I can trade with
+            if (player.id !== playerId && canTradeWith(player)) {
                 const actionBtn = document.createElement('button');
                 actionBtn.className = 'action-button trade';
                 actionBtn.textContent = 'Trade →';
-                actionBtn.onclick = () => requestTrade(player.id);
+                actionBtn.onclick = () => {
+                    log(`🔄 Trading with ${player.name}`);
+                    requestTrade(player.id);
+                };
                 cardSection.appendChild(actionBtn);
             }
 
@@ -2369,6 +2453,40 @@
                 leaveVideoCall();
             }
             showToast(`📹 Video ended for player`, 'info');
+        }
+
+        // Enhanced Game action handlers
+        function handleFlipClick() {
+            log(`🎴 Flip Card button clicked`);
+            flipCard();
+        }
+
+        function handleKeepClick() {
+            log(`✋ Keep Card button clicked`);
+            if (currentGame?.currentPlayerId !== playerId) {
+                log(`❌ Not my turn! Current turn: ${currentGame?.currentPlayerId}, Me: ${playerId}`);
+                showToast('Not your turn!', 'warning');
+                return;
+            }
+            keepCard();
+        }
+
+        function handleTradeClick() {
+            log(`🔄 Trade Card button clicked`);
+            if (!canPerformTrade()) {
+                log(`❌ Cannot trade right now`);
+                showToast('Cannot trade right now!', 'warning');
+                return;
+            }
+            
+            const nextPlayer = getNextTradeablePlayer();
+            if (nextPlayer) {
+                log(`🔄 Trading with ${nextPlayer.name}`);
+                requestTrade(nextPlayer.id);
+            } else {
+                log(`❌ No valid trade target`);
+                showToast('No valid trade target!', 'warning');
+            }
         }
 
         // Game actions
