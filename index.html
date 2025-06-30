@@ -1603,6 +1603,22 @@
             socket.on('player-joined', function(data) {
                 log(`👋 Player joined: ${data.newPlayer?.name || 'Unknown'}`);
                 currentGame = data.game;
+                
+                // FIXED: Check for duplicate players and warn
+                if (currentGame.players) {
+                    const playerNames = currentGame.players.map(p => p.name);
+                    const playerIds = currentGame.players.map(p => p.id);
+                    const duplicateNames = playerNames.filter((name, index) => playerNames.indexOf(name) !== index);
+                    const duplicateIds = playerIds.filter((id, index) => playerIds.indexOf(id) !== index);
+                    
+                    if (duplicateNames.length > 0) {
+                        log(`⚠️ WARNING: Duplicate player names detected: ${duplicateNames.join(', ')}`);
+                    }
+                    if (duplicateIds.length > 0) {
+                        log(`⚠️ WARNING: Duplicate player IDs detected: ${duplicateIds.join(', ')}`);
+                    }
+                }
+                
                 updateGameDisplay();
                 updatePersonalTable();
             });
@@ -1776,11 +1792,60 @@
 
             socket.on('error', function(data) {
                 log(`❌ Error: ${data.message}`);
-                showToast(data.message, 'error');
+                
+                // Handle specific duplicate username errors
+                if (data.message && data.message.toLowerCase().includes('name') && data.message.toLowerCase().includes('taken')) {
+                    showToast('Username already taken in this game! Try a different name.', 'error');
+                    
+                    // Suggest a random suffix
+                    const currentName = document.getElementById('playerName').value.trim();
+                    const randomSuffix = Math.floor(Math.random() * 999) + 1;
+                    const suggestedName = `${currentName}${randomSuffix}`;
+                    
+                    document.getElementById('playerName').value = suggestedName;
+                    showToast(`Try "${suggestedName}" instead`, 'warning');
+                } else {
+                    showToast(data.message, 'error');
+                }
             });
         }
 
-        // Game creation
+        // Username validation functions
+        function validatePlayerName(name) {
+            if (!name || name.trim().length === 0) {
+                showToast('Please enter a valid name', 'error');
+                return false;
+            }
+            
+            if (name.trim().length > 20) {
+                showToast('Name must be 20 characters or less', 'error');
+                return false;
+            }
+            
+            // Check for inappropriate characters
+            const validName = /^[a-zA-Z0-9\s_-]+$/.test(name.trim());
+            if (!validName) {
+                showToast('Name can only contain letters, numbers, spaces, underscore, and dash', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function checkForDuplicateUsername(name) {
+            if (currentGame && currentGame.players) {
+                const duplicate = currentGame.players.find(p => 
+                    p.name.toLowerCase().trim() === name.toLowerCase().trim() && p.id !== playerId
+                );
+                if (duplicate) {
+                    showToast(`Name "${name}" is already taken in this game`, 'error');
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Game creation with validation
         function createPublicGame() {
             if (!socket || !socket.connected) {
                 log('❌ No socket connection - reconnecting...');
@@ -1789,7 +1854,19 @@
                 return;
             }
 
-            playerName = document.getElementById('playerName').value.trim() || 'Player';
+            const rawPlayerName = document.getElementById('playerName').value.trim() || 'Player';
+            
+            // Validate username
+            if (!validatePlayerName(rawPlayerName)) {
+                return;
+            }
+            
+            playerName = rawPlayerName;
+            
+            // Check if already in a game with this name
+            if (checkForDuplicateUsername(playerName)) {
+                return;
+            }
             
             log(`🎮 Creating FRESH public game for ${playerName} (${socket.id})`);
 
@@ -1807,7 +1884,14 @@
                 return;
             }
 
-            playerName = document.getElementById('playerName').value.trim() || 'Player';
+            const rawPlayerName = document.getElementById('playerName').value.trim() || 'Player';
+            
+            // Validate username
+            if (!validatePlayerName(rawPlayerName)) {
+                return;
+            }
+            
+            playerName = rawPlayerName;
 
             const settings = {
                 startingLives: parseInt(document.getElementById('startingLives').value),
@@ -1837,7 +1921,14 @@
                 return;
             }
 
-            playerName = document.getElementById('playerName').value.trim() || 'Player';
+            const rawPlayerName = document.getElementById('playerName').value.trim() || 'Player';
+            
+            // Validate username
+            if (!validatePlayerName(rawPlayerName)) {
+                return;
+            }
+            
+            playerName = rawPlayerName;
 
             socket.emit('join-game', {
                 friendCode: gameCode,
@@ -1926,10 +2017,44 @@
             document.getElementById('hostControls')?.classList.add('hidden');
         }
 
+        // Enhanced game state cleanup
+        function cleanupGameState() {
+            if (!currentGame || !currentGame.players) return;
+            
+            const originalCount = currentGame.players.length;
+            
+            // Remove duplicate players by ID
+            const uniquePlayers = [];
+            const seenIds = new Set();
+            
+            currentGame.players.forEach(player => {
+                if (!seenIds.has(player.id)) {
+                    uniquePlayers.push(player);
+                    seenIds.add(player.id);
+                } else {
+                    log(`🗑️ Removing duplicate player: ${player.name} (${player.id})`);
+                }
+            });
+            
+            if (originalCount !== uniquePlayers.length) {
+                log(`🔧 Game cleanup: ${originalCount} -> ${uniquePlayers.length} players`);
+                currentGame.players = uniquePlayers;
+                
+                // Update display after cleanup
+                updateGameDisplay();
+                updatePersonalTable();
+                
+                showToast(`Cleaned up ${originalCount - uniquePlayers.length} duplicate players`, 'success');
+            }
+        }
+
         // Personal Table management
         function updatePersonalTable() {
             if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
             if (!focusedPlayers) initializeFocusState();
+
+            // FIXED: Clean up duplicate players first
+            cleanupGameState();
 
             const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
             if (myPlayerIndex === -1) {
@@ -1958,16 +2083,41 @@
             const players = currentGame.players;
             const myPlayer = players[myPlayerIndex];
             
-            focusedPlayers.currentTurn = myPlayer;
+            // FIXED: Deduplicate players by ID to prevent duplicate Soob issue
+            const uniquePlayers = [];
+            const seenIds = new Set();
             
-            const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
-            const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
+            players.forEach(player => {
+                if (!seenIds.has(player.id)) {
+                    uniquePlayers.push(player);
+                    seenIds.add(player.id);
+                }
+            });
             
-            focusedPlayers.leftNeighbor = players[leftNeighborIndex];
-            focusedPlayers.rightNeighbor = players[rightNeighborIndex];
+            log(`🔧 Deduplication: ${players.length} players -> ${uniquePlayers.length} unique players`);
             
-            const remainingPlayers = players.filter((p, index) => 
-                index !== myPlayerIndex && 
+            // Update currentGame with deduplicated players
+            currentGame.players = uniquePlayers;
+            
+            // Recalculate indices with clean player list
+            const cleanMyPlayerIndex = uniquePlayers.findIndex(p => p.id === playerId);
+            const cleanPlayerCount = uniquePlayers.length;
+            
+            if (cleanMyPlayerIndex === -1) {
+                log(`❌ Cannot find myself in clean players list`);
+                return;
+            }
+            
+            focusedPlayers.currentTurn = uniquePlayers[cleanMyPlayerIndex];
+            
+            const leftNeighborIndex = (cleanMyPlayerIndex - 1 + cleanPlayerCount) % cleanPlayerCount;
+            const rightNeighborIndex = (cleanMyPlayerIndex + 1) % cleanPlayerCount;
+            
+            focusedPlayers.leftNeighbor = uniquePlayers[leftNeighborIndex];
+            focusedPlayers.rightNeighbor = uniquePlayers[rightNeighborIndex];
+            
+            const remainingPlayers = uniquePlayers.filter((p, index) => 
+                index !== cleanMyPlayerIndex && 
                 index !== leftNeighborIndex && 
                 index !== rightNeighborIndex
             );
@@ -1975,29 +2125,50 @@
             focusedPlayers.custom1 = remainingPlayers[0] || null;
             focusedPlayers.custom2 = remainingPlayers[1] || null;
             
-            log(`🎯 Personal view for ${myPlayer.name}: Left=${players[leftNeighborIndex]?.name}, Center=${myPlayer.name}, Right=${players[rightNeighborIndex]?.name}`);
+            log(`🎯 Clean personal view: Left=${uniquePlayers[leftNeighborIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${uniquePlayers[rightNeighborIndex]?.name}`);
         }
 
         function setupCustomFocusMode(myPlayerIndex, playerCount) {
             const players = currentGame.players;
-            const myPlayer = players[myPlayerIndex];
             
-            focusedPlayers.currentTurn = myPlayer;
+            // FIXED: Deduplicate players by ID
+            const uniquePlayers = [];
+            const seenIds = new Set();
             
-            const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
-            const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
+            players.forEach(player => {
+                if (!seenIds.has(player.id)) {
+                    uniquePlayers.push(player);
+                    seenIds.add(player.id);
+                }
+            });
             
-            focusedPlayers.leftNeighbor = players[leftNeighborIndex];
-            focusedPlayers.rightNeighbor = players[rightNeighborIndex];
+            log(`🔧 Custom mode deduplication: ${players.length} -> ${uniquePlayers.length} unique`);
             
-            if (focusedPlayers.custom1 && !players.find(p => p.id === focusedPlayers.custom1.id)) {
+            // Update currentGame with deduplicated players
+            currentGame.players = uniquePlayers;
+            
+            // Recalculate with clean data
+            const cleanMyPlayerIndex = uniquePlayers.findIndex(p => p.id === playerId);
+            const cleanPlayerCount = uniquePlayers.length;
+            
+            if (cleanMyPlayerIndex === -1) return;
+            
+            focusedPlayers.currentTurn = uniquePlayers[cleanMyPlayerIndex];
+            
+            const leftNeighborIndex = (cleanMyPlayerIndex - 1 + cleanPlayerCount) % cleanPlayerCount;
+            const rightNeighborIndex = (cleanMyPlayerIndex + 1) % cleanPlayerCount;
+            
+            focusedPlayers.leftNeighbor = uniquePlayers[leftNeighborIndex];
+            focusedPlayers.rightNeighbor = uniquePlayers[rightNeighborIndex];
+            
+            if (focusedPlayers.custom1 && !uniquePlayers.find(p => p.id === focusedPlayers.custom1.id)) {
                 focusedPlayers.custom1 = null;
             }
-            if (focusedPlayers.custom2 && !players.find(p => p.id === focusedPlayers.custom2.id)) {
+            if (focusedPlayers.custom2 && !uniquePlayers.find(p => p.id === focusedPlayers.custom2.id)) {
                 focusedPlayers.custom2 = null;
             }
             
-            const dealer = players.find(p => p.id === currentGame.dealerId);
+            const dealer = uniquePlayers.find(p => p.id === currentGame.dealerId);
             if (dealer && !isPlayerInFocus(dealer.id)) {
                 if (!focusedPlayers.custom1) {
                     focusedPlayers.custom1 = dealer;
@@ -2006,7 +2177,7 @@
                 }
             }
             
-            log(`🎯 Personal view for ${myPlayer.name}: Left=${players[leftNeighborIndex]?.name}, Center=${myPlayer.name}, Right=${players[rightNeighborIndex]?.name}`);
+            log(`🎯 Clean custom view: Left=${uniquePlayers[leftNeighborIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${uniquePlayers[rightNeighborIndex]?.name}`);
         }
 
         function hideAvailablePlayersSection() {
@@ -2302,13 +2473,24 @@
 
             if (!currentGame || !currentGame.players) return;
 
-            const playerCount = currentGame.players.length;
+            // FIXED: Deduplicate players before rendering
+            const uniquePlayers = [];
+            const seenIds = new Set();
+            
+            currentGame.players.forEach(player => {
+                if (!seenIds.has(player.id)) {
+                    uniquePlayers.push(player);
+                    seenIds.add(player.id);
+                }
+            });
+            
+            const playerCount = uniquePlayers.length;
             if (playerCount <= 5) {
                 return;
             }
 
             const addedPlayerIds = new Set();
-            const playersNotInFocus = currentGame.players.filter(player => {
+            const playersNotInFocus = uniquePlayers.filter(player => {
                 return !isPlayerInFocus(player.id);
             });
 
@@ -2367,7 +2549,7 @@
                 playersScroll.appendChild(playerDiv);
             });
 
-            log(`✅ Rendered ${addedPlayerIds.size} available players`);
+            log(`✅ Rendered ${addedPlayerIds.size} available players (deduplicated)`);
         }
 
         function addToFocus(player) {
@@ -2770,6 +2952,28 @@
                 chatInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         sendChatMessage();
+                    }
+                });
+            }
+
+            // Add real-time username validation
+            const playerNameInput = document.getElementById('playerName');
+            if (playerNameInput) {
+                playerNameInput.addEventListener('input', function(e) {
+                    const name = e.target.value.trim();
+                    
+                    // Remove any existing validation styling
+                    e.target.style.borderColor = '';
+                    
+                    if (name.length > 20) {
+                        e.target.style.borderColor = 'red';
+                        e.target.title = 'Name must be 20 characters or less';
+                    } else if (name.length > 0 && !/^[a-zA-Z0-9\s_-]+$/.test(name)) {
+                        e.target.style.borderColor = 'orange';
+                        e.target.title = 'Only letters, numbers, spaces, underscore, and dash allowed';
+                    } else if (name.length > 0) {
+                        e.target.style.borderColor = 'green';
+                        e.target.title = 'Valid username';
                     }
                 });
             }
