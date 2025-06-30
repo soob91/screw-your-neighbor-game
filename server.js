@@ -494,28 +494,45 @@ class Game {
     const activePlayers = this.players.filter(p => p.lives > 0);
     const currentPlayer = activePlayers[this.currentPlayerIndex];
     if (fromPlayer.id !== currentPlayer.id) {
-      throw new Error('Not your turn to trade');
+        throw new Error('Not your turn to trade');
     }
     
     if (this.playersWhoActed.has(fromPlayerId)) {
-      throw new Error('You have already acted this turn');
+        throw new Error('You have already acted this turn');
     }
     
     const fromIndex = activePlayers.findIndex(p => p.id === fromPlayerId);
-    const nextIndex = (fromIndex + 1) % activePlayers.length;
-    const nextPlayer = activePlayers[nextIndex];
+    // Find the valid trade target (allowing King bypass)
+    let nextIndex = (fromIndex + 1) % activePlayers.length;
+    let nextPlayer = activePlayers[nextIndex];
+
+    // Check if we need to bypass Kings
+    while (nextPlayer.card && nextPlayer.card.value === 'K' && nextPlayer.cardRevealed) {
+      // Special case: If dealer has King, can't bypass - must trade with deck
+      const isDealerWithKing = nextPlayer.id === activePlayers[this.dealerIndex].id;
+      if (isDealerWithKing) {
+        break; // Stop here - dealer King is handled later
+      }
+
+      // Bypass non-dealer King holders
+      console.log(`👑 Server: Bypassing ${nextPlayer.name} (has revealed King)`);
+      nextIndex = (nextIndex + 1) % activePlayers.length;
+      nextPlayer = activePlayers[nextIndex];
+
+      // Prevent infinite loop
+      if (nextIndex === fromIndex) break;
+    }
     
     if (nextPlayer.id !== toPlayerId) {
-      throw new Error('You can only trade with the next player');
+        throw new Error('You can only trade with the next player');
     }
     
     // Game logic for trading
     const hasJack = toPlayer.card && toPlayer.card.value === 'J';
     const hasKing = toPlayer.card && toPlayer.card.value === 'K';
     
-    // SPECIAL CASE: Trading with dealer who has King = trade with deck instead!
+    // CRITICAL FIX: Check if target is dealer with King
     const isDealerTarget = toPlayer.id === activePlayers[this.dealerIndex].id;
-    const isLastPlayerBeforeDealer = (fromIndex + 1) % activePlayers.length === this.dealerIndex;
     
     let traded = false;
     let blocked = false;
@@ -524,71 +541,79 @@ class Game {
     let deckCard = null;
     
     if (hasJack) {
-      // Jack blocks the trade - "Screw You!"
-      blocked = true;
-      toPlayer.cardRevealed = true;
-      fromPlayer.stats.tradesBlocked++;
+        // Jack blocks the trade - "Screw You!"
+        blocked = true;
+        toPlayer.cardRevealed = true;
+        toPlayer.stats.tradesBlocked++;
+        console.log(`🚫 ${toPlayer.name}'s Jack blocks ${fromPlayer.name}'s trade!`);
     } else if (hasKing && isDealerTarget) {
-      // SPECIAL RULE: Player before dealer with King gets to trade with deck!
-      if (this.deck.length === 0) {
-        throw new Error('No cards left in deck');
-      }
-      
-      deckCard = this.deck.pop();
-      const playerCard = fromPlayer.card;
-      fromPlayer.card = deckCard;
-      
-      tradedWithDeck = true;
-      toPlayer.cardRevealed = true;
-      fromPlayer.cardRevealed = true;
-      fromPlayer.stats.tradesInitiated++;
+        // SPECIAL RULE: Dealer with King = trade with deck instead!
+        if (this.deck.length === 0) {
+            throw new Error('No cards left in deck');
+        }
+        
+        deckCard = this.deck.pop();
+        const playerCard = fromPlayer.card;
+        fromPlayer.card = deckCard;
+        
+        tradedWithDeck = true;
+        toPlayer.cardRevealed = true; // Reveal dealer's King
+        fromPlayer.cardRevealed = true;
+        fromPlayer.stats.tradesInitiated++;
+        
+        console.log(`👑🎴 SPECIAL: ${fromPlayer.name} trades with deck because dealer ${toPlayer.name} has King!`);
     } else if (hasKing) {
-      // Regular King - gets revealed and allows passing to next player
-      kingRevealed = true;
-      toPlayer.cardRevealed = true;
-      
-      // Check if this is a pass-through to the dealer (special case)
-      const kingHolderIndex = activePlayers.findIndex(p => p.id === toPlayer.id);
-      const nextAfterKingIndex = (kingHolderIndex + 1) % activePlayers.length;
-      const nextAfterKing = activePlayers[nextAfterKingIndex];
-      
-      // SPECIAL CASE: If next player after King is the dealer AND has Jack
-      const isNextPlayerDealer = nextAfterKingIndex === this.dealerIndex;
-      
-      if (isNextPlayerDealer && nextAfterKing.card && nextAfterKing.card.value === 'J') {
-        // Dealer has Jack - this blocks the pass and ends the round
-        nextAfterKing.cardRevealed = true;
-        this.playersWhoActed.add(fromPlayerId);
-        this.turnPhase = 'revealing';
-        console.log(`Dealer's Jack blocks pass-through! Trading phase ends immediately.`);
-      }
+        // Regular King - reveal and pass to next player
+        kingRevealed = true;
+        toPlayer.cardRevealed = true;
+        
+        console.log(`👑 ${toPlayer.name}'s King revealed - ${fromPlayer.name} can pass to next player`);
+        
+        // Find next player after the King holder
+        const kingHolderIndex = activePlayers.findIndex(p => p.id === toPlayer.id);
+        const nextAfterKingIndex = (kingHolderIndex + 1) % activePlayers.length;
+        const nextAfterKing = activePlayers[nextAfterKingIndex];
+        
+        // Check if next player after King has Jack
+        if (nextAfterKing.card && nextAfterKing.card.value === 'J') {
+            nextAfterKing.cardRevealed = true;
+            this.playersWhoActed.add(fromPlayerId);
+            this.turnPhase = 'revealing';
+            console.log(`🚫 ${nextAfterKing.name}'s Jack blocks pass-through! Round ends.`);
+        }
     } else {
-      // Normal trade - swap cards
-      const tempCard = fromPlayer.card;
-      fromPlayer.card = toPlayer.card;
-      toPlayer.card = tempCard;
-      traded = true;
-      fromPlayer.stats.tradesInitiated++;
-      fromPlayer.cardRevealed = true;
+        // Normal trade - swap cards
+        const tempCard = fromPlayer.card;
+        fromPlayer.card = toPlayer.card;
+        toPlayer.card = tempCard;
+        traded = true;
+        fromPlayer.stats.tradesInitiated++;
+        fromPlayer.cardRevealed = true;
+        
+        console.log(`🔄 Normal trade: ${fromPlayer.name} ↔ ${toPlayer.name}`);
     }
     
     // Mark player as having acted (unless King allows passing)
     if (!kingRevealed) {
-      this.playersWhoActed.add(fromPlayerId);
-      this.advanceToNextPlayer();
+        this.playersWhoActed.add(fromPlayerId);
+        this.advanceToNextPlayer();
     }
     
-    return { 
-      traded, 
-      blocked, 
+    // In your requestTrade method, REPLACE the return statement with this:
+
+    return {
+      traded,
+      blocked,
       kingRevealed,
       tradedWithDeck,
       deckCard,
       roundEnded: this.turnPhase === 'revealing',
-      fromPlayer, 
-      toPlayer 
+      fromPlayer,      // Keep the objects for other uses
+      toPlayer,        // Keep the objects for other uses
+      fromPlayerId: fromPlayer.id,  // ADD: Player IDs for client
+      toPlayerId: toPlayer.id       // ADD: Player IDs for client
     };
-  }
+}
 
   async skipPlayerTurn(playerId) {
     this.updateActivity();
@@ -656,6 +681,36 @@ class Game {
     return { traded: true, newCard: deckCard, oldCard: dealerCard };
   }
 
+  async dealerKingDeckTrade(fromPlayerId) {
+    this.updateActivity();
+
+    const fromPlayer = this.players.find(p => p.id === fromPlayerId);
+    if (!fromPlayer) throw new Error('Player not found');
+
+    if (this.deck.length === 0) {
+      throw new Error('No cards left in deck');
+    }
+
+    const deckCard = this.deck.pop();
+    fromPlayer.card = deckCard;
+    fromPlayer.cardRevealed = true;
+
+    // Reveal dealer's King
+    const dealer = this.players[this.dealerIndex];
+    dealer.cardRevealed = true;
+
+    this.playersWhoActed.add(fromPlayerId);
+    this.advanceToNextPlayer();
+
+    console.log(`🎴 ${fromPlayer.name} trades with deck (dealer has King)`);
+
+    return {
+      tradedWithDeck: true,
+      fromPlayer,
+      deckCard
+    };
+  }
+
   async skipDealerTrade(dealerId) {
     this.updateActivity();
     
@@ -682,45 +737,80 @@ class Game {
     this.updateActivity();
     
     if (this.turnPhase !== 'revealing') {
-      throw new Error('Cannot end round yet - still in trading phase');
+        throw new Error('Cannot end round yet - still in trading phase');
     }
     
     const activePlayers = this.players.filter(p => p.lives > 0);
     
     activePlayers.forEach(player => {
-      player.cardRevealed = true;
+        player.cardRevealed = true;
     });
 
     const lowestValue = Math.min(...activePlayers.map(p => p.card.numValue));
     const losers = activePlayers.filter(p => p.card.numValue === lowestValue);
 
+    // CRITICAL FIX: Only subtract lives, never add them back!
     losers.forEach(player => {
-      player.lives--;
-      player.stats.roundsLost++;
+        player.lives = Math.max(0, player.lives - 1); // Ensure lives never go below 0
+        player.stats.roundsLost++;
+        
+        console.log(`Player ${player.name} lost a life. Lives remaining: ${player.lives}`);
+        
+        // Log elimination
+        if (player.lives === 0) {
+            console.log(`🚪 Player ${player.name} has been ELIMINATED from the game!`);
+        }
     });
 
     activePlayers.filter(p => p.card.numValue > lowestValue).forEach(player => {
-      player.stats.roundsWon++;
+        player.stats.roundsWon++;
     });
 
     const roundResult = {
-      round: this.round,
-      losers: losers.map(p => ({ id: p.id, name: p.name, card: p.card })),
-      lowestValue
+        round: this.round,
+        losers: losers.map(p => ({ 
+            id: p.id, 
+            name: p.name, 
+            card: p.card,
+            livesRemaining: p.lives,
+            eliminated: p.lives === 0
+        })),
+        lowestValue
     };
 
     this.roundHistory.push(roundResult);
     this.round++;
 
     if (!this.isFinished()) {
-      const remainingPlayers = this.players.filter(p => p.lives > 0);
-      this.dealerIndex = (this.dealerIndex + 1) % remainingPlayers.length;
-      this.currentPlayerIndex = (this.dealerIndex + 1) % remainingPlayers.length;
-      this.dealCards();
+        // CRITICAL FIX: Only include players who still have lives > 0
+        const remainingPlayers = this.players.filter(p => p.lives > 0);
+        
+        console.log(`Remaining players for next round: ${remainingPlayers.map(p => `${p.name}(${p.lives} lives)`).join(', ')}`);
+        
+        if (remainingPlayers.length < 2) {
+            console.log(`Game ending - only ${remainingPlayers.length} players remaining`);
+            return roundResult;
+        }
+        
+        // Find new dealer among remaining players
+        const currentDealerStillAlive = remainingPlayers.find(p => p.id === remainingPlayers[this.dealerIndex]?.id);
+        
+        if (!currentDealerStillAlive) {
+            // Current dealer is eliminated, find next living player
+            this.dealerIndex = 0;
+        } else {
+            this.dealerIndex = (this.dealerIndex + 1) % remainingPlayers.length;
+        }
+        
+        this.currentPlayerIndex = (this.dealerIndex + 1) % remainingPlayers.length;
+        
+        console.log(`New dealer: ${remainingPlayers[this.dealerIndex]?.name}, First player: ${remainingPlayers[this.currentPlayerIndex]?.name}`);
+        
+        this.dealCards();
     }
 
     return roundResult;
-  }
+}
 
   isFinished() {
     const alivePlayers = this.players.filter(p => p.lives > 0);
@@ -1287,6 +1377,20 @@ io.on('connection', (socket) => {
       socket.emit('error', { message: error.message });
     }
   });
+
+  socket.on('trade-with-deck-special', async (data) => {
+    try {
+      const game = gameManager.getGame(socket.gameId);
+      if (!game) throw new Error('Game not found');
+
+      const result = await game.dealerKingDeckTrade(socket.userId);
+      sendGameUpdateToAll(socket.gameId, 'trade-completed', { result });
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  }); 
 
   socket.on('end-round', async () => {
     try {

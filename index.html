@@ -821,7 +821,227 @@
         .toast.success { border-left: 4px solid #27ae60; }
         .toast.error { border-left: 4px solid #e74c3c; }
         .toast.warning { border-left: 4px solid #f39c12; }
-    </style>
+        /* Lives as Dots Display */
+        .player-lives-dots {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+            background: rgba(0,0,0,0.5);
+            padding: 2px 6px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .life-dot {
+            width: 8px;
+            height: 8px;
+            background: #e74c3c;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .life-dot.lost {         
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .mini-lives-dots {
+            display: flex;
+            gap: 1px;
+            justify-content: center;
+            margin-top: 2px;
+        }
+
+        .mini-life-dot {
+            width: 4px;
+            height: 4px;
+            background: #e74c3c;
+            border-radius: 50%;
+        }
+
+        .mini-life-dot.lost {
+            background: rgba(255,255,255,0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Eliminated Player Styles */
+        .focus-slot.eliminated {
+            opacity: 0.5;
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .focus-slot.eliminated .card-display {
+            opacity: 0.4;
+            background: linear-gradient(145deg, #444, #666) !important;
+            color: rgba(255,255,255,0.6) !important;
+            transform: scale(0.9);
+        }
+
+        .focus-slot.eliminated .player-name {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .eliminated-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .available-player.eliminated {
+            opacity: 0.4;
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .available-player.eliminated .player-name {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        /* Jack "Screw You!" animations */
+        .jack-block-reveal {
+            border: 4px solid #e74c3c !important;
+            box-shadow: 0 0 30px rgba(231, 76, 60, 1) !important;
+            animation: jackBlockPulse 2s ease-out;
+            transform: scale(1.1) !important;
+        }
+
+        @keyframes jackRevealBurst {
+            0% { 
+                opacity: 0;
+                transform: scale(0.3);
+                background: rgba(255, 0, 0, 0);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.1);
+                background: rgba(255, 0, 0, 0.9);
+            }
+            100% { 
+                opacity: 1;
+                transform: scale(1);
+                background: rgba(255, 0, 0, 0.8);
+            }
+        }
+
+        @keyframes jackBounceIn {
+            0% { 
+                transform: scale(0.3) rotate(-10deg);
+                opacity: 0;
+            }
+            50% { 
+                transform: scale(1.1) rotate(5deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes jackBlockPulse {
+            0%, 100% { 
+                box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
+                transform: scale(1.05);
+            }
+            25% { 
+                box-shadow: 0 0 40px rgba(231, 76, 60, 1);
+                transform: scale(1.15) rotate(2deg);
+            }
+            50% { 
+                box-shadow: 0 0 50px rgba(231, 76, 60, 1);
+                transform: scale(1.2) rotate(-2deg);
+            }
+            75% { 
+                box-shadow: 0 0 40px rgba(231, 76, 60, 1);
+                transform: scale(1.15) rotate(1deg);
+            }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes jackFlyOut {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            }
+            25% {
+                transform: scale(1.5) rotate(360deg);
+                opacity: 1;
+                box-shadow: 0 0 30px rgba(231, 76, 60, 0.6);
+            }
+            50% {
+                transform: scale(2) rotate(720deg);
+                opacity: 1;
+                box-shadow: 0 0 50px rgba(231, 76, 60, 0.8);
+                left: 50%;
+                top: 50%;
+                margin-left: -40px;
+                margin-top: -55px;
+            }
+            100% {
+                transform: scale(3) rotate(1080deg);
+                opacity: 1;
+                box-shadow: 0 0 80px rgba(231, 76, 60, 1);
+                left: 50%;
+                top: 50%;
+                margin-left: -40px;
+                margin-top: -55px;
+            }
+        }
+
+        @keyframes textBurstIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes jackShootOff {
+            0% {
+                transform: scale(2.5) rotate(1440deg) translateX(calc(50vw - 50%)) translateY(calc(50vh - 50%));
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.5) rotate(1800deg) translateX(150vw) translateY(-50vh);
+                opacity: 0;
+            }
+        }
+
+</style>
 </head>
 <body>
     <!-- Main Menu -->
@@ -929,9 +1149,14 @@
             <button class="control-button warning" id="endRoundBtn" onclick="endRound()" disabled>
                 ⏰ End Round
             </button>
+            <button class="control-button danger" onclick="clearStuckCard()" style="background: purple;">
+                🧹 Clear Card
+            </button>
             <button class="control-button danger" onclick="leaveGame()">
                 🚪 Leave
             </button>
+            </div>
+
         </div>
 
         <!-- Start Game Button (for host) -->
@@ -963,42 +1188,6 @@
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.19.1.js"></script>
     
     <script>
-        // Global variables
-        // Utility functions - Define these first
-        function log(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logMessage = `[${timestamp}] ${message}`;
-            console.log(logMessage);
-            addGameMessage(message);
-        }
-
-        function addGameMessage(message) {
-            const gameMessages = document.getElementById('gameMessages');
-            if (gameMessages) {
-                const messageDiv = document.createElement('div');
-                messageDiv.textContent = message;
-                gameMessages.appendChild(messageDiv);
-                gameMessages.scrollTop = gameMessages.scrollHeight;
-                
-                while (gameMessages.children.length > 100) {
-                    gameMessages.removeChild(gameMessages.firstChild);
-                }
-            }
-        }
-
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 3000);
-        }
-
         // Global variables
         let socket = null;
         let currentGame = null;
@@ -1035,6 +1224,97 @@
         let nudgeTimeouts = {};
         let nudgeIntervals = {};
 
+        // Utility functions - Define these first
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            console.log(logMessage);
+            addGameMessage(message);
+        }
+
+        function addGameMessage(message) {
+            const gameMessages = document.getElementById('gameMessages');
+            if (gameMessages) {
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = message;
+                gameMessages.appendChild(messageDiv);
+                gameMessages.scrollTop = gameMessages.scrollHeight;
+                
+                while (gameMessages.children.length > 100) {
+                    gameMessages.removeChild(gameMessages.firstChild);
+                }
+            }
+        }
+
+        function addChatMessage(playerName, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                const messageDiv = document.createElement('div');
+                messageDiv.innerHTML = `<strong>${playerName}:</strong> ${message}`;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                while (chatMessages.children.length > 50) {
+                    chatMessages.removeChild(chatMessages.firstChild);
+                }
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        }
+
+        function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
+}
+
+        function createLivesDisplay(player, isMini = false) {
+    const maxLives = currentGame?.settings?.startingLives || 3;
+    const currentLives = player.lives || 0;
+    
+        if (isMini) {
+        const miniLivesContainer = document.createElement('div');
+        miniLivesContainer.className = 'mini-lives-dots';
+        
+        for (let i = 0; i < maxLives; i++) {
+            const dot = document.createElement('div');
+            dot.className = i < currentLives ? 'mini-life-dot' : 'mini-life-dot lost';
+            miniLivesContainer.appendChild(dot);
+        }
+        
+        return miniLivesContainer;
+    } else {
+        const livesContainer = document.createElement('div');
+        livesContainer.className = 'player-lives-dots';
+        
+        for (let i = 0; i < maxLives; i++) {
+            const dot = document.createElement('div');
+            dot.className = i < currentLives ? 'life-dot' : 'life-dot lost';
+            livesContainer.appendChild(dot);
+        }
+        
+        return livesContainer;
+    }
+}
+
         // Initialize clean focus state
         function initializeFocusState() {
             focusedPlayers = {
@@ -1048,35 +1328,398 @@
 
         // Enhanced Gesture Detection System
         function initializeGestureHandlers(cardElement, targetPlayerId) {
-            if (removable) {
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'remove-button';
-                removeBtn.textContent = '×';
-                removeBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    removeFromFocus(player.id);
-                };
-                slot.appendChild(removeBtn);
+            if (!cardElement) {
+                log(`❌ No card element to initialize gestures for player ${targetPlayerId}`);
+                return;
             }
 
-            return slot;
+            log(`🎯 Initializing gesture handlers for player ${targetPlayerId}`);
+
+            // Touch events for mobile
+            cardElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+            cardElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+            cardElement.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+            // Mouse events for desktop
+            cardElement.addEventListener('mousedown', handleMouseStart);
+            cardElement.addEventListener('mousemove', handleMouseMove);
+            cardElement.addEventListener('mouseup', handleMouseEnd);
+
+            // Store player ID for gesture handling
+            cardElement.dataset.playerId = targetPlayerId;
+            
+            log(`✅ Gesture handlers set for player ${targetPlayerId}`);
         }
 
-        // Card visibility function - only show other players' cards during revealing phase
-        function shouldPlayerCardBeVisible(player) {
-            // Always show your own card
-            if (player.id === playerId) {
-                return true;
-            }
-            
-            // Only show other players' cards during the revealing phase at the end of the round
-            if (currentGame.turnPhase === 'revealing') {
-                return true;
-            }
-            
-            // Don't show other players' cards during normal gameplay, even if they've looked at them
-            return false;
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            startGesture(touch.clientX, touch.clientY, e.target);
+            log(`📱 Touch start: ${touch.clientX}, ${touch.clientY}`);
         }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!gestureState.isTracking) return;
+            const touch = e.touches[0];
+            updateGesture(touch.clientX, touch.clientY);
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            log(`📱 Touch end`);
+            endGesture();
+        }
+
+        function handleMouseStart(e) {
+            startGesture(e.clientX, e.clientY, e.target);
+            log(`🖱️ Mouse start: ${e.clientX}, ${e.clientY}`);
+        }
+
+        function handleMouseMove(e) {
+            if (!gestureState.isTracking) return;
+            updateGesture(e.clientX, e.clientY);
+        }
+
+        function handleMouseEnd(e) {
+            log(`🖱️ Mouse end`);
+            endGesture();
+        }
+
+        function startGesture(x, y, element) {
+            gestureState.startX = x;
+            gestureState.startY = y;
+            gestureState.startTime = Date.now();
+            gestureState.isTracking = true;
+            gestureState.element = element;
+            log(`🎯 Gesture started at ${x}, ${y}`);
+        }
+
+        function updateGesture(x, y) {
+            if (!gestureState.isTracking) return;
+            
+            const deltaX = x - gestureState.startX;
+            const deltaY = y - gestureState.startY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            // Visual feedback for swipe
+            if (distance > 20) {
+                const cardElement = gestureState.element.closest('.card-display');
+                if (cardElement && deltaX > 50) {
+                    cardElement.style.transform = `translateX(${Math.min(deltaX - 50, 30)}px) rotate(${Math.min((deltaX - 50) / 5, 10)}deg)`;
+                    cardElement.style.opacity = '0.8';
+                    log(`👉 Swipe feedback: deltaX=${deltaX}`);
+                }
+            }
+        }
+
+        function showWinnerAnnouncement(winnerName) {
+    // Create big winner overlay
+    const winnerOverlay = document.createElement('div');
+    winnerOverlay.className = 'winner-announcement';
+    winnerOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.5s ease;
+    `;
+    
+    const winnerContent = document.createElement('div');
+    winnerContent.style.cssText = `
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        color: white;
+        padding: 40px 60px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        animation: bounceIn 0.6s ease;
+    `;
+    
+    winnerContent.innerHTML = `
+        <h1 style="font-size: 3rem; margin: 0 0 20px 0;">🏆</h1>
+        <h2 style="font-size: 2rem; margin: 0 0 10px 0;">${winnerName} Wins!</h2>
+        <p style="font-size: 1.2rem; margin: 0; opacity: 0.9;">Congratulations!</p>
+        <button onclick="closeWinnerAnnouncement()" style="
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+        ">Continue</button>
+    `;
+    
+    winnerOverlay.appendChild(winnerContent);
+    document.body.appendChild(winnerOverlay);
+}
+
+function closeWinnerAnnouncement() {
+    const overlay = document.querySelector('.winner-announcement');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+function disableAllGameButtons() {
+    // Disable main control buttons
+    document.getElementById('flipCardBtn').disabled = true;
+    document.getElementById('keepCardBtn').disabled = true;
+    document.getElementById('tradeCardBtn').disabled = true;
+    document.getElementById('endRoundBtn').disabled = true;
+    
+    // Hide start game button if visible
+    const hostControls = document.getElementById('hostControls');
+    if (hostControls) {
+        hostControls.classList.add('hidden');
+    }
+    
+    // Disable all card action buttons
+    document.querySelectorAll('.action-button').forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.3';
+    });
+    
+    log('🔒 All game buttons disabled - game finished');
+}
+
+        function endGesture() {
+            if (!gestureState.isTracking) return;
+            
+            const duration = Date.now() - gestureState.startTime;
+            const cardElement = gestureState.element.closest('.card-display');
+            
+            log(`🎯 Gesture ended, duration: ${duration}ms`);
+            
+            if (cardElement) {
+                // Check for swipe based on transform applied during updateGesture
+                const transform = cardElement.style.transform || '';
+                const wasSwipeRight = transform.includes('translateX') && !transform.includes('-');
+                
+                // Reset visual feedback
+                cardElement.style.transform = '';
+                cardElement.style.opacity = '';
+                
+                // Get the player ID from the card element's dataset
+                const targetPlayerId = cardElement.dataset.playerId;
+                log(`🎯 Target player ID: ${targetPlayerId}`);
+                
+                if (!targetPlayerId) {
+                    log(`❌ No target player ID found in card element`);
+                    gestureState.isTracking = false;
+                    gestureState.element = null;
+                    return;
+                }
+                
+                if (wasSwipeRight) {
+                    // Swipe right detected
+                    log(`👉 Swipe right detected for player ${targetPlayerId}`);
+                    handleSwipeRight(targetPlayerId);
+                } else if (duration < 300) {
+                    // Quick tap
+                    if (gestureState.lastTap && Date.now() - gestureState.lastTap < 500) {
+                        // Double tap - Keep card
+                        log(`👆👆 Double tap detected for player ${targetPlayerId}`);
+                        handleDoubleTap(targetPlayerId);
+                        gestureState.lastTap = 0;
+                    } else {
+                        // Single tap - Look at card
+                        log(`👆 Single tap detected for player ${targetPlayerId}`);
+                        gestureState.lastTap = Date.now();
+                        handleSingleTap(targetPlayerId);
+                    }
+                }
+            } else {
+                log(`❌ No card element found for gesture`);
+            }
+            
+            // Reset gesture state
+            gestureState.isTracking = false;
+            gestureState.element = null;
+        }
+
+        function handleSwipeRight(targetPlayerId) {
+            log(`👉 Swipe feedback: Swipe right for player ${targetPlayerId}`);
+            if (targetPlayerId === playerId) {
+                // Check if we can trade
+                if (canPerformTrade()) {
+                    const nextPlayer = getNextTradeablePlayer();
+                    if (nextPlayer) {
+                        log(`🔄 Trading with ${nextPlayer.name}`);
+                        requestTrade(nextPlayer.id);
+                    } else {
+                        log(`❌ No valid trade target found`);
+                        showToast('No valid trade target!', 'warning');
+                    }
+                } else {
+                    log(`❌ Cannot trade right now`);
+                    showToast('Cannot trade right now!', 'warning');
+                }
+            }
+        }
+
+        function handleDoubleTap(targetPlayerId) {
+            log(`✅ Double tap: Processing for player ${targetPlayerId}`);
+            if (targetPlayerId === playerId) {
+                if (currentGame?.currentPlayerId === targetPlayerId) {
+                    log(`✅ Double tap: It's my turn, keeping card`);
+                    keepCard();
+                } else {
+                    log(`❌ Double tap: Not my turn`);
+                    showToast('Not your turn!', 'warning');
+                }
+            }
+        }
+
+        function handleSingleTap(targetPlayerId) {
+            log(`👆 Single tap: Processing for player ${targetPlayerId}`);
+            if (targetPlayerId === playerId) {
+                const myPlayer = currentGame?.players?.find(p => p.id === targetPlayerId);
+                if (myPlayer && myPlayer.hasCard && !playerCardLooks[targetPlayerId]) {
+                    log(`👁️ Single tap: Flipping card for first look`);
+                    flipCard();
+                    markPlayerAsLooked(targetPlayerId);
+
+                } else {
+                    log(`👁️ Single tap: Player already looked or no card`);
+                }
+            }
+        }
+
+        // King Logic Functions
+        function isKing(card) {
+            return card && (card.value === 'K' || card.value === 'King');
+        }
+
+        function isJack(card) {
+            return card && (card.value === 'J' || card.value === 'Jack');
+        }
+
+        function shouldAutoRevealKing(player) {
+            // For Kings, we want to auto-reveal even if already revealed locally
+                return player && player.card && isKing(player.card);
+        }
+
+        function handleKingAutoReveal(player) {
+            if (shouldAutoRevealKing(player)) {
+                log(`👑 AUTO-REVEALING King for ${player.name}`);
+        
+                // Mark as revealed for all players to see
+                player.cardRevealed = true;
+        
+                if (player.id === playerId) {
+                    // Auto-flip our own King and emit to server
+                    socket?.emit('auto-reveal-king', { 
+                        gameId: currentGame.id, 
+                        playerId: player.id 
+                    });
+                }
+        
+                markPlayerAsLooked(player.id);
+                showToast(`${player.name} has a King! 👑`, 'warning');
+        
+                // Add visual King reveal animation
+                setTimeout(() => {
+                    const playerCard = document.querySelector(`[data-player-id="${player.id}"] .card-display`);
+                    if (playerCard) {
+                        playerCard.classList.add('king-auto');
+                    }
+                }, 100);
+            }
+        }
+
+        function canPerformTrade() {
+            const isMyTurn = currentGame?.currentPlayerId === playerId;
+            const gameStarted = currentGame?.state === 'playing';
+            const tradingPhase = currentGame?.turnPhase === 'trading';
+            const myPlayer = currentGame?.players?.find(p => p.id === playerId);
+            
+            log(`🔍 Trade check: myTurn=${isMyTurn}, gameStarted=${gameStarted}, tradingPhase=${tradingPhase}`);
+            
+            // Can't trade if I have a King
+            if (myPlayer?.card && isKing(myPlayer.card)) {
+                log(`👑 Cannot trade: I have a King`);
+                showToast('Kings cannot be traded! 👑', 'warning');
+                return false;
+            }
+            
+            const canTrade = isMyTurn && gameStarted && tradingPhase;
+            log(`🔍 Final trade result: ${canTrade}`);
+            return canTrade;
+        }
+
+        function getNextTradeablePlayer() {
+            if (!currentGame?.players) return null;
+            
+            const myIndex = currentGame.players.findIndex(p => p.id === playerId);
+            if (myIndex === -1) return null;
+            
+            const playerCount = currentGame.players.length;
+            let nextIndex = (myIndex + 1) % playerCount;
+            let searchCount = 0;
+            
+            // Find next player who doesn't have a revealed King
+            while (searchCount < playerCount) {
+                const nextPlayer = currentGame.players[nextIndex];
+
+                // Check if player has revealed King
+                if (nextPlayer.card && isKing(nextPlayer.card) && nextPlayer.cardRevealed) {
+
+                    // Special case: If DEALER has King, trade with deck
+                    if (nextPlayer.id === currentGame.dealerId) {
+                        log(`👑 DEALER ${nextPlayer.name} has King - trade with deck!`);
+                        return { id: 'TRADE_WITH_DECK', name: 'Deck', isDealer: true };
+                    }
+
+                    // Normal case: Bypass non-dealer King holders
+                    else {
+                        log(`👑 Bypassing ${nextPlayer.name} (has King)`);
+                        nextIndex = (nextIndex + 1) % playerCount;
+                        searchCount++;
+                        continue;
+                    }
+                }
+
+                // Valid trade target (no King or not revealed)
+                if (nextPlayer.lives > 0 && nextPlayer.id !== playerId) {
+                    return nextPlayer;
+                }
+
+                nextIndex = (nextIndex + 1) % playerCount;
+                searchCount++;
+            }
+            
+            return null;
+        }
+
+        // Card visibility function - show own cards, revealing phase cards, and auto-revealed Kings
+            function shouldPlayerCardBeVisible(player) {
+                // Always show your own card
+                if (player.id === playerId) {
+                    return true;
+                }
+
+                // Show other players' cards during the revealing phase at the end of the round
+                if (currentGame.turnPhase === 'revealing') {
+                    return true;
+                }
+
+                // 🎯 NEW: Show auto-revealed Kings during normal gameplay
+                if (player.card && isKing(player.card) && player.cardRevealed) {
+                    return true;
+                }
+
+                // Don't show other players' cards during normal gameplay otherwise
+                return false;
+            }
 
         function canTradeWith(player) {
             if (!currentGame) return false;
@@ -1104,6 +1747,155 @@
             return canTrade;
         }
 
+        // Card Look Tracking
+        function markPlayerAsLooked(playerId) {
+            playerCardLooks[playerId] = true;
+            log(`👁️ Player ${playerId} has looked at their card`);
+            clearNudge(playerId);
+        }
+
+        function hasPlayerLooked(playerId) {
+            return Boolean(playerCardLooks[playerId]);
+        }
+
+        function resetCardLooks() {
+            playerCardLooks = {};
+            log('🔄 Reset all card look tracking');
+        }
+
+        // Nudge System
+        function startNudge(playerId, reason = 'Look at your card') {
+            clearNudge(playerId); // Clear any existing nudge
+            
+            const playerElement = document.querySelector(`[data-player-id="${playerId}"]`)?.closest('.focus-slot');
+            if (!playerElement) return;
+            
+            const cardElement = playerElement.querySelector('.card-display');
+            if (!cardElement) return;
+            
+            log(`🔔 Starting nudge for player ${playerId}: ${reason}`);
+            
+            // Visual nudge - shake animation
+            cardElement.classList.add('nudge-shake');
+            
+            // Audio nudge (optional)
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmoeAzeI1PKscBkFl3bvuKJcHA==');
+                audio.volume = 0.3;
+                audio.play().catch(() => {}); // Ignore audio errors
+            } catch (error) {
+                // Ignore audio errors
+            }
+            
+            // Pulse effect
+            nudgeIntervals[playerId] = setInterval(() => {
+                if (cardElement.classList.contains('nudge-pulse')) {
+                    cardElement.classList.remove('nudge-pulse');
+                } else {
+                    cardElement.classList.add('nudge-pulse');
+                }
+            }, 1000);
+            
+            // Auto-clear after 10 seconds
+            nudgeTimeouts[playerId] = setTimeout(() => {
+                clearNudge(playerId);
+            }, 10000);
+            
+            // Show toast
+            showToast(`${reason} 👆`, 'warning');
+        }
+
+        function clearNudge(playerId) {
+            const playerElement = document.querySelector(`[data-player-id="${playerId}"]`)?.closest('.focus-slot');
+            if (playerElement) {
+                const cardElement = playerElement.querySelector('.card-display');
+                if (cardElement) {
+                    cardElement.classList.remove('nudge-shake', 'nudge-pulse');
+                }
+            }
+            
+            if (nudgeTimeouts[playerId]) {
+                clearTimeout(nudgeTimeouts[playerId]);
+                delete nudgeTimeouts[playerId];
+            }
+            
+            if (nudgeIntervals[playerId]) {
+                clearInterval(nudgeIntervals[playerId]);
+                delete nudgeIntervals[playerId];
+            }
+        }
+
+        function clearAllNudges() {
+            Object.keys(nudgeTimeouts).forEach(playerId => clearNudge(playerId));
+        }
+
+        // Username validation functions
+        function validatePlayerName(name) {
+            if (!name || name.trim().length === 0) {
+                showToast('Please enter a valid name', 'error');
+                return false;
+            }
+            
+            if (name.trim().length > 20) {
+                showToast('Name must be 20 characters or less', 'error');
+                return false;
+            }
+            
+            // Check for inappropriate characters
+            const validName = /^[a-zA-Z0-9\s_-]+$/.test(name.trim());
+            if (!validName) {
+                showToast('Name can only contain letters, numbers, spaces, underscore, and dash', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function checkForDuplicateUsername(name) {
+            if (currentGame && currentGame.players) {
+                const duplicate = currentGame.players.find(p => 
+                    p.name.toLowerCase().trim() === name.toLowerCase().trim() && p.id !== playerId
+                );
+                if (duplicate) {
+                    showToast(`Name "${name}" is already taken in this game`, 'error');
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Enhanced game state cleanup
+        function cleanupGameState() {
+            if (!currentGame || !currentGame.players) return;
+            
+            const originalCount = currentGame.players.length;
+            
+            // Remove duplicate players by ID
+            const uniquePlayers = [];
+            const seenIds = new Set();
+            
+            currentGame.players.forEach(player => {
+                if (!seenIds.has(player.id)) {
+                    uniquePlayers.push(player);
+                    seenIds.add(player.id);
+                } else {
+                    log(`🗑️ Removing duplicate player: ${player.name} (${player.id})`);
+                }
+            });
+            
+            if (originalCount !== uniquePlayers.length) {
+                log(`🔧 Game cleanup: ${originalCount} -> ${uniquePlayers.length} players`);
+                currentGame.players = uniquePlayers;
+                
+                // Update display after cleanup
+                updateGameDisplay();
+                updatePersonalTable();
+                
+                showToast(`Cleaned up ${originalCount - uniquePlayers.length} duplicate players`, 'success');
+            }
+        }
+
+        // Available Players Management
         function renderAvailablePlayers() {
             const playersScroll = document.getElementById('playersScroll');
             if (!playersScroll) return;
@@ -1154,6 +1946,11 @@
                     playerClasses += ' tradeable';
                 }
                 
+                // Check if player is eliminated
+                if (player.lives <= 0) {
+                    playerClasses += ' eliminated';
+                }
+
                 playerDiv.className = playerClasses;
 
                 const playerNameDiv = document.createElement('div');
@@ -1179,11 +1976,9 @@
                 }
                 playerDiv.appendChild(miniCard);
 
-                const miniLives = document.createElement('div');
-                miniLives.className = 'mini-lives';
-                miniLives.textContent = `❤️ ${player.lives || 3}`;
-                playerDiv.appendChild(miniLives);
-
+                const miniLivesDisplay = createLivesDisplay(player, true);
+                playerDiv.appendChild(miniLivesDisplay);
+                
                 playerDiv.onclick = () => addToFocus(player);
                 playersScroll.appendChild(playerDiv);
             });
@@ -1245,6 +2040,494 @@
 
             renderPersonalTable();
             renderAvailablePlayers();
+        }
+
+        function isPlayerInFocus(playerId) {
+            if (!focusedPlayers) return false;
+            return Object.values(focusedPlayers).some(player => player && player.id === playerId);
+        }
+
+        // Personal Table management
+        function updatePersonalTable() {
+            if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
+            if (!focusedPlayers) initializeFocusState();
+
+            // Clean up duplicate players first
+            cleanupGameState();
+
+            const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
+            if (myPlayerIndex === -1) {
+                log(`❌ Cannot find myself (${playerId}) in players list`);
+                return;
+            }
+
+            const playerCount = currentGame.players.length;
+            if (playerCount < 2) return;
+
+            log(`🔄 Updating personal table: ${playerCount} players, I am ${currentGame.players[myPlayerIndex].name} at index ${myPlayerIndex}`);
+
+            if (playerCount <= 5) {
+                autoFillAllPlayers(myPlayerIndex, playerCount);
+                hideAvailablePlayersSection();
+            } else {
+                setupCustomFocusMode(myPlayerIndex, playerCount);
+                showAvailablePlayersSection();
+            }
+
+            renderPersonalTable();
+            renderAvailablePlayers();
+        }
+
+        function autoFillAllPlayers(myPlayerIndex, playerCount) {
+            const players = currentGame.players;
+            
+            // Deduplicate players by ID to prevent duplicate issues
+            const uniquePlayers = [];
+            const seenIds = new Set();
+            
+            players.forEach(player => {
+                if (!seenIds.has(player.id)) {
+                    uniquePlayers.push(player);
+                    seenIds.add(player.id);
+                }
+            });
+            
+            log(`🔧 Deduplication: ${players.length} players -> ${uniquePlayers.length} unique players`);
+            
+            // Update currentGame with deduplicated players
+            currentGame.players = uniquePlayers;
+            
+            // Recalculate indices with clean player list
+            const cleanMyPlayerIndex = uniquePlayers.findIndex(p => p.id === playerId);
+            const cleanPlayerCount = uniquePlayers.length;
+            
+            if (cleanMyPlayerIndex === -1) {
+                log(`❌ Cannot find myself in clean players list`);
+                return;
+            }
+            
+            focusedPlayers.currentTurn = uniquePlayers[cleanMyPlayerIndex];
+            
+            const leftNeighborIndex = (cleanMyPlayerIndex - 1 + cleanPlayerCount) % cleanPlayerCount;
+            const rightNeighborIndex = (cleanMyPlayerIndex + 1) % cleanPlayerCount;
+            
+            // Smart arrangement: prioritize living players for neighbors
+            const alivePlayers = uniquePlayers.filter(p => p.lives > 0);
+            const deadPlayers = uniquePlayers.filter(p => p.lives <= 0);
+
+            if (alivePlayers.length > 1) {
+                // Find my position among alive players
+                const myAliveIndex = alivePlayers.findIndex(p => p.id === playerId);
+                const aliveCount = alivePlayers.length;
+    
+                if (myAliveIndex !== -1) {
+                    const leftAliveIndex = (myAliveIndex - 1 + aliveCount) % aliveCount;
+                    const rightAliveIndex = (myAliveIndex + 1) % aliveCount;
+        
+                    focusedPlayers.leftNeighbor = alivePlayers[leftAliveIndex];
+                    focusedPlayers.rightNeighbor = alivePlayers[rightAliveIndex];
+        
+                    // Fill custom slots with remaining alive players, then dead players
+                    const otherAlivePlayers = alivePlayers.filter((p, index) => 
+                        index !== myAliveIndex && 
+                        index !== leftAliveIndex && 
+                        index !== rightAliveIndex
+                    );
+        
+                    const customPlayers = [...otherAlivePlayers, ...deadPlayers];
+                    focusedPlayers.custom1 = customPlayers[0] || null;
+                    focusedPlayers.custom2 = customPlayers[1] || null;
+                }
+            } else {
+                // Fallback to original logic if somehow we have no alive players
+                focusedPlayers.leftNeighbor = uniquePlayers[leftNeighborIndex];
+                focusedPlayers.rightNeighbor = uniquePlayers[rightNeighborIndex];
+    
+                const remainingPlayers = uniquePlayers.filter((p, index) => 
+                    index !== cleanMyPlayerIndex && 
+                    index !== leftNeighborIndex && 
+                    index !== rightNeighborIndex
+                );
+    
+                focusedPlayers.custom1 = remainingPlayers[0] || null;
+                focusedPlayers.custom2 = remainingPlayers[1] || null;
+            }
+            
+            log(`🎯 Clean personal view: Left=${uniquePlayers[leftNeighborIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${uniquePlayers[rightNeighborIndex]?.name}`);
+        }
+
+        function setupCustomFocusMode(myPlayerIndex, playerCount) {
+            const players = currentGame.players;
+            
+            // Deduplicate players by ID
+            const uniquePlayers = [];
+            const seenIds = new Set();
+            
+            players.forEach(player => {
+                if (!seenIds.has(player.id)) {
+                    uniquePlayers.push(player);
+                    seenIds.add(player.id);
+                }
+            });
+            
+            log(`🔧 Custom mode deduplication: ${players.length} -> ${uniquePlayers.length} unique`);
+            
+            // Update currentGame with deduplicated players
+            currentGame.players = uniquePlayers;
+            
+            // Recalculate with clean data
+            const cleanMyPlayerIndex = uniquePlayers.findIndex(p => p.id === playerId);
+            const cleanPlayerCount = uniquePlayers.length;
+            
+            if (cleanMyPlayerIndex === -1) return;
+            
+            focusedPlayers.currentTurn = uniquePlayers[cleanMyPlayerIndex];
+            
+            const leftNeighborIndex = (cleanMyPlayerIndex - 1 + cleanPlayerCount) % cleanPlayerCount;
+            const rightNeighborIndex = (cleanMyPlayerIndex + 1) % cleanPlayerCount;
+            
+            focusedPlayers.leftNeighbor = uniquePlayers[leftNeighborIndex];
+            focusedPlayers.rightNeighbor = uniquePlayers[rightNeighborIndex];
+            
+            if (focusedPlayers.custom1 && !uniquePlayers.find(p => p.id === focusedPlayers.custom1.id)) {
+                focusedPlayers.custom1 = null;
+            }
+            if (focusedPlayers.custom2 && !uniquePlayers.find(p => p.id === focusedPlayers.custom2.id)) {
+                focusedPlayers.custom2 = null;
+            }
+            
+            const dealer = uniquePlayers.find(p => p.id === currentGame.dealerId);
+            if (dealer && !isPlayerInFocus(dealer.id)) {
+                if (!focusedPlayers.custom1) {
+                    focusedPlayers.custom1 = dealer;
+                } else if (!focusedPlayers.custom2) {
+                    focusedPlayers.custom2 = dealer;
+                }
+            }
+            
+            log(`🎯 Clean custom view: Left=${uniquePlayers[leftNeighborIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${uniquePlayers[rightNeighborIndex]?.name}`);
+        }
+
+        function hideAvailablePlayersSection() {
+            const availableSection = document.querySelector('.available-players');
+            if (availableSection) {
+                availableSection.style.display = 'none';
+            }
+        }
+
+        function showAvailablePlayersSection() {
+            const availableSection = document.querySelector('.available-players');
+            if (availableSection) {
+                availableSection.style.display = 'block';
+            }
+        }
+
+        function renderPersonalTable() {
+            const focusGrid = document.getElementById('focusGrid');
+            if (!focusGrid || !focusedPlayers) return;
+            
+            focusGrid.innerHTML = '';
+
+            const leftSlot = createFocusSlot('slot', focusedPlayers.leftNeighbor, false);
+            leftSlot.style.gridColumn = '1';
+            leftSlot.style.gridRow = '1';
+            focusGrid.appendChild(leftSlot);
+
+            const centerSlot = createFocusSlot('slot', focusedPlayers.currentTurn, false);
+            centerSlot.style.gridColumn = '2';
+            centerSlot.style.gridRow = '1';
+            focusGrid.appendChild(centerSlot);
+
+            const rightSlot = createFocusSlot('slot', focusedPlayers.rightNeighbor, false);
+            rightSlot.style.gridColumn = '3';
+            rightSlot.style.gridRow = '1';
+            focusGrid.appendChild(rightSlot);
+
+            const custom1Slot = createFocusSlot('custom', focusedPlayers.custom1, true);
+            custom1Slot.style.gridColumn = '1';
+            custom1Slot.style.gridRow = '2';
+            focusGrid.appendChild(custom1Slot);
+
+            const custom2Slot = createFocusSlot('custom', focusedPlayers.custom2, true);
+            custom2Slot.style.gridColumn = '3';
+            custom2Slot.style.gridRow = '2';
+            focusGrid.appendChild(custom2Slot);
+            
+            // Add dealer turn notification
+            // FIX: Clear any existing dealer notifications first
+            const existingNotification = document.querySelector('.dealer-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Add dealer turn notification ONLY when it's actually the dealer's turn
+            const myPlayer = currentGame?.players?.find(p => p.id === playerId);
+            const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
+            const isDealerTurn = isDealer && currentGame?.currentPlayerId === playerId && currentGame?.state === 'playing';
+
+            if (isDealerTurn) {
+                const dealerNotification = document.createElement('div');
+                dealerNotification.className = 'dealer-notification'; // Add class for easy removal
+                dealerNotification.style.cssText = `
+                    position: absolute;
+                    top: -5px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: linear-gradient(45deg, #f39c12, #e67e22);
+                    color: white;
+                    padding: 4px 12px;
+                    border-radius: 12px;
+                    font-weight: bold;
+                    font-size: 0.7rem;
+                    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.4);
+                    animation: pulse 2s infinite;
+                    z-index: 50;
+                    white-space: nowrap;
+                `;
+                dealerNotification.textContent = '🏁 DEALER TURN - Final Action!';
+                document.querySelector('.personal-table').style.position = 'relative';
+                document.querySelector('.personal-table').appendChild(dealerNotification);
+            }
+        }
+
+        function createFocusSlot(type, player, removable) {
+            const slot = document.createElement('div');
+            let slotClasses = `focus-slot ${type}`;
+
+            if (!player) {
+                slot.classList.add('empty');
+                slot.innerHTML = `
+                    <div class="add-icon">+</div>
+                    <div>Tap player below</div>
+                `;
+                return slot;
+            }
+            
+            if (player.id === currentGame?.currentPlayerId) {
+                slotClasses += ' current-turn';
+            }
+            
+            if (player.id === currentGame?.dealerId) {
+                slotClasses += ' dealer';
+            }
+            
+            // Check if player is eliminated
+            if (player.lives <= 0) {
+                 slotClasses += ' eliminated';
+            }
+
+            slot.className = slotClasses;
+
+            // Add eliminated indicator if player is dead
+            if (player && player.lives <= 0) {
+                const eliminatedIndicator = document.createElement('div');
+                eliminatedIndicator.className = 'eliminated-indicator';
+                eliminatedIndicator.textContent = 'ELIMINATED';
+                slot.appendChild(eliminatedIndicator);
+            }
+
+            const playerContent = document.createElement('div');
+            playerContent.className = 'player-content';
+
+            const cardSection = document.createElement('div');
+            cardSection.className = 'card-section';
+
+            const playerInfo = document.createElement('div');
+            playerInfo.className = 'player-info';
+            const dealerText = (player.id === currentGame?.dealerId) ? ' (Dealer)' : '';
+            playerInfo.innerHTML = `<span class="player-name">${player.name}${dealerText}</span>`;
+
+            const livesDisplay = createLivesDisplay(player, false);
+            playerInfo.appendChild(livesDisplay);
+
+            const cardDisplay = document.createElement('div');
+            cardDisplay.className = 'card-display';
+            
+            // Card visibility logic - only show other players' cards during revealing phase
+            const shouldShowCard = shouldPlayerCardBeVisible(player);
+            
+            if (player.id === playerId) {
+                log(`🎴 My card state: hasCard=${player.hasCard}, card=${player.card ? `${player.card.value}${player.card.suit}` : 'null'}, revealed=${player.cardRevealed}, shouldShow=${shouldShowCard}`);
+            }
+            
+            if (shouldAutoRevealKing(player)) {
+                handleKingAutoReveal(player);
+            }
+            
+            if (player.card && shouldShowCard && player.lives > 0) {
+                const card = player.card;
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                let cardClasses = isRed ? ' red revealed' : ' black revealed';
+                
+                if (isKing(card)) {
+                    cardClasses += ' king-auto';
+                }
+                
+                cardDisplay.className += cardClasses;
+                
+                const cardContent = document.createElement('div');
+                cardContent.className = 'card-content';
+                cardContent.innerHTML = `
+                    <div class="card-value">${card.value}</div>
+                    <div class="card-suit">${card.suit}</div>
+                `;
+                cardDisplay.appendChild(cardContent);
+            } else if ((player.hasCard || player.card) && player.lives > 0) {
+                cardDisplay.className += ' face-down';
+                cardDisplay.textContent = '🂠';
+                
+                // Only add gesture handlers for my own card
+                if (player.id === playerId) {
+                    setTimeout(() => {
+                        initializeGestureHandlers(cardDisplay, player.id);
+                    }, 100);
+                }
+                
+                if (player.id !== playerId && !hasPlayerLooked(player.id) && player.hasCard) {
+                    setTimeout(() => {
+                        if (!hasPlayerLooked(player.id)) {
+                            startNudge(player.id, `${player.name} should look at their card`);
+                        }
+                    }, 2000);
+                }
+            } else {
+                cardDisplay.textContent = 'No Card';
+            }
+
+            cardSection.appendChild(playerInfo);
+            cardSection.appendChild(cardDisplay);
+            cardSection.setAttribute('data-player-id', player.id);
+
+            // Add action buttons for my own card
+            if (player.id === playerId) {
+                const actionContainer = document.createElement('div');
+                actionContainer.style.display = 'flex';
+                actionContainer.style.gap = '4px';
+                actionContainer.style.marginTop = '4px';
+
+                const myPlayer = currentGame?.players?.find(p => p.id === playerId);
+                const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
+                const isDealerTurn = isDealer && currentGame?.currentPlayerId === playerId;
+
+                // Keep Card button
+                const keepBtn = document.createElement('button');
+                keepBtn.className = 'action-button';
+                keepBtn.style.fontSize = '0.6rem';
+                keepBtn.style.padding = '4px 6px';
+                keepBtn.disabled = currentGame?.currentPlayerId !== playerId;
+                
+                // Update button for dealer turn
+                if (isDealerTurn) {
+                    keepBtn.textContent = '✋ Keep & End';
+                    keepBtn.style.background = '#f39c12';
+                } else {
+                    keepBtn.textContent = '✋ Keep';
+                    keepBtn.style.background = '#27ae60';
+                }
+                
+                keepBtn.onclick = () => {
+                    log(`✋ Card-level keep button clicked (dealer: ${isDealerTurn})`);
+                    if (isDealerTurn) {
+                        // Dealer keep = end round
+                        socket.emit('dealer-skip-trade', { gameId: currentGame.id });
+                        showToast('Dealer kept card - Round ending!', 'success');
+                    } else {
+                        keepCard();
+                    }
+                };
+                actionContainer.appendChild(keepBtn);
+
+                // Trade button
+                const tradeBtn = document.createElement('button');
+                tradeBtn.className = 'action-button trade';
+                tradeBtn.style.fontSize = '0.6rem';
+                tradeBtn.style.padding = '4px 6px';
+                tradeBtn.disabled = !canPerformTrade() && !isDealerTurn;
+                
+                // Update button for dealer turn
+                if (isDealerTurn) {
+                    tradeBtn.textContent = '🎴 Deck';
+                    tradeBtn.style.background = '#e74c3c';
+                } else {
+                    tradeBtn.textContent = '🔄 Trade';
+                    tradeBtn.style.background = '#3498db';
+                }
+                
+                tradeBtn.onclick = () => {
+                    log(`🔄 Card-level trade button clicked (dealer: ${isDealerTurn})`);
+                    if (isDealerTurn) {
+                        // Dealer trade with deck
+                        socket.emit('dealer-trade-deck', { gameId: currentGame.id });
+                        showToast('Trading with deck...', 'info');
+                    } else {
+                        const nextPlayer = getNextTradeablePlayer();
+                        if (nextPlayer) {
+                            requestTrade(nextPlayer.id);
+                        } else {
+                            showToast('No valid trade target!', 'warning');
+                        }
+                    }
+                };
+                actionContainer.appendChild(tradeBtn);
+
+                cardSection.appendChild(actionContainer);
+            }
+
+            // Add trade button for other players I can trade with
+            if (player.id !== playerId && canTradeWith(player)) {
+                const actionBtn = document.createElement('button');
+                actionBtn.className = 'action-button trade';
+                actionBtn.textContent = 'Trade →';
+                actionBtn.onclick = () => {
+                    log(`🔄 Trading with ${player.name}`);
+                    requestTrade(player.id);
+                };
+                cardSection.appendChild(actionBtn);
+            }
+
+            const videoSection = document.createElement('div');
+            videoSection.className = 'video-section';
+
+            const videoContainer = document.createElement('div');
+            videoContainer.className = 'video-container';
+            const videoElement = document.createElement('div');
+            videoElement.className = 'video-element';
+            videoElement.id = `video-${player.id}`;
+            
+            const placeholder = document.createElement('div');
+            placeholder.className = 'video-placeholder';
+            placeholder.textContent = '📹';
+            videoElement.appendChild(placeholder);
+            
+            const videoControls = document.createElement('div');
+            videoControls.className = 'video-controls';
+            videoControls.innerHTML = `
+                <button class="video-control-btn" onclick="startVideoForPlayer('${player.id}')" title="Start Video">📷</button>
+                <button class="video-control-btn" onclick="toggleMuteForPlayer('${player.id}')" title="Mute">🎤</button>
+                <button class="video-control-btn" onclick="endVideoForPlayer('${player.id}')" title="End">❌</button>
+            `;
+            
+            videoContainer.appendChild(videoElement);
+            videoContainer.appendChild(videoControls);
+            videoSection.appendChild(videoContainer);
+
+            playerContent.appendChild(cardSection);
+            playerContent.appendChild(videoSection);
+            slot.appendChild(playerContent);
+
+            // Add remove button for removable slots
+            if (removable) {
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-button';
+                removeBtn.textContent = '×';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeFromFocus(player.id);
+                };
+                slot.appendChild(removeBtn);
+            }
+
+            return slot;
         }
 
         // Video Controls
@@ -1414,6 +2697,14 @@
                 log(`❌ Cannot perform trade right now`);
                 return;
             }
+
+            if (targetPlayerId === 'TRADE_WITH_DECK') {
+                log(`🎴 Special case: Trading with deck because dealer has King`);
+                socket.emit('trade-with-deck-special', {
+                    gameId: currentGame.id
+                });
+                return;
+            }
             
             if (!hasPlayerLooked(targetPlayerId)) {
                 const targetPlayer = currentGame.players.find(p => p.id === targetPlayerId);
@@ -1427,13 +2718,6 @@
             }
             
             log(`🔄 Requesting trade: ${playerId} → ${targetPlayerId}`);
-            
-            const myIndex = currentGame.players.findIndex(p => p.id === playerId);
-            const targetIndex = currentGame.players.findIndex(p => p.id === targetPlayerId);
-            const expectedNextIndex = (myIndex + 1) % currentGame.players.length;
-            
-            log(`🔍 Trade Debug: My index: ${myIndex}, Target index: ${targetIndex}, Expected next: ${expectedNextIndex}`);
-            log(`🔍 Current turn: ${currentGame.currentPlayerId}, My turn: ${currentGame.currentPlayerId === playerId}`);
             
             socket.emit('trade-request', { 
                 gameId: currentGame.id,
@@ -1476,6 +2760,13 @@
 
             log('📹 Initializing video call...');
             
+            // Check if Agora SDK is loaded
+            if (typeof AgoraRTC === 'undefined') {
+                log('❌ Agora SDK not loaded - video features disabled');
+                showToast('Video features unavailable - Agora SDK not loaded', 'warning');
+                return;
+            }
+            
             try {
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 log('📹 Agora client created successfully');
@@ -1488,6 +2779,7 @@
                 joinVideoChannel();
             } catch (error) {
                 log(`❌ Error initializing video: ${error.message}`);
+                showToast('Video initialization failed - continuing without video', 'warning');
             }
         }
 
@@ -1495,11 +2787,17 @@
             try {
                 const channelName = currentGame?.gameCode || currentGame?.id || 'test123';
                 const uid = Math.floor(Math.random() * 1000000);
-                const appId = 'YOUR_AGORA_APP_ID'; // Add your token here
+                const appId = 'cfef8101dcc14802a8f97d8805b3ebc9'; // Add your app ID here
+
+                if (appId === 'YOUR_AGORA_APP_ID') {
+                    log('❌ Agora App ID not configured - video disabled');
+                    showToast('Video disabled: Configure Agora App ID', 'warning');
+                    return;
+                }
 
                 log(`📹 Attempting to join channel: ${channelName}`);
 
-                await agoraClient.join(appId, channelName, null, uid);
+                await agoraClient.join(appId, channelName, '007eJxTYDhlHj+3eMbMaUYzO2fUvM96tvnD84WPQr6Zfnzz7l7l1kuaCgzJaalpFoYGhinJyYYmFgZGiRZpluYpFhYGpknGqUnJlhpMyRkNgYwM3dvZGRihEMRnZyhJLS4xNDJmYAAAFPwj5w==', uid);
                 log('📹 Successfully joined channel');
 
                 try {
@@ -1522,10 +2820,12 @@
 
                 } catch (mediaError) {
                     log(`❌ Media error: ${mediaError.message}`);
+                    showToast('Camera/microphone access denied - video disabled', 'warning');
                 }
 
             } catch (error) {
                 log(`❌ Error joining video channel: ${error.message}`);
+                showToast('Failed to join video call - continuing without video', 'warning');
             }
         }
 
@@ -1618,539 +2918,6 @@
             } catch (error) {
                 log(`❌ Error leaving video call: ${error.message}`);
             }
-        }
-
-        // Initialize with clean state
-        document.addEventListener('DOMContentLoaded', function() {
-            log('🎮 Game initialized with complete features!');
-            
-            initializeFocusState();
-            
-            const chatInput = document.getElementById('chatInput');
-            if (chatInput) {
-                chatInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        sendChatMessage();
-                    }
-                });
-            }
-
-            // Add real-time username validation
-            const playerNameInput = document.getElementById('playerName');
-            if (playerNameInput) {
-                playerNameInput.addEventListener('input', function(e) {
-                    const name = e.target.value.trim();
-                    
-                    // Remove any existing validation styling
-                    e.target.style.borderColor = '';
-                    
-                    if (name.length > 20) {
-                        e.target.style.borderColor = 'red';
-                        e.target.title = 'Name must be 20 characters or less';
-                    } else if (name.length > 0 && !/^[a-zA-Z0-9\s_-]+$/.test(name)) {
-                        e.target.style.borderColor = 'orange';
-                        e.target.title = 'Only letters, numbers, spaces, underscore, and dash allowed';
-                    } else if (name.length > 0) {
-                        e.target.style.borderColor = 'green';
-                        e.target.title = 'Valid username';
-                    }
-                });
-            }
-
-            window.addEventListener('beforeunload', () => {
-                completeCleanup();
-            });
-            
-            window.addEventListener('beforeunload', () => {
-                if (socket) {
-                    socket.removeAllListeners();
-                    socket.disconnect();
-                }
-                if (isVideoJoined) {
-                    leaveVideoCall().catch(console.error);
-                }
-            });
-        });
-
-        // Memory cleanup
-        setInterval(() => {
-            const gameMessages = document.getElementById('gameMessages');
-            if (gameMessages && gameMessages.children.length > 100) {
-                while (gameMessages.children.length > 50) {
-                    gameMessages.removeChild(gameMessages.firstChild);
-                }
-            }
-            
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages && chatMessages.children.length > 50) {
-                while (chatMessages.children.length > 25) {
-                    chatMessages.removeChild(chatMessages.firstChild);
-                }
-            }
-        }, 30000);
-    </script>
-</body>
-</html>!cardElement) {
-                log(`❌ No card element to initialize gestures for player ${targetPlayerId}`);
-                return;
-            }
-
-            log(`🎯 Initializing gesture handlers for player ${targetPlayerId}`);
-
-            // Touch events for mobile
-            cardElement.addEventListener('touchstart', handleTouchStart, { passive: false });
-            cardElement.addEventListener('touchmove', handleTouchMove, { passive: false });
-            cardElement.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-            // Mouse events for desktop
-            cardElement.addEventListener('mousedown', handleMouseStart);
-            cardElement.addEventListener('mousemove', handleMouseMove);
-            cardElement.addEventListener('mouseup', handleMouseEnd);
-
-            // Store player ID for gesture handling
-            cardElement.dataset.playerId = targetPlayerId;
-            
-            log(`✅ Gesture handlers set for player ${targetPlayerId}`);
-        }
-
-        function handleTouchStart(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            startGesture(touch.clientX, touch.clientY, e.target);
-            log(`📱 Touch start: ${touch.clientX}, ${touch.clientY}`);
-        }
-
-        function handleTouchMove(e) {
-            e.preventDefault();
-            if (!gestureState.isTracking) return;
-            const touch = e.touches[0];
-            updateGesture(touch.clientX, touch.clientY);
-        }
-
-        function handleTouchEnd(e) {
-            e.preventDefault();
-            log(`📱 Touch end`);
-            endGesture();
-        }
-
-        function handleMouseStart(e) {
-            startGesture(e.clientX, e.clientY, e.target);
-            log(`🖱️ Mouse start: ${e.clientX}, ${e.clientY}`);
-        }
-
-        function handleMouseMove(e) {
-            if (!gestureState.isTracking) return;
-            updateGesture(e.clientX, e.clientY);
-        }
-
-        function handleMouseEnd(e) {
-            log(`🖱️ Mouse end`);
-            endGesture();
-        }
-
-        function startGesture(x, y, element) {
-            gestureState.startX = x;
-            gestureState.startY = y;
-            gestureState.startTime = Date.now();
-            gestureState.isTracking = true;
-            gestureState.element = element;
-            log(`🎯 Gesture started at ${x}, ${y}`);
-        }
-
-        function updateGesture(x, y) {
-            if (!gestureState.isTracking) return;
-            
-            const deltaX = x - gestureState.startX;
-            const deltaY = y - gestureState.startY;
-            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            
-            // Visual feedback for swipe
-            if (distance > 20) {
-                const cardElement = gestureState.element.closest('.card-display');
-                if (cardElement && deltaX > 50) {
-                    cardElement.style.transform = `translateX(${Math.min(deltaX - 50, 30)}px) rotate(${Math.min((deltaX - 50) / 5, 10)}deg)`;
-                    cardElement.style.opacity = '0.8';
-                    log(`👉 Swipe feedback: deltaX=${deltaX}`);
-                }
-            }
-        }
-
-        function endGesture() {
-            if (!gestureState.isTracking) return;
-            
-            const duration = Date.now() - gestureState.startTime;
-            const cardElement = gestureState.element.closest('.card-display');
-            
-            log(`🎯 Gesture ended, duration: ${duration}ms`);
-            
-            if (cardElement) {
-                // Check for swipe based on transform applied during updateGesture
-                const transform = cardElement.style.transform || '';
-                const wasSwipeRight = transform.includes('translateX') && !transform.includes('-');
-                
-                // Reset visual feedback
-                cardElement.style.transform = '';
-                cardElement.style.opacity = '';
-                
-                // Get the player ID from the card element's dataset
-                const targetPlayerId = cardElement.dataset.playerId;
-                log(`🎯 Target player ID: ${targetPlayerId}`);
-                
-                if (!targetPlayerId) {
-                    log(`❌ No target player ID found in card element`);
-                    gestureState.isTracking = false;
-                    gestureState.element = null;
-                    return;
-                }
-                
-                if (wasSwipeRight) {
-                    // Swipe right detected
-                    log(`👉 Swipe right detected for player ${targetPlayerId}`);
-                    handleSwipeRight(targetPlayerId);
-                } else if (duration < 300) {
-                    // Quick tap
-                    if (gestureState.lastTap && Date.now() - gestureState.lastTap < 500) {
-                        // Double tap - Keep card
-                        log(`👆👆 Double tap detected for player ${targetPlayerId}`);
-                        handleDoubleTap(targetPlayerId);
-                        gestureState.lastTap = 0;
-                    } else {
-                        // Single tap - Look at card
-                        log(`👆 Single tap detected for player ${targetPlayerId}`);
-                        gestureState.lastTap = Date.now();
-                        handleSingleTap(targetPlayerId);
-                    }
-                }
-            } else {
-                log(`❌ No card element found for gesture`);
-            }
-            
-            // Reset gesture state
-            gestureState.isTracking = false;
-            gestureState.element = null;
-        }
-
-        function handleSwipeRight(targetPlayerId) {
-            log(`👉 Swipe feedback: Swipe right for player ${targetPlayerId}`);
-            if (targetPlayerId === playerId) {
-                // Check if we can trade
-                if (canPerformTrade()) {
-                    const nextPlayer = getNextTradeablePlayer();
-                    if (nextPlayer) {
-                        log(`🔄 Trading with ${nextPlayer.name}`);
-                        requestTrade(nextPlayer.id);
-                    } else {
-                        log(`❌ No valid trade target found`);
-                        showToast('No valid trade target!', 'warning');
-                    }
-                } else {
-                    log(`❌ Cannot trade right now`);
-                    showToast('Cannot trade right now!', 'warning');
-                }
-            }
-        }
-
-        function handleDoubleTap(targetPlayerId) {
-            log(`✅ Double tap: Processing for player ${targetPlayerId}`);
-            if (targetPlayerId === playerId) {
-                if (currentGame?.currentPlayerId === targetPlayerId) {
-                    log(`✅ Double tap: It's my turn, keeping card`);
-                    keepCard();
-                } else {
-                    log(`❌ Double tap: Not my turn`);
-                    showToast('Not your turn!', 'warning');
-                }
-            }
-        }
-
-        function handleSingleTap(targetPlayerId) {
-            log(`👆 Single tap: Processing for player ${targetPlayerId}`);
-            if (targetPlayerId === playerId) {
-                const myPlayer = currentGame?.players?.find(p => p.id === targetPlayerId);
-                if (myPlayer && myPlayer.hasCard && !playerCardLooks[targetPlayerId]) {
-                    log(`👁️ Single tap: Flipping card for first look`);
-                    flipCard();
-                    markPlayerAsLooked(targetPlayerId);
-                } else {
-                    log(`👁️ Single tap: Player already looked or no card`);
-                }
-            }
-        }
-
-        // King Logic Functions
-        function isKing(card) {
-            return card && (card.value === 'K' || card.value === 'King');
-        }
-
-        function isJack(card) {
-            return card && (card.value === 'J' || card.value === 'Jack');
-        }
-
-        function shouldAutoRevealKing(player) {
-            return player && player.card && isKing(player.card) && !player.cardRevealed;
-        }
-
-        function handleKingAutoReveal(player) {
-            if (shouldAutoRevealKing(player)) {
-                log(`👑 AUTO-REVEALING King for ${player.name}`);
-                if (player.id === playerId) {
-                    // Auto-flip our own King
-                    socket?.emit('flip-card', { gameId: currentGame.id });
-                }
-                markPlayerAsLooked(player.id);
-                showToast(`${player.name} has a King! 👑`, 'warning');
-            }
-        }
-
-        function canPerformTrade() {
-            const isMyTurn = currentGame?.currentPlayerId === playerId;
-            const gameStarted = currentGame?.state === 'playing';
-            const tradingPhase = currentGame?.turnPhase === 'trading';
-            const myPlayer = currentGame?.players?.find(p => p.id === playerId);
-            
-            log(`🔍 Trade check: myTurn=${isMyTurn}, gameStarted=${gameStarted}, tradingPhase=${tradingPhase}`);
-            
-            // Can't trade if I have a King
-            if (myPlayer?.card && isKing(myPlayer.card)) {
-                log(`👑 Cannot trade: I have a King`);
-                showToast('Kings cannot be traded! 👑', 'warning');
-                return false;
-            }
-            
-            const canTrade = isMyTurn && gameStarted && tradingPhase;
-            log(`🔍 Final trade result: ${canTrade}`);
-            return canTrade;
-        }
-
-        function getNextTradeablePlayer() {
-            if (!currentGame?.players) return null;
-            
-            const myIndex = currentGame.players.findIndex(p => p.id === playerId);
-            if (myIndex === -1) return null;
-            
-            const playerCount = currentGame.players.length;
-            let nextIndex = (myIndex + 1) % playerCount;
-            let searchCount = 0;
-            
-            // Find next player who doesn't have a revealed King
-            while (searchCount < playerCount) {
-                const nextPlayer = currentGame.players[nextIndex];
-                
-                // Skip if player has revealed King (pass-through logic)
-                if (nextPlayer.card && isKing(nextPlayer.card) && nextPlayer.cardRevealed) {
-                    log(`👑 Passing through ${nextPlayer.name} (has revealed King)`);
-                    nextIndex = (nextIndex + 1) % playerCount;
-                    searchCount++;
-                    continue;
-                }
-                
-                // Valid trade target
-                if (nextPlayer.lives > 0 && nextPlayer.id !== playerId) {
-                    return nextPlayer;
-                }
-                
-                nextIndex = (nextIndex + 1) % playerCount;
-                searchCount++;
-            }
-            
-            return null;
-        }
-
-        // Card Look Tracking
-        function markPlayerAsLooked(playerId) {
-            playerCardLooks[playerId] = true;
-            log(`👁️ Player ${playerId} has looked at their card`);
-            clearNudge(playerId);
-        }
-
-        function hasPlayerLooked(playerId) {
-            return Boolean(playerCardLooks[playerId]);
-        }
-
-        function resetCardLooks() {
-            playerCardLooks = {};
-            log('🔄 Reset all card look tracking');
-        }
-
-        // Nudge System
-        function startNudge(playerId, reason = 'Look at your card') {
-            clearNudge(playerId); // Clear any existing nudge
-            
-            const playerElement = document.querySelector(`[data-player-id="${playerId}"]`)?.closest('.focus-slot');
-            if (!playerElement) return;
-            
-            const cardElement = playerElement.querySelector('.card-display');
-            if (!cardElement) return;
-            
-            log(`🔔 Starting nudge for player ${playerId}: ${reason}`);
-            
-            // Visual nudge - shake animation
-            cardElement.classList.add('nudge-shake');
-            
-            // Audio nudge (optional)
-            try {
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmoeAzeI1PKscBkFl3bvuKJcHA==');
-                audio.volume = 0.3;
-                audio.play().catch(() => {}); // Ignore audio errors
-            } catch (error) {
-                // Ignore audio errors
-            }
-            
-            // Pulse effect
-            nudgeIntervals[playerId] = setInterval(() => {
-                if (cardElement.classList.contains('nudge-pulse')) {
-                    cardElement.classList.remove('nudge-pulse');
-                } else {
-                    cardElement.classList.add('nudge-pulse');
-                }
-            }, 1000);
-            
-            // Auto-clear after 10 seconds
-            nudgeTimeouts[playerId] = setTimeout(() => {
-                clearNudge(playerId);
-            }, 10000);
-            
-            // Show toast
-            showToast(`${reason} 👆`, 'warning');
-        }
-
-        function clearNudge(playerId) {
-            const playerElement = document.querySelector(`[data-player-id="${playerId}"]`)?.closest('.focus-slot');
-            if (playerElement) {
-                const cardElement = playerElement.querySelector('.card-display');
-                if (cardElement) {
-                    cardElement.classList.remove('nudge-shake', 'nudge-pulse');
-                }
-            }
-            
-            if (nudgeTimeouts[playerId]) {
-                clearTimeout(nudgeTimeouts[playerId]);
-                delete nudgeTimeouts[playerId];
-            }
-            
-            if (nudgeIntervals[playerId]) {
-                clearInterval(nudgeIntervals[playerId]);
-                delete nudgeIntervals[playerId];
-            }
-        }
-
-        function clearAllNudges() {
-            Object.keys(nudgeTimeouts).forEach(playerId => clearNudge(playerId));
-        }
-
-        // Username validation functions
-        function validatePlayerName(name) {
-            if (!name || name.trim().length === 0) {
-                showToast('Please enter a valid name', 'error');
-                return false;
-            }
-            
-            if (name.trim().length > 20) {
-                showToast('Name must be 20 characters or less', 'error');
-                return false;
-            }
-            
-            // Check for inappropriate characters
-            const validName = /^[a-zA-Z0-9\s_-]+$/.test(name.trim());
-            if (!validName) {
-                showToast('Name can only contain letters, numbers, spaces, underscore, and dash', 'error');
-                return false;
-            }
-            
-            return true;
-        }
-
-        function checkForDuplicateUsername(name) {
-            if (currentGame && currentGame.players) {
-                const duplicate = currentGame.players.find(p => 
-                    p.name.toLowerCase().trim() === name.toLowerCase().trim() && p.id !== playerId
-                );
-                if (duplicate) {
-                    showToast(`Name "${name}" is already taken in this game`, 'error');
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // Enhanced game state cleanup
-        function cleanupGameState() {
-            if (!currentGame || !currentGame.players) return;
-            
-            const originalCount = currentGame.players.length;
-            
-            // Remove duplicate players by ID
-            const uniquePlayers = [];
-            const seenIds = new Set();
-            
-            currentGame.players.forEach(player => {
-                if (!seenIds.has(player.id)) {
-                    uniquePlayers.push(player);
-                    seenIds.add(player.id);
-                } else {
-                    log(`🗑️ Removing duplicate player: ${player.name} (${player.id})`);
-                }
-            });
-            
-            if (originalCount !== uniquePlayers.length) {
-                log(`🔧 Game cleanup: ${originalCount} -> ${uniquePlayers.length} players`);
-                currentGame.players = uniquePlayers;
-                
-                // Update display after cleanup
-                updateGameDisplay();
-                updatePersonalTable();
-                
-                showToast(`Cleaned up ${originalCount - uniquePlayers.length} duplicate players`, 'success');
-            }
-        }
-
-        // Utility functions
-        function log(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logMessage = `[${timestamp}] ${message}`;
-            console.log(logMessage);
-            addGameMessage(message);
-        }
-
-        function addGameMessage(message) {
-            const gameMessages = document.getElementById('gameMessages');
-            if (gameMessages) {
-                const messageDiv = document.createElement('div');
-                messageDiv.textContent = message;
-                gameMessages.appendChild(messageDiv);
-                gameMessages.scrollTop = gameMessages.scrollHeight;
-                
-                while (gameMessages.children.length > 100) {
-                    gameMessages.removeChild(gameMessages.firstChild);
-                }
-            }
-        }
-
-        function addChatMessage(playerName, message) {
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                const messageDiv = document.createElement('div');
-                messageDiv.innerHTML = `<strong>${playerName}:</strong> ${message}`;
-                chatMessages.appendChild(messageDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                
-                while (chatMessages.children.length > 50) {
-                    chatMessages.removeChild(chatMessages.firstChild);
-                }
-            }
-        }
-
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 3000);
         }
 
         // Complete cleanup function
@@ -2260,7 +3027,8 @@
                 socket = null;
             }
             
-            socket = io({
+            // Connect to your backend server on port 3001
+            socket = io('http://localhost:3001', {
                 transports: ['websocket', 'polling'],
                 timeout: 20000,
                 reconnection: true,
@@ -2289,7 +3057,7 @@
 
             socket.on('connect_error', (error) => {
                 log(`❌ Connection error: ${error.message}`);
-                showToast('Connection failed. Retrying...', 'error');
+                showToast('Connection failed. Make sure server is running on port 3001.', 'error');
             });
 
             setupSocketEvents();
@@ -2304,6 +3072,18 @@
                 updateGameDisplay();
                 updatePersonalTable();
                 showHostControls();
+            });
+
+            socket.on('king-auto-revealed', function(data) {
+                log(`👑 King auto-revealed for player ${data.playerId}`);
+                const player = currentGame.players?.find(p => p.id === data.playerId);
+                if (player) {
+                    player.cardRevealed = true;
+                    markPlayerAsLooked(data.playerId);
+                    updateGameDisplay();
+                    updatePersonalTable();
+                    showToast(`${player.name}'s King is revealed! 👑`, 'warning');
+                }
             });
 
             socket.on('private-game-created', function(data) {
@@ -2438,6 +3218,10 @@
                     
                 } else if (result.blocked) {
                     log('🚫 Trade BLOCKED by Jack - "Screw You!"');
+
+                    // 🃏 ENHANCED JACK REVEAL LOGIC
+                    handleJackBlock(result.fromPlayerId, result.toPlayerId);
+
                 } else if (result.kingRevealed) {
                     if (result.roundEnded) {
                         log('👑 King revealed but Jack blocks pass-through - Round ends!');
@@ -2566,16 +3350,22 @@
             socket.on('game-finished', function(data) {
                 log(`🎉 Game finished!`);
                 currentGame = data.game;
+    
+                if (data.winner) {
+                    // Show big winner announcement
+                    showWinnerAnnouncement(data.winner.name);
+                    showToast(`🏆 ${data.winner.name} Wins the Game!`, 'success');
+        
+                   // Disable all game buttons except Leave
+                    disableAllGameButtons();
+                }
+    
                 updateGameDisplay();
                 updatePersonalTable();
-                
-                if (data.winner) {
-                    showToast(`Winner: ${data.winner.name}!`, 'success');
-                }
-                
+    
                 setTimeout(() => {
                     leaveVideoCall().catch(console.error);
-                }, 5000);
+                }, 10000); // Give more time to celebrate
             });
 
             socket.on('chat-message', function(data) {
@@ -2812,437 +3602,314 @@
             document.getElementById('hostControls')?.classList.add('hidden');
         }
 
-        // Personal Table management
-        function updatePersonalTable() {
-            if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
-            if (!focusedPlayers) initializeFocusState();
+        // ADD this new function to handle Jack blocks dramatically:
+            function handleJackBlock(fromPlayerId, toPlayerId) {
+                if (!fromPlayerId || !toPlayerId) return;
 
-            // Clean up duplicate players first
-            cleanupGameState();
+                // Find the actual player objects from the game state
+                const fromPlayer = currentGame?.players?.find(p => p.id === fromPlayerId);
+                const toPlayer = currentGame?.players?.find(p => p.id === toPlayerId);
 
-            const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
-            if (myPlayerIndex === -1) {
-                log(`❌ Cannot find myself (${playerId}) in players list`);
-                return;
-            }
-
-            const playerCount = currentGame.players.length;
-            if (playerCount < 2) return;
-
-            log(`🔄 Updating personal table: ${playerCount} players, I am ${currentGame.players[myPlayerIndex].name} at index ${myPlayerIndex}`);
-
-            if (playerCount <= 5) {
-                autoFillAllPlayers(myPlayerIndex, playerCount);
-                hideAvailablePlayersSection();
-            } else {
-                setupCustomFocusMode(myPlayerIndex, playerCount);
-                showAvailablePlayersSection();
-            }
-
-            renderPersonalTable();
-            renderAvailablePlayers();
-        }
-
-        function autoFillAllPlayers(myPlayerIndex, playerCount) {
-            const players = currentGame.players;
-            const myPlayer = players[myPlayerIndex];
-            
-            // Deduplicate players by ID to prevent duplicate Soob issue
-            const uniquePlayers = [];
-            const seenIds = new Set();
-            
-            players.forEach(player => {
-                if (!seenIds.has(player.id)) {
-                    uniquePlayers.push(player);
-                    seenIds.add(player.id);
+                if (!fromPlayer || !toPlayer) {
+                    log(`❌ Could not find players for Jack block: ${fromPlayerId} -> ${toPlayerId}`);
+                    return;
                 }
-            });
-            
-            log(`🔧 Deduplication: ${players.length} players -> ${uniquePlayers.length} unique players`);
-            
-            // Update currentGame with deduplicated players
-            currentGame.players = uniquePlayers;
-            
-            // Recalculate indices with clean player list
-            const cleanMyPlayerIndex = uniquePlayers.findIndex(p => p.id === playerId);
-            const cleanPlayerCount = uniquePlayers.length;
-            
-            if (cleanMyPlayerIndex === -1) {
-                log(`❌ Cannot find myself in clean players list`);
-                return;
-            }
-            
-            focusedPlayers.currentTurn = uniquePlayers[cleanMyPlayerIndex];
-            
-            const leftNeighborIndex = (cleanMyPlayerIndex - 1 + cleanPlayerCount) % cleanPlayerCount;
-            const rightNeighborIndex = (cleanMyPlayerIndex + 1) % cleanPlayerCount;
-            
-            focusedPlayers.leftNeighbor = uniquePlayers[leftNeighborIndex];
-            focusedPlayers.rightNeighbor = uniquePlayers[rightNeighborIndex];
-            
-            const remainingPlayers = uniquePlayers.filter((p, index) => 
-                index !== cleanMyPlayerIndex && 
-                index !== leftNeighborIndex && 
-                index !== rightNeighborIndex
-            );
-            
-            focusedPlayers.custom1 = remainingPlayers[0] || null;
-            focusedPlayers.custom2 = remainingPlayers[1] || null;
-            
-            log(`🎯 Clean personal view: Left=${uniquePlayers[leftNeighborIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${uniquePlayers[rightNeighborIndex]?.name}`);
-        }
 
-        function setupCustomFocusMode(myPlayerIndex, playerCount) {
-            const players = currentGame.players;
-            
-            // Deduplicate players by ID
-            const uniquePlayers = [];
-            const seenIds = new Set();
-            
-            players.forEach(player => {
-                if (!seenIds.has(player.id)) {
-                    uniquePlayers.push(player);
-                    seenIds.add(player.id);
-                }
-            });
-            
-            log(`🔧 Custom mode deduplication: ${players.length} -> ${uniquePlayers.length} unique`);
-            
-            // Update currentGame with deduplicated players
-            currentGame.players = uniquePlayers;
-            
-            // Recalculate with clean data
-            const cleanMyPlayerIndex = uniquePlayers.findIndex(p => p.id === playerId);
-            const cleanPlayerCount = uniquePlayers.length;
-            
-            if (cleanMyPlayerIndex === -1) return;
-            
-            focusedPlayers.currentTurn = uniquePlayers[cleanMyPlayerIndex];
-            
-            const leftNeighborIndex = (cleanMyPlayerIndex - 1 + cleanPlayerCount) % cleanPlayerCount;
-            const rightNeighborIndex = (cleanMyPlayerIndex + 1) % cleanPlayerCount;
-            
-            focusedPlayers.leftNeighbor = uniquePlayers[leftNeighborIndex];
-            focusedPlayers.rightNeighbor = uniquePlayers[rightNeighborIndex];
-            
-            if (focusedPlayers.custom1 && !uniquePlayers.find(p => p.id === focusedPlayers.custom1.id)) {
-                focusedPlayers.custom1 = null;
-            }
-            if (focusedPlayers.custom2 && !uniquePlayers.find(p => p.id === focusedPlayers.custom2.id)) {
-                focusedPlayers.custom2 = null;
-            }
-            
-            const dealer = uniquePlayers.find(p => p.id === currentGame.dealerId);
-            if (dealer && !isPlayerInFocus(dealer.id)) {
-                if (!focusedPlayers.custom1) {
-                    focusedPlayers.custom1 = dealer;
-                } else if (!focusedPlayers.custom2) {
-                    focusedPlayers.custom2 = dealer;
-                }
-            }
-            
-            log(`🎯 Clean custom view: Left=${uniquePlayers[leftNeighborIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${uniquePlayers[rightNeighborIndex]?.name}`);
-        }
+                log(`🃏 ${toPlayer.name}'s Jack blocks ${fromPlayer.name} - SCREW YOU!`);
 
-        function hideAvailablePlayersSection() {
-            const availableSection = document.querySelector('.available-players');
-            if (availableSection) {
-                availableSection.style.display = 'none';
-            }
-        }
+                // 1. Mark the Jack holder as having revealed their card to everyone
+                toPlayer.cardRevealed = true;
+                markPlayerAsLooked(toPlayer.id);
 
-        function showAvailablePlayersSection() {
-            const availableSection = document.querySelector('.available-players');
-            if (availableSection) {
-                availableSection.style.display = 'block';
-            }
-        }
+                // 2. Show dramatic "SCREW YOU!" message
+                showJackScrewYouMessage(fromPlayer.name, toPlayer.name);
 
-        function isPlayerInFocus(playerId) {
-            if (!focusedPlayers) return false;
-            return Object.values(focusedPlayers).some(player => player && player.id === playerId);
-        }
+                // 3. Add special Jack reveal animation to the card
+                setTimeout(() => {
+                    addJackRevealAnimation(toPlayer.id);
+                }, 100);
 
-        function renderPersonalTable() {
-            const focusGrid = document.getElementById('focusGrid');
-            if (!focusGrid || !focusedPlayers) return;
-            
-            focusGrid.innerHTML = '';
-
-            const leftSlot = createFocusSlot('slot', focusedPlayers.leftNeighbor, false);
-            leftSlot.style.gridColumn = '1';
-            leftSlot.style.gridRow = '1';
-            focusGrid.appendChild(leftSlot);
-
-            const centerSlot = createFocusSlot('slot', focusedPlayers.currentTurn, false);
-            centerSlot.style.gridColumn = '2';
-            centerSlot.style.gridRow = '1';
-            focusGrid.appendChild(centerSlot);
-
-            const rightSlot = createFocusSlot('slot', focusedPlayers.rightNeighbor, false);
-            rightSlot.style.gridColumn = '3';
-            rightSlot.style.gridRow = '1';
-            focusGrid.appendChild(rightSlot);
-
-            const custom1Slot = createFocusSlot('custom', focusedPlayers.custom1, true);
-            custom1Slot.style.gridColumn = '1';
-            custom1Slot.style.gridRow = '2';
-            focusGrid.appendChild(custom1Slot);
-
-            const custom2Slot = createFocusSlot('custom', focusedPlayers.custom2, true);
-            custom2Slot.style.gridColumn = '3';
-            custom2Slot.style.gridRow = '2';
-            focusGrid.appendChild(custom2Slot);
-            
-            // Add dealer turn notification
-            const myPlayer = currentGame?.players?.find(p => p.id === playerId);
-            const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
-            const isDealerTurn = isDealer && currentGame?.currentPlayerId === playerId && currentGame?.state === 'playing';
-            
-            if (isDealerTurn) {
-                const dealerNotification = document.createElement('div');
-                dealerNotification.style.cssText = `
-                    position: absolute;
-                    top: 10px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: linear-gradient(45deg, #f39c12, #e67e22);
-                    color: white;
-                    padding: 8px 16px;
-                    border-radius: 20px;
-                    font-weight: bold;
-                    font-size: 0.9rem;
-                    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
-                    animation: pulse 2s infinite;
-                    z-index: 100;
-                `;
-                dealerNotification.textContent = '🏁 DEALER TURN - Final Action!';
-                document.querySelector('.personal-table').style.position = 'relative';
-                document.querySelector('.personal-table').appendChild(dealerNotification);
-            }
-        }
-
-        function createFocusSlot(type, player, removable) {
-            const slot = document.createElement('div');
-            let slotClasses = `focus-slot ${type}`;
-            
-            if (player && player.id === currentGame?.currentPlayerId) {
-                slotClasses += ' current-turn';
-            }
-            
-            if (player && player.id === currentGame?.dealerId) {
-                slotClasses += ' dealer';
-            }
-            
-            slot.className = slotClasses;
-
-            if (!player) {
-                slot.classList.add('empty');
-                slot.innerHTML = `
-                    <div class="add-icon">+</div>
-                    <div>Tap player below</div>
-                `;
-                return slot;
+                // 4. Show toast notification
+                showToast(`${toPlayer.name} blocks with a Jack! 🃏`, 'warning');
             }
 
-            const playerContent = document.createElement('div');
-            playerContent.className = 'player-content';
-
-            const cardSection = document.createElement('div');
-            cardSection.className = 'card-section';
-
-            const playerInfo = document.createElement('div');
-            playerInfo.className = 'player-info';
-            const dealerText = (player.id === currentGame?.dealerId) ? ' (Dealer)' : '';
-            playerInfo.innerHTML = `
-                <span class="player-name">${player.name}${dealerText}</span>
-                <span class="player-lives">❤️ ${player.lives || 3}</span>
-            `;
-
-            const cardDisplay = document.createElement('div');
-            cardDisplay.className = 'card-display';
-            
-            // Card visibility logic - only show other players' cards during revealing phase
-            const shouldShowCard = shouldPlayerCardBeVisible(player);
-            
-            if (player.id === playerId) {
-                log(`🎴 My card state: hasCard=${player.hasCard}, card=${player.card ? `${player.card.value}${player.card.suit}` : 'null'}, revealed=${player.cardRevealed}, shouldShow=${shouldShowCard}`);
-            }
-            
-            if (shouldAutoRevealKing(player)) {
-                handleKingAutoReveal(player);
-            }
-            
-            if (player.card && shouldShowCard) {
-                const card = player.card;
-                const isRed = card.suit === '♥' || card.suit === '♦';
-                let cardClasses = isRed ? ' red revealed' : ' black revealed';
-                
-                if (isKing(card)) {
-                    cardClasses += ' king-auto';
-                }
-                
-                cardDisplay.className += cardClasses;
-                
-                const cardContent = document.createElement('div');
-                cardContent.className = 'card-content';
-                cardContent.innerHTML = `
-                    <div class="card-value">${card.value}</div>
-                    <div class="card-suit">${card.suit}</div>
-                `;
-                cardDisplay.appendChild(cardContent);
-            } else if (player.hasCard || player.card) {
-                cardDisplay.className += ' face-down';
-                cardDisplay.textContent = '🂠';
-                
-                // Only add gesture handlers for my own card
-                if (player.id === playerId) {
-                    setTimeout(() => {
-                        initializeGestureHandlers(cardDisplay, player.id);
-                    }, 100);
-                }
-                
-                if (player.id !== playerId && !hasPlayerLooked(player.id) && player.hasCard) {
-                    setTimeout(() => {
-                        if (!hasPlayerLooked(player.id)) {
-                            startNudge(player.id, `${player.name} should look at their card`);
+            // ADD this function for the dramatic "SCREW YOU!" message:
+                // ENHANCED: Flying spinning Jack card version
+                    function showJackScrewYouMessage(blockedPlayerName, jackPlayerName) {
+                        // Step 1: Find the Jack holder's card to get its position
+                        const jackPlayer = currentGame?.players?.find(p => p.name === jackPlayerName);
+                        if (!jackPlayer) {
+                            // Fallback to original overlay if we can't find the player
+                            showOriginalScrewYouOverlay(blockedPlayerName, jackPlayerName);
+                            return;
                         }
-                    }, 2000);
-                }
-            } else {
-                cardDisplay.textContent = 'No Card';
-            }
 
-            cardSection.appendChild(playerInfo);
-            cardSection.appendChild(cardDisplay);
-            cardSection.setAttribute('data-player-id', player.id);
+                        const jackCardElement = document.querySelector(`[data-player-id="${jackPlayer.id}"] .card-display`);
+                        if (!jackCardElement) {
+                            // Fallback to original overlay if we can't find the card
+                            showOriginalScrewYouOverlay(blockedPlayerName, jackPlayerName);
+                            return;
+                        }
 
-            // Add action buttons for my own card
-            if (player.id === playerId) {
-                const actionContainer = document.createElement('div');
-                actionContainer.style.display = 'flex';
-                actionContainer.style.gap = '4px';
-                actionContainer.style.marginTop = '4px';
+                        // Step 2: Get the card's current position
+                        const cardRect = jackCardElement.getBoundingClientRect();
+                        const startX = cardRect.left + cardRect.width / 2;
+                        const startY = cardRect.top + cardRect.height / 2;
 
-                const myPlayer = currentGame?.players?.find(p => p.id === playerId);
-                const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
-                const isDealerTurn = isDealer && currentGame?.currentPlayerId === playerId;
+                        // Step 3: Create the flying Jack card
+                        const flyingJack = document.createElement('div');
+                        flyingJack.className = 'flying-jack-card';
+                        flyingJack.style.cssText = `
+        position: fixed;
+        left: ${startX - 40}px;
+        top: ${startY - 55}px;
+        width: 80px;
+        height: 110px;
+        background: linear-gradient(145deg, #ffffff, #f8f8f8);
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+        font-weight: bold;
+        font-family: 'Times New Roman', serif;
+        font-size: 1rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        z-index: 1001;
+        pointer-events: none;
+        animation: jackFlyOut 2.5s ease-out forwards;
+    `;
 
-                // Keep Card button
-                const keepBtn = document.createElement('button');
-                keepBtn.className = 'action-button';
-                keepBtn.style.fontSize = '0.6rem';
-                keepBtn.style.padding = '4px 6px';
-                keepBtn.disabled = currentGame?.currentPlayerId !== playerId;
-                
-                // Update button for dealer turn
-                if (isDealerTurn) {
-                    keepBtn.textContent = '✋ Keep & End';
-                    keepBtn.style.background = '#f39c12';
-                } else {
-                    keepBtn.textContent = '✋ Keep';
-                    keepBtn.style.background = '#27ae60';
-                }
-                
-                keepBtn.onclick = () => {
-                    log(`✋ Card-level keep button clicked (dealer: ${isDealerTurn})`);
-                    if (isDealerTurn) {
-                        // Dealer keep = end round
-                        socket.emit('dealer-skip-trade', { gameId: currentGame.id });
-                        showToast('Dealer kept card - Round ending!', 'success');
-                    } else {
-                        keepCard();
-                    }
-                };
-                actionContainer.appendChild(keepBtn);
+                        // Step 4: Add the Jack card content
+                        const jackCard = jackPlayer.card;
+                        if (jackCard) {
+                            const isRed = jackCard.suit === '♥' || jackCard.suit === '♦';
+                            if (isRed) {
+                                flyingJack.style.color = '#d32f2f';
+                            }
 
-                // Trade button
-                const tradeBtn = document.createElement('button');
-                tradeBtn.className = 'action-button trade';
-                tradeBtn.style.fontSize = '0.6rem';
-                tradeBtn.style.padding = '4px 6px';
-                tradeBtn.disabled = !canPerformTrade() && !isDealerTurn;
-                
-                // Update button for dealer turn
-                if (isDealerTurn) {
-                    tradeBtn.textContent = '🎴 Deck';
-                    tradeBtn.style.background = '#e74c3c';
-                } else {
-                    tradeBtn.textContent = '🔄 Trade';
-                    tradeBtn.style.background = '#3498db';
-                }
-                
-                tradeBtn.onclick = () => {
-                    log(`🔄 Card-level trade button clicked (dealer: ${isDealerTurn})`);
-                    if (isDealerTurn) {
-                        // Dealer trade with deck
-                        socket.emit('dealer-trade-deck', { gameId: currentGame.id });
-                        showToast('Trading with deck...', 'info');
-                    } else {
-                        const nextPlayer = getNextTradeablePlayer();
-                        if (nextPlayer) {
-                            requestTrade(nextPlayer.id);
+                            flyingJack.innerHTML = `
+            <div style="font-size: 1.1rem; margin-bottom: 2px;">${jackCard.value}</div>
+            <div style="font-size: 1.3rem;">${jackCard.suit}</div>
+        `;
                         } else {
-                            showToast('No valid trade target!', 'warning');
+                            // Fallback Jack content
+                            flyingJack.innerHTML = `
+            <div style="font-size: 1.1rem; margin-bottom: 2px;">J</div>
+            <div style="font-size: 1.3rem;">♠</div>
+        `;
                         }
+
+                        // Step 5: Add the flying card to the page
+                        document.body.appendChild(flyingJack);
+
+                        // Step 6: Add "SCREW YOU!" text directly on the landed card
+                        setTimeout(() => {
+                            addScrewYouTextToCard(flyingJack, blockedPlayerName, jackPlayerName);
+                        }, 2500); // Wait for the card animation to complete
                     }
-                };
-                actionContainer.appendChild(tradeBtn);
+                 
+                 // Original overlay function (renamed)
+                    function showOriginalScrewYouOverlay(blockedPlayerName, jackPlayerName) {
+                        // Create big dramatic overlay (same as before)
+                        const screwYouOverlay = document.createElement('div');
+                        screwYouOverlay.className = 'jack-screw-you-overlay';
+                        screwYouOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: jackRevealBurst 0.6s ease-out;
+        pointer-events: none;
+    `;
 
-                cardSection.appendChild(actionContainer);
+                        const screwYouContent = document.createElement('div');
+                        screwYouContent.style.cssText = `
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        color: white;
+        padding: 30px 50px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border: 4px solid #fff;
+        animation: jackBounceIn 0.8s ease-out;
+    `;
+
+                        screwYouContent.innerHTML = `
+        <h1 style="font-size: 3rem; margin: 0 0 15px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🃏</h1>
+        <h2 style="font-size: 2.5rem; margin: 0 0 10px 0; font-weight: bold;">SCREW YOU!</h2>
+        <p style="font-size: 1.3rem; margin: 0; opacity: 0.9;">${jackPlayerName} blocks ${blockedPlayerName}!</p>
+    `;
+
+                        screwYouOverlay.appendChild(screwYouContent);
+                        document.body.appendChild(screwYouOverlay);
+
+                        // Auto-remove after 3 seconds
+                        setTimeout(() => {
+                            if (screwYouOverlay.parentNode) {
+                                screwYouOverlay.style.animation = 'fadeOut 0.5s ease-out';
+                                setTimeout(() => {
+                                    screwYouOverlay.remove();
+                                }, 500);
+                            }
+                        }, 2500);
+
+                        // FALLBACK: Remove card after 6 seconds no matter what
+                        setTimeout(() => {
+                            if (flyingJack.parentNode) {
+                                flyingJack.style.animation = 'jackShootOff 1s ease-in forwards';
+                                setTimeout(() => {
+                                    if (flyingJack.parentNode) {
+                                        flyingJack.remove();
+                                    }
+                                }, 1000);
+                            }
+                        }, 6000);
+                    }  
+
+                // ADD this function for Jack card animation:
+                    function addJackRevealAnimation(playerId) {
+                        const playerCard = document.querySelector(`[data-player-id="${playerId}"] .card-display`);
+                        if (!playerCard) return;
+
+                        log(`🃏 Adding Jack reveal animation for player ${playerId}`);
+
+                        // Add special Jack blocking animation class
+                        playerCard.classList.add('jack-block-reveal');
+
+                        // Remove animation class after it completes
+                        setTimeout(() => {
+                            playerCard.classList.remove('jack-block-reveal');
+                        }, 2000);
+                    }
+
+                    // Emergency function to clear stuck cards
+                        function clearStuckCard() {
+                            const stuckCards = document.querySelectorAll('.flying-jack-card');
+                            stuckCards.forEach(card => card.remove());
+                            console.log('🧹 Cleared stuck cards');
+                            showToast('Cleared stuck card!', 'success');
+                        }
+
+                    // Add "SCREW YOU!" text directly on the landed card
+                        function addScrewYouTextToCard(flyingJack, blockedPlayerName, jackPlayerName) {
+                            console.log('🃏 Adding text to card...');
+
+                            // Create simple text overlay
+                            const textOverlay = document.createElement('div');
+                            textOverlay.style.cssText = `
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background: rgba(231, 76, 60, 0.95);
+                                color: white;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                border-radius: 8px;
+                                font-weight: bold;
+                                text-align: center;
+                                z-index: 1002;
+                            `;
+
+                                textOverlay.innerHTML = `
+        <div style="font-size: 1.4rem; margin-bottom: 5px;">💥</div>
+        <div style="font-size: 1.2rem; line-height: 1.2;">YOU GOT<br>SCREWED!</div>
+    `;
+
+                                // Add text to card
+                                flyingJack.appendChild(textOverlay);
+                                console.log('🃏 Text added to card');
+
+                                // FORCE remove after 3 seconds - no matter what
+                                setTimeout(() => {
+                                    console.log('🃏 Removing card now...');
+                                    if (flyingJack && flyingJack.parentNode) {
+                                        flyingJack.remove();
+                                    }
+                                }, 3000);
+                            }
+
+                            window.addEventListener('beforeunload', () => {
+                                completeCleanup();
+                            });
+
+                            window.addEventListener('beforeunload', () => {
+                                if (socket) {
+                                    socket.removeAllListeners();
+                                    socket.disconnect();
+                                }
+                                if (isVideoJoined) {
+                                    leaveVideoCall().catch(console.error);
+                                }
+
+        // Initialize with clean state
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🎮 Game initialized with complete features!');
+            
+            initializeFocusState();
+            
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendChatMessage();
+                    }
+                });
             }
 
-            // Add trade button for other players I can trade with
-            if (player.id !== playerId && canTradeWith(player)) {
-                const actionBtn = document.createElement('button');
-                actionBtn.className = 'action-button trade';
-                actionBtn.textContent = 'Trade →';
-                actionBtn.onclick = () => {
-                    log(`🔄 Trading with ${player.name}`);
-                    requestTrade(player.id);
-                };
-                cardSection.appendChild(actionBtn);
+            // Add real-time username validation
+            const playerNameInput = document.getElementById('playerName');
+            if (playerNameInput) {
+                playerNameInput.addEventListener('input', function(e) {
+                    const name = e.target.value.trim();
+                    
+                    // Remove any existing validation styling
+                    e.target.style.borderColor = '';
+                    
+                    if (name.length > 20) {
+                        e.target.style.borderColor = 'red';
+                        e.target.title = 'Name must be 20 characters or less';
+                    } else if (name.length > 0 && !/^[a-zA-Z0-9\s_-]+$/.test(name)) {
+                        e.target.style.borderColor = 'orange';
+                        e.target.title = 'Only letters, numbers, spaces, underscore, and dash allowed';
+                    } else if (name.length > 0) {
+                        e.target.style.borderColor = 'green';
+                        e.target.title = 'Valid username';
+                    }
+                });
             }
-
-            const videoSection = document.createElement('div');
-            videoSection.className = 'video-section';
-
-            const videoContainer = document.createElement('div');
-            videoContainer.className = 'video-container';
-            const videoElement = document.createElement('div');
-            videoElement.className = 'video-element';
-            videoElement.id = `video-${player.id}`;
             
-            const placeholder = document.createElement('div');
-            placeholder.className = 'video-placeholder';
-            placeholder.textContent = '📹';
-            videoElement.appendChild(placeholder);
+            });
+        });
+
+        // Memory cleanup
+        setInterval(() => {
+            const gameMessages = document.getElementById('gameMessages');
+            if (gameMessages && gameMessages.children.length > 100) {
+                while (gameMessages.children.length > 50) {
+                    gameMessages.removeChild(gameMessages.firstChild);
+                }
+            }
             
-            const videoControls = document.createElement('div');
-            videoControls.className = 'video-controls';
-            videoControls.innerHTML = `
-                <button class="video-control-btn" onclick="startVideoForPlayer('${player.id}')" title="Start Video">📷</button>
-                <button class="video-control-btn" onclick="toggleMuteForPlayer('${player.id}')" title="Mute">🎤</button>
-                <button class="video-control-btn" onclick="endVideoForPlayer('${player.id}')" title="End">❌</button>
-            `;
-            
-            videoContainer.appendChild(videoElement);
-            videoContainer.appendChild(videoControls);
-            videoSection.appendChild(videoContainer);
-
-            playerContent.appendChild(cardSection);
-            playerContent.appendChild(videoSection);
-            slot.appendChild(playerContent);
-
-            if (removable) {
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'remove-button';
-    removeBtn.textContent = '×';
-    removeBtn.onclick = (e) => {
-        e.stopPropagation();
-        removeFromFocus(player.id);
-    };
-    slot.appendChild(removeBtn);
-}
-
-return slot;
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages && chatMessages.children.length > 50) {
+                while (chatMessages.children.length > 25) {
+                    chatMessages.removeChild(chatMessages.firstChild);
+                }
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
