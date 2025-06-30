@@ -3234,4 +3234,15 @@
             playerContent.appendChild(videoSection);
             slot.appendChild(playerContent);
 
-            if (
+            if (removable) {
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-button';
+    removeBtn.textContent = '×';
+    removeBtn.onclick = (e) => {
+        e.stopPropagation();
+        removeFromFocus(player.id);
+    };
+    slot.appendChild(removeBtn);
+}
+
+return slot;
