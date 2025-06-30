@@ -74,12 +74,26 @@
         .focus-slot.current-turn {
             border-color: #00FF00;
             box-shadow: 0 0 15px rgba(0,255,0,0.3);
+            grid-column: 2;
+            grid-row: 1;
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
             0%, 100% { box-shadow: 0 0 15px rgba(0,255,0,0.3); }
             50% { box-shadow: 0 0 25px rgba(0,255,0,0.6); }
+        }
+
+        .focus-slot.left-neighbor {
+            border-color: #FF6B35;
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .focus-slot.right-neighbor {
+            border-color: #FF6B35;
+            grid-column: 3;
+            grid-row: 1;
         }
 
         .focus-slot.custom {
@@ -116,7 +130,7 @@
             margin-bottom: 5px;
         }
 
-        /* Card + Video Side-by-Side Layout */
+        /* FIXED: Card + Video Side-by-Side Layout */
         .player-content {
             display: flex;
             gap: 8px;
@@ -227,10 +241,11 @@
             flex-shrink: 0;
         }
 
-        /* Playing Card Design - Proper Card Proportions */
+        /* FIXED: Proper Playing Card Design - Perfect Size */
         .card-display {
-            width: 80px;
-            height: 110px;
+            width: 100%;
+            max-width: 120px;
+            height: 75px;
             background: linear-gradient(145deg, #ffffff, #f8f8f8);
             border: 2px solid #ddd;
             border-radius: 8px;
@@ -240,15 +255,13 @@
             justify-content: center;
             color: #333;
             font-weight: bold;
-            margin: 8px auto;
+            margin: 8px 0;
             transition: all 0.3s ease;
             font-family: 'Times New Roman', serif;
             font-size: 1rem;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             position: relative;
             cursor: pointer;
-            user-select: none;
-            touch-action: manipulation;
         }
 
         .card-display:hover {
@@ -281,61 +294,7 @@
             transform: scale(1.02);
         }
 
-        /* NEW: Nudge Animations */
-        .nudge-shake {
-            animation: shake 0.5s ease-in-out infinite;
-        }
-
-        .nudge-pulse {
-            animation: pulse-glow 1s ease-in-out;
-            border: 3px solid #FFD700 !important;
-            box-shadow: 0 0 20px rgba(255,215,0,0.8) !important;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-3px) rotate(-1deg); }
-            75% { transform: translateX(3px) rotate(1deg); }
-        }
-
-        @keyframes pulse-glow {
-            0%, 100% { 
-                box-shadow: 0 0 10px rgba(255,215,0,0.4);
-                border-color: rgba(255,215,0,0.6);
-            }
-            50% { 
-                box-shadow: 0 0 25px rgba(255,215,0,0.9);
-                border-color: rgba(255,215,0,1);
-            }
-        }
-
-        /* NEW: Gesture Feedback */
-        .card-display.gesture-active {
-            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-        }
-
-        .card-display.king-auto {
-            border: 3px solid #FFD700 !important;
-            box-shadow: 0 0 20px rgba(255,215,0,0.8) !important;
-            animation: king-reveal 2s ease-out;
-        }
-
-        @keyframes king-reveal {
-            0% { 
-                transform: scale(1) rotate(0deg);
-                box-shadow: 0 0 5px rgba(255,215,0,0.3);
-            }
-            50% { 
-                transform: scale(1.1) rotate(5deg);
-                box-shadow: 0 0 30px rgba(255,215,0,1);
-            }
-            100% { 
-                transform: scale(1.02) rotate(0deg);
-                box-shadow: 0 0 15px rgba(255,215,0,0.6);
-            }
-        }
-
-        /* Card content styling */
+        /* Card content styling for authentic playing card */
         .card-content {
             display: flex;
             flex-direction: column;
@@ -476,17 +435,6 @@
             background: rgba(255,215,0,0.1);
         }
 
-        .available-player.tradeable {
-            border-color: #e74c3c;
-            background: rgba(231, 76, 60, 0.1);
-            animation: tradeGlow 2s infinite;
-        }
-
-        @keyframes tradeGlow {
-            0%, 100% { box-shadow: 0 0 5px rgba(231, 76, 60, 0.3); }
-            50% { box-shadow: 0 0 15px rgba(231, 76, 60, 0.6); }
-        }
-
         .available-player .check-mark {
             position: absolute;
             top: -5px;
@@ -508,10 +456,10 @@
             font-weight: bold;
         }
 
-        /* Mini Cards - Proper Proportions */
+        /* FIXED: Perfect Mini Cards */
         .available-player .mini-card {
-            width: 30px;
-            height: 42px;
+            width: 100%;
+            height: 25px;
             background: linear-gradient(145deg, #ffffff, #f0f0f0);
             border: 1px solid #ddd;
             border-radius: 3px;
@@ -519,9 +467,9 @@
             align-items: center;
             justify-content: center;
             color: #333;
-            font-size: 0.6rem;
+            font-size: 0.65rem;
             font-weight: bold;
-            margin: 2px auto;
+            margin-bottom: 2px;
             font-family: 'Times New Roman', serif;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
@@ -777,15 +725,13 @@
             }
 
             .card-display {
-                width: 60px;
-                height: 85px;
-                font-size: 0.8rem;
+                height: 60px;
+                font-size: 0.9rem;
             }
 
             .available-player .mini-card {
-                width: 25px;
-                height: 35px;
-                font-size: 0.5rem;
+                height: 20px;
+                font-size: 0.6rem;
             }
         }
 
@@ -960,7 +906,7 @@
         let playerId = null;
         let playerName = '';
         
-        // Personal Table state
+        // FIXED: Personal Table state with bulletproof cleanup
         let focusedPlayers = null;
         
         // Video state
@@ -975,22 +921,7 @@
         let updateTimeout = null;
         let lastGameState = null;
 
-        // NEW: Gesture and King Logic State
-        let playerCardLooks = {}; // Track who has looked at their card
-        let gestureState = {
-            startX: 0,
-            startY: 0,
-            startTime: 0,
-            isTracking: false,
-            element: null,
-            lastTap: 0
-        };
-
-        // NEW: Nudge system
-        let nudgeTimeouts = {};
-        let nudgeIntervals = {};
-
-        // Initialize clean focus state
+        // FIXED: Initialize clean focus state
         function initializeFocusState() {
             focusedPlayers = {
                 leftNeighbor: null,
@@ -999,356 +930,6 @@
                 custom1: null,
                 custom2: null
             };
-        }
-
-        // NEW: Enhanced Gesture Detection System
-        function initializeGestureHandlers(cardElement, targetPlayerId) {
-            if (!cardElement) {
-                log(`❌ No card element to initialize gestures for player ${targetPlayerId}`);
-                return;
-            }
-
-            log(`🎯 Initializing gesture handlers for player ${targetPlayerId}`);
-
-            // Touch events for mobile
-            cardElement.addEventListener('touchstart', handleTouchStart, { passive: false });
-            cardElement.addEventListener('touchmove', handleTouchMove, { passive: false });
-            cardElement.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-            // Mouse events for desktop
-            cardElement.addEventListener('mousedown', handleMouseStart);
-            cardElement.addEventListener('mousemove', handleMouseMove);
-            cardElement.addEventListener('mouseup', handleMouseEnd);
-
-            // Store player ID for gesture handling
-            cardElement.dataset.playerId = targetPlayerId;
-            
-            log(`✅ Gesture handlers set for player ${targetPlayerId}`);
-        }
-
-        function handleTouchStart(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            startGesture(touch.clientX, touch.clientY, e.target);
-            log(`📱 Touch start: ${touch.clientX}, ${touch.clientY}`);
-        }
-
-        function handleTouchMove(e) {
-            e.preventDefault();
-            if (!gestureState.isTracking) return;
-            const touch = e.touches[0];
-            updateGesture(touch.clientX, touch.clientY);
-        }
-
-        function handleTouchEnd(e) {
-            e.preventDefault();
-            log(`📱 Touch end`);
-            endGesture();
-        }
-
-        function handleMouseStart(e) {
-            startGesture(e.clientX, e.clientY, e.target);
-            log(`🖱️ Mouse start: ${e.clientX}, ${e.clientY}`);
-        }
-
-        function handleMouseMove(e) {
-            if (!gestureState.isTracking) return;
-            updateGesture(e.clientX, e.clientY);
-        }
-
-        function handleMouseEnd(e) {
-            log(`🖱️ Mouse end`);
-            endGesture();
-        }
-
-        function startGesture(x, y, element) {
-            gestureState.startX = x;
-            gestureState.startY = y;
-            gestureState.startTime = Date.now();
-            gestureState.isTracking = true;
-            gestureState.element = element;
-            log(`🎯 Gesture started at ${x}, ${y}`);
-        }
-
-        function updateGesture(x, y) {
-            if (!gestureState.isTracking) return;
-            
-            const deltaX = x - gestureState.startX;
-            const deltaY = y - gestureState.startY;
-            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            
-            // Visual feedback for swipe
-            if (distance > 20) {
-                const cardElement = gestureState.element.closest('.card-display');
-                if (cardElement && deltaX > 50) {
-                    cardElement.style.transform = `translateX(${Math.min(deltaX - 50, 30)}px) rotate(${Math.min((deltaX - 50) / 5, 10)}deg)`;
-                    cardElement.style.opacity = '0.8';
-                    log(`👉 Swipe feedback: deltaX=${deltaX}`);
-                }
-            }
-        }
-
-        function endGesture() {
-            if (!gestureState.isTracking) return;
-            
-            const duration = Date.now() - gestureState.startTime;
-            const cardElement = gestureState.element.closest('.card-display');
-            
-            log(`🎯 Gesture ended, duration: ${duration}ms`);
-            
-            if (cardElement) {
-                // Check for swipe based on transform applied during updateGesture
-                const transform = cardElement.style.transform || '';
-                const wasSwipeRight = transform.includes('translateX') && !transform.includes('-');
-                
-                // Reset visual feedback
-                cardElement.style.transform = '';
-                cardElement.style.opacity = '';
-                
-                // Get the player ID from the card element's dataset
-                const targetPlayerId = cardElement.dataset.playerId;
-                log(`🎯 Target player ID: ${targetPlayerId}`);
-                
-                if (!targetPlayerId) {
-                    log(`❌ No target player ID found in card element`);
-                    gestureState.isTracking = false;
-                    gestureState.element = null;
-                    return;
-                }
-                
-                if (wasSwipeRight) {
-                    // Swipe right detected
-                    log(`👉 Swipe right detected for player ${targetPlayerId}`);
-                    handleSwipeRight(targetPlayerId);
-                } else if (duration < 300) {
-                    // Quick tap
-                    if (gestureState.lastTap && Date.now() - gestureState.lastTap < 500) {
-                        // Double tap - Keep card
-                        log(`👆👆 Double tap detected for player ${targetPlayerId}`);
-                        handleDoubleTap(targetPlayerId);
-                        gestureState.lastTap = 0;
-                    } else {
-                        // Single tap - Look at card
-                        log(`👆 Single tap detected for player ${targetPlayerId}`);
-                        gestureState.lastTap = Date.now();
-                        handleSingleTap(targetPlayerId);
-                    }
-                }
-            } else {
-                log(`❌ No card element found for gesture`);
-            }
-            
-            // Reset gesture state
-            gestureState.isTracking = false;
-            gestureState.element = null;
-        }
-
-        function handleSwipeRight(targetPlayerId) {
-            log(`👉 Swipe feedback: Swipe right for player ${targetPlayerId}`);
-            if (targetPlayerId === playerId) {
-                // Check if we can trade
-                if (canPerformTrade()) {
-                    const nextPlayer = getNextTradeablePlayer();
-                    if (nextPlayer) {
-                        log(`🔄 Trading with ${nextPlayer.name}`);
-                        requestTrade(nextPlayer.id);
-                    } else {
-                        log(`❌ No valid trade target found`);
-                        showToast('No valid trade target!', 'warning');
-                    }
-                } else {
-                    log(`❌ Cannot trade right now`);
-                    showToast('Cannot trade right now!', 'warning');
-                }
-            }
-        }
-
-        function handleDoubleTap(targetPlayerId) {
-            log(`✅ Double tap: Processing for player ${targetPlayerId}`);
-            if (targetPlayerId === playerId) {
-                if (currentGame?.currentPlayerId === targetPlayerId) {
-                    log(`✅ Double tap: It's my turn, keeping card`);
-                    keepCard();
-                } else {
-                    log(`❌ Double tap: Not my turn`);
-                    showToast('Not your turn!', 'warning');
-                }
-            }
-        }
-
-        function handleSingleTap(targetPlayerId) {
-            log(`👆 Single tap: Processing for player ${targetPlayerId}`);
-            if (targetPlayerId === playerId) {
-                const myPlayer = currentGame?.players?.find(p => p.id === targetPlayerId);
-                if (myPlayer && myPlayer.hasCard && !playerCardLooks[targetPlayerId]) {
-                    log(`👁️ Single tap: Flipping card for first look`);
-                    flipCard();
-                    markPlayerAsLooked(targetPlayerId);
-                } else {
-                    log(`👁️ Single tap: Player already looked or no card`);
-                }
-            }
-        }
-
-        // NEW: King Logic Functions
-        function isKing(card) {
-            return card && (card.value === 'K' || card.value === 'King');
-        }
-
-        function isJack(card) {
-            return card && (card.value === 'J' || card.value === 'Jack');
-        }
-
-        function shouldAutoRevealKing(player) {
-            return player && player.card && isKing(player.card) && !player.cardRevealed;
-        }
-
-        function handleKingAutoReveal(player) {
-            if (shouldAutoRevealKing(player)) {
-                log(`👑 AUTO-REVEALING King for ${player.name}`);
-                if (player.id === playerId) {
-                    // Auto-flip our own King
-                    socket?.emit('flip-card', { gameId: currentGame.id });
-                }
-                markPlayerAsLooked(player.id);
-                showToast(`${player.name} has a King! 👑`, 'warning');
-            }
-        }
-
-        function canPerformTrade() {
-            const isMyTurn = currentGame?.currentPlayerId === playerId;
-            const gameStarted = currentGame?.state === 'playing';
-            const tradingPhase = currentGame?.turnPhase === 'trading';
-            const myPlayer = currentGame?.players?.find(p => p.id === playerId);
-            
-            log(`🔍 Trade check: myTurn=${isMyTurn}, gameStarted=${gameStarted}, tradingPhase=${tradingPhase}`);
-            
-            // Can't trade if I have a King
-            if (myPlayer?.card && isKing(myPlayer.card)) {
-                log(`👑 Cannot trade: I have a King`);
-                showToast('Kings cannot be traded! 👑', 'warning');
-                return false;
-            }
-            
-            const canTrade = isMyTurn && gameStarted && tradingPhase;
-            log(`🔍 Final trade result: ${canTrade}`);
-            return canTrade;
-        }
-
-        function getNextTradeablePlayer() {
-            if (!currentGame?.players) return null;
-            
-            const myIndex = currentGame.players.findIndex(p => p.id === playerId);
-            if (myIndex === -1) return null;
-            
-            const playerCount = currentGame.players.length;
-            let nextIndex = (myIndex + 1) % playerCount;
-            let searchCount = 0;
-            
-            // Find next player who doesn't have a revealed King
-            while (searchCount < playerCount) {
-                const nextPlayer = currentGame.players[nextIndex];
-                
-                // Skip if player has revealed King (pass-through logic)
-                if (nextPlayer.card && isKing(nextPlayer.card) && nextPlayer.cardRevealed) {
-                    log(`👑 Passing through ${nextPlayer.name} (has revealed King)`);
-                    nextIndex = (nextIndex + 1) % playerCount;
-                    searchCount++;
-                    continue;
-                }
-                
-                // Valid trade target
-                if (nextPlayer.lives > 0 && nextPlayer.id !== playerId) {
-                    return nextPlayer;
-                }
-                
-                nextIndex = (nextIndex + 1) % playerCount;
-                searchCount++;
-            }
-            
-            return null;
-        }
-
-        // NEW: Card Look Tracking
-        function markPlayerAsLooked(playerId) {
-            playerCardLooks[playerId] = true;
-            log(`👁️ Player ${playerId} has looked at their card`);
-            clearNudge(playerId);
-        }
-
-        function hasPlayerLooked(playerId) {
-            return Boolean(playerCardLooks[playerId]);
-        }
-
-        function resetCardLooks() {
-            playerCardLooks = {};
-            log('🔄 Reset all card look tracking');
-        }
-
-        // NEW: Nudge System
-        function startNudge(playerId, reason = 'Look at your card') {
-            clearNudge(playerId); // Clear any existing nudge
-            
-            const playerElement = document.querySelector(`[data-player-id="${playerId}"]`)?.closest('.focus-slot');
-            if (!playerElement) return;
-            
-            const cardElement = playerElement.querySelector('.card-display');
-            if (!cardElement) return;
-            
-            log(`🔔 Starting nudge for player ${playerId}: ${reason}`);
-            
-            // Visual nudge - shake animation
-            cardElement.classList.add('nudge-shake');
-            
-            // Audio nudge (optional)
-            try {
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmoeAzeI1PKscBkFl3bvuKJcHA==');
-                audio.volume = 0.3;
-                audio.play().catch(() => {}); // Ignore audio errors
-            } catch (error) {
-                // Ignore audio errors
-            }
-            
-            // Pulse effect
-            nudgeIntervals[playerId] = setInterval(() => {
-                if (cardElement.classList.contains('nudge-pulse')) {
-                    cardElement.classList.remove('nudge-pulse');
-                } else {
-                    cardElement.classList.add('nudge-pulse');
-                }
-            }, 1000);
-            
-            // Auto-clear after 10 seconds
-            nudgeTimeouts[playerId] = setTimeout(() => {
-                clearNudge(playerId);
-            }, 10000);
-            
-            // Show toast
-            showToast(`${reason} 👆`, 'warning');
-        }
-
-        function clearNudge(playerId) {
-            const playerElement = document.querySelector(`[data-player-id="${playerId}"]`)?.closest('.focus-slot');
-            if (playerElement) {
-                const cardElement = playerElement.querySelector('.card-display');
-                if (cardElement) {
-                    cardElement.classList.remove('nudge-shake', 'nudge-pulse');
-                }
-            }
-            
-            if (nudgeTimeouts[playerId]) {
-                clearTimeout(nudgeTimeouts[playerId]);
-                delete nudgeTimeouts[playerId];
-            }
-            
-            if (nudgeIntervals[playerId]) {
-                clearInterval(nudgeIntervals[playerId]);
-                delete nudgeIntervals[playerId];
-            }
-        }
-
-        function clearAllNudges() {
-            Object.keys(nudgeTimeouts).forEach(playerId => clearNudge(playerId));
         }
 
         // Utility functions
@@ -1400,13 +981,13 @@
             }, 3000);
         }
 
-        // Complete cleanup function
+        // FIXED: BULLETPROOF cleanup function - NO MORE DUPLICATES
         function completeCleanup() {
             log('🧹 Performing complete cleanup...');
             
             // 1. Disconnect socket completely
             if (socket) {
-                socket.removeAllListeners();
+                socket.removeAllListeners(); // Remove ALL event listeners
                 socket.disconnect();
                 socket = null;
             }
@@ -1424,19 +1005,7 @@
             remoteUsers = {};
             isVideoJoined = false;
             
-            // 5. Clear gesture and King logic state
-            playerCardLooks = {};
-            gestureState = {
-                startX: 0,
-                startY: 0,
-                startTime: 0,
-                isTracking: false,
-                element: null,
-                lastTap: 0
-            };
-            clearAllNudges();
-            
-            // 6. Clear all UI elements
+            // 5. Clear all UI elements
             const focusGrid = document.getElementById('focusGrid');
             if (focusGrid) focusGrid.innerHTML = '';
             
@@ -1449,11 +1018,11 @@
             const gameMessages = document.getElementById('gameMessages');
             if (gameMessages) gameMessages.innerHTML = '';
             
-            // 7. Reset connection status
+            // 6. Reset connection status
             const connectionStatus = document.getElementById('connectionStatus');
             if (connectionStatus) connectionStatus.innerHTML = '🔴 Disconnected';
             
-            // 8. Clear any timeouts
+            // 7. Clear any timeouts
             if (updateTimeout) {
                 clearTimeout(updateTimeout);
                 updateTimeout = null;
@@ -1464,16 +1033,17 @@
 
         // Menu navigation
         function showMainMenu() {
-            completeCleanup();
+            completeCleanup(); // Always cleanup when going to main menu
             document.querySelectorAll('.menu-screen, #gameContent').forEach(el => el.classList.add('hidden'));
             document.getElementById('main-menu').classList.remove('hidden');
         }
 
         function showQuickMatch() {
-            completeCleanup();
+            completeCleanup(); // CRITICAL: Complete cleanup before new game
             document.querySelectorAll('.menu-screen').forEach(el => el.classList.add('hidden'));
             document.getElementById('quick-match').classList.remove('hidden');
             
+            // Small delay to ensure cleanup is complete
             setTimeout(() => {
                 connectToServer();
                 setTimeout(() => {
@@ -1497,10 +1067,11 @@
             document.getElementById('gameContent').classList.remove('hidden');
         }
 
-        // Server connection
+        // FIXED: Server connection with GUARANTEED fresh start
         function connectToServer() {
             log('🔄 Creating FRESH server connection...');
             
+            // Ensure we start completely fresh
             if (socket) {
                 socket.removeAllListeners();
                 socket.disconnect();
@@ -1514,7 +1085,7 @@
                 reconnectionDelay: 1000,
                 reconnectionAttempts: 5,
                 maxReconnectionAttempts: 10,
-                forceNew: true
+                forceNew: true // CRITICAL: Force completely new connection
             });
             
             socket.on('connect', () => {
@@ -1601,10 +1172,6 @@
             socket.on('game-started', function(data) {
                 log('🎮 Game started!');
                 currentGame = data.game;
-                
-                resetCardLooks();
-                clearAllNudges();
-                
                 hideHostControls();
                 updateGameDisplay();
                 updatePersonalTable();
@@ -1614,59 +1181,12 @@
                 }, 1000);
             });
 
-            socket.on('round-started', function(data) {
-                log(`🔄 New round started!`);
-                currentGame = data.game;
-                
-                resetCardLooks();
-                clearAllNudges();
-                
-                updateGameDisplay();
-                updatePersonalTable();
-            });
-
-            socket.on('cards-dealt', function(data) {
-                log('🎴 Cards dealt!');
-                currentGame = data.game;
-                
-                resetCardLooks();
-                clearAllNudges();
-                
-                // Check for any Kings that should auto-reveal
-                if (currentGame.players) {
-                    currentGame.players.forEach(player => {
-                        if (shouldAutoRevealKing(player)) {
-                            setTimeout(() => handleKingAutoReveal(player), 500);
-                        }
-                    });
-                }
-                
-                updateGameDisplay();
-                updatePersonalTable();
-                
-                // Start nudging players who haven't looked at their cards
-                setTimeout(() => {
-                    if (currentGame.players) {
-                        currentGame.players.forEach(player => {
-                            if (player.hasCard && !hasPlayerLooked(player.id) && player.id !== playerId) {
-                                startNudge(player.id, `${player.name} should look at their card`);
-                            }
-                        });
-                    }
-                }, 3000);
-            });
-
             socket.on('trade-completed', function(data) {
                 const result = data.result;
                 if (result.tradedWithDeck) {
                     log('🎴 SPECIAL RULE: Dealer had King - traded with deck instead!');
                 } else if (result.traded) {
                     log('✅ Cards swapped successfully!');
-                    
-                    // Both players have now "looked" at their new cards
-                    if (result.fromPlayerId) markPlayerAsLooked(result.fromPlayerId);
-                    if (result.toPlayerId) markPlayerAsLooked(result.toPlayerId);
-                    
                 } else if (result.blocked) {
                     log('🚫 Trade BLOCKED by Jack - "Screw You!"');
                 } else if (result.kingRevealed) {
@@ -1677,16 +1197,6 @@
                     }
                 }
                 currentGame = data.game;
-                
-                // Check for new Kings that should auto-reveal
-                if (currentGame.players) {
-                    currentGame.players.forEach(player => {
-                        if (shouldAutoRevealKing(player)) {
-                            handleKingAutoReveal(player);
-                        }
-                    });
-                }
-                
                 updateGameDisplay();
                 updatePersonalTable();
                 showToast('Trade completed!', 'success');
@@ -1703,15 +1213,6 @@
             socket.on('card-flipped', function(data) {
                 log(`🎴 Player ${data.playerId} flipped their card`);
                 currentGame = data.game;
-                
-                markPlayerAsLooked(data.playerId);
-                
-                // Check if this revealed a King
-                const player = currentGame.players?.find(p => p.id === data.playerId);
-                if (player && shouldAutoRevealKing(player)) {
-                    handleKingAutoReveal(player);
-                }
-                
                 updateGameDisplay();
                 updatePersonalTable();
             });
@@ -1733,10 +1234,6 @@
             socket.on('round-ended', function(data) {
                 log(`🏁 Round ${data.result?.round || ''} ended`);
                 currentGame = data.game;
-                
-                resetCardLooks();
-                clearAllNudges();
-                
                 updateGameDisplay();
                 updatePersonalTable();
                 
@@ -1771,7 +1268,7 @@
             });
         }
 
-        // Game creation
+        // FIXED: Game creation with GUARANTEED fresh game
         function createPublicGame() {
             if (!socket || !socket.connected) {
                 log('❌ No socket connection - reconnecting...');
@@ -1786,8 +1283,8 @@
 
             socket.emit('quick-match', {
                 playerName: playerName,
-                userId: socket.id,
-                token: `demo_token_${socket.id}`
+                userId: socket.id, // ← NEW: Just socket.id
+                token: `demo_token_${socket.id}` // ← NEW: Just socket.id
             });
         }
 
@@ -1878,87 +1375,61 @@
         }
 
         function showHostControls() {
-            if (currentGame?.hostId === playerId && currentGame?.state === 'waiting') {
-                document.getElementById('hostControls')?.classList.remove('hidden');
-            }
-        }
+    // FIXED: Handle host ID with potential timestamp
+    const isHost = currentGame?.hostId === playerId || currentGame?.hostId?.startsWith(playerId);
+    
+    if (isHost && currentGame?.state === 'waiting') {
+        document.getElementById('hostControls')?.classList.remove('hidden');
+    }
+}
 
         function hideHostControls() {
             document.getElementById('hostControls')?.classList.add('hidden');
         }
 
-        // Personal Table management
+        // FIXED: Personal Table management - ABSOLUTELY NO DUPLICATES
         function updatePersonalTable() {
             if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
             if (!focusedPlayers) initializeFocusState();
 
             const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
-            if (myPlayerIndex === -1) {
-                log(`❌ Cannot find myself (${playerId}) in players list`);
-                return;
-            }
+            if (myPlayerIndex === -1) return;
 
             const playerCount = currentGame.players.length;
             if (playerCount < 2) return;
 
-            log(`🔄 Updating personal table: ${playerCount} players, I am ${currentGame.players[myPlayerIndex].name} at index ${myPlayerIndex}`);
+            log(`🔄 Updating table: ${playerCount} players total`);
 
-            if (playerCount <= 5) {
-                autoFillAllPlayers(myPlayerIndex, playerCount);
-                hideAvailablePlayersSection();
-            } else {
-                setupCustomFocusMode(myPlayerIndex, playerCount);
-                showAvailablePlayersSection();
+            const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
+            const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
+            
+            const currentTurnPlayer = currentGame.players.find(p => p.id === currentGame.currentPlayerId);
+
+            // CRITICAL: Check if players still exist before assigning
+            const leftNeighbor = currentGame.players[leftNeighborIndex];
+            const rightNeighbor = currentGame.players[rightNeighborIndex];
+
+            // Only update if player changed or doesn't exist
+            if (!focusedPlayers.leftNeighbor || focusedPlayers.leftNeighbor.id !== leftNeighbor.id) {
+                focusedPlayers.leftNeighbor = leftNeighbor;
+            }
+            if (!focusedPlayers.rightNeighbor || focusedPlayers.rightNeighbor.id !== rightNeighbor.id) {
+                focusedPlayers.rightNeighbor = rightNeighbor;
+            }
+            if (!focusedPlayers.currentTurn || focusedPlayers.currentTurn.id !== currentTurnPlayer?.id) {
+                focusedPlayers.currentTurn = currentTurnPlayer;
             }
 
-            renderPersonalTable();
-            renderAvailablePlayers();
-        }
-
-        function autoFillAllPlayers(myPlayerIndex, playerCount) {
-            const players = currentGame.players;
-            const myPlayer = players[myPlayerIndex];
-            
-            focusedPlayers.currentTurn = myPlayer;
-            
-            const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
-            const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
-            
-            focusedPlayers.leftNeighbor = players[leftNeighborIndex];
-            focusedPlayers.rightNeighbor = players[rightNeighborIndex];
-            
-            const remainingPlayers = players.filter((p, index) => 
-                index !== myPlayerIndex && 
-                index !== leftNeighborIndex && 
-                index !== rightNeighborIndex
-            );
-            
-            focusedPlayers.custom1 = remainingPlayers[0] || null;
-            focusedPlayers.custom2 = remainingPlayers[1] || null;
-            
-            log(`🎯 Personal view for ${myPlayer.name}: Left=${players[leftNeighborIndex]?.name}, Center=${myPlayer.name}, Right=${players[rightNeighborIndex]?.name}`);
-        }
-
-        function setupCustomFocusMode(myPlayerIndex, playerCount) {
-            const players = currentGame.players;
-            const myPlayer = players[myPlayerIndex];
-            
-            focusedPlayers.currentTurn = myPlayer;
-            
-            const leftNeighborIndex = (myPlayerIndex - 1 + playerCount) % playerCount;
-            const rightNeighborIndex = (myPlayerIndex + 1) % playerCount;
-            
-            focusedPlayers.leftNeighbor = players[leftNeighborIndex];
-            focusedPlayers.rightNeighbor = players[rightNeighborIndex];
-            
-            if (focusedPlayers.custom1 && !players.find(p => p.id === focusedPlayers.custom1.id)) {
+            // Clean custom slots if player no longer exists
+            if (focusedPlayers.custom1 && !currentGame.players.find(p => p.id === focusedPlayers.custom1.id)) {
                 focusedPlayers.custom1 = null;
             }
-            if (focusedPlayers.custom2 && !players.find(p => p.id === focusedPlayers.custom2.id)) {
+            if (focusedPlayers.custom2 && !currentGame.players.find(p => p.id === focusedPlayers.custom2.id)) {
                 focusedPlayers.custom2 = null;
             }
-            
-            const dealer = players.find(p => p.id === currentGame.dealerId);
+
+            // Auto-assign dealer if not in focus and slots available
+            const dealer = currentGame.players.find(p => p.id === currentGame.dealerId);
             if (dealer && !isPlayerInFocus(dealer.id)) {
                 if (!focusedPlayers.custom1) {
                     focusedPlayers.custom1 = dealer;
@@ -1966,22 +1437,9 @@
                     focusedPlayers.custom2 = dealer;
                 }
             }
-            
-            log(`🎯 Personal view for ${myPlayer.name}: Left=${players[leftNeighborIndex]?.name}, Center=${myPlayer.name}, Right=${players[rightNeighborIndex]?.name}`);
-        }
 
-        function hideAvailablePlayersSection() {
-            const availableSection = document.querySelector('.available-players');
-            if (availableSection) {
-                availableSection.style.display = 'none';
-            }
-        }
-
-        function showAvailablePlayersSection() {
-            const availableSection = document.querySelector('.available-players');
-            if (availableSection) {
-                availableSection.style.display = 'block';
-            }
+            renderPersonalTable();
+            renderAvailablePlayers();
         }
 
         function isPlayerInFocus(playerId) {
@@ -1995,39 +1453,25 @@
             
             focusGrid.innerHTML = '';
 
-            const leftSlot = createFocusSlot('slot', focusedPlayers.leftNeighbor, false);
-            leftSlot.style.gridColumn = '1';
-            leftSlot.style.gridRow = '1';
+            const leftSlot = createFocusSlot('left-neighbor', focusedPlayers.leftNeighbor, false);
             focusGrid.appendChild(leftSlot);
 
-            const centerSlot = createFocusSlot('slot', focusedPlayers.currentTurn, false);
-            centerSlot.style.gridColumn = '2';
-            centerSlot.style.gridRow = '1';
-            focusGrid.appendChild(centerSlot);
+            const currentSlot = createFocusSlot('current-turn', focusedPlayers.currentTurn, false);
+            focusGrid.appendChild(currentSlot);
 
-            const rightSlot = createFocusSlot('slot', focusedPlayers.rightNeighbor, false);
-            rightSlot.style.gridColumn = '3';
-            rightSlot.style.gridRow = '1';
+            const rightSlot = createFocusSlot('right-neighbor', focusedPlayers.rightNeighbor, false);
             focusGrid.appendChild(rightSlot);
 
             const custom1Slot = createFocusSlot('custom', focusedPlayers.custom1, true);
-            custom1Slot.style.gridColumn = '1';
-            custom1Slot.style.gridRow = '2';
             focusGrid.appendChild(custom1Slot);
 
             const custom2Slot = createFocusSlot('custom', focusedPlayers.custom2, true);
-            custom2Slot.style.gridColumn = '3';
-            custom2Slot.style.gridRow = '2';
             focusGrid.appendChild(custom2Slot);
         }
 
         function createFocusSlot(type, player, removable) {
             const slot = document.createElement('div');
             let slotClasses = `focus-slot ${type}`;
-            
-            if (player && player.id === currentGame?.currentPlayerId) {
-                slotClasses += ' current-turn';
-            }
             
             if (player && player.id === currentGame?.dealerId) {
                 slotClasses += ' dealer';
@@ -2061,27 +1505,10 @@
             const cardDisplay = document.createElement('div');
             cardDisplay.className = 'card-display';
             
-            // FIXED: Card visibility logic - only show other players' cards during revealing phase
-            const shouldShowCard = shouldPlayerCardBeVisible(player);
-            
-            if (player.id === playerId) {
-                log(`🎴 My card state: hasCard=${player.hasCard}, card=${player.card ? `${player.card.value}${player.card.suit}` : 'null'}, revealed=${player.cardRevealed}, shouldShow=${shouldShowCard}`);
-            }
-            
-            if (shouldAutoRevealKing(player)) {
-                handleKingAutoReveal(player);
-            }
-            
-            if (player.card && shouldShowCard) {
+            if (player.card && (player.cardRevealed || currentGame.turnPhase === 'revealing' || (player.id === playerId && player.cardRevealed))) {
                 const card = player.card;
                 const isRed = card.suit === '♥' || card.suit === '♦';
-                let cardClasses = isRed ? ' red revealed' : ' black revealed';
-                
-                if (isKing(card)) {
-                    cardClasses += ' king-auto';
-                }
-                
-                cardDisplay.className += cardClasses;
+                cardDisplay.className += isRed ? ' red revealed' : ' black revealed';
                 
                 const cardContent = document.createElement('div');
                 cardContent.className = 'card-content';
@@ -2093,20 +1520,8 @@
             } else if (player.hasCard || player.card) {
                 cardDisplay.className += ' face-down';
                 cardDisplay.textContent = '🂠';
-                
-                // Only add gesture handlers for my own card
                 if (player.id === playerId) {
-                    setTimeout(() => {
-                        initializeGestureHandlers(cardDisplay, player.id);
-                    }, 100);
-                }
-                
-                if (player.id !== playerId && !hasPlayerLooked(player.id) && player.hasCard) {
-                    setTimeout(() => {
-                        if (!hasPlayerLooked(player.id)) {
-                            startNudge(player.id, `${player.name} should look at their card`);
-                        }
-                    }, 2000);
+                    cardDisplay.onclick = () => flipCard();
                 }
             } else {
                 cardDisplay.textContent = 'No Card';
@@ -2114,9 +1529,8 @@
 
             cardSection.appendChild(playerInfo);
             cardSection.appendChild(cardDisplay);
-            cardSection.setAttribute('data-player-id', player.id);
 
-            if (canTradeWith(player)) {
+            if (type === 'right-neighbor' && canTradeWith(player)) {
                 const actionBtn = document.createElement('button');
                 actionBtn.className = 'action-button trade';
                 actionBtn.textContent = 'Trade →';
@@ -2168,48 +1582,13 @@
             return slot;
         }
 
-        // FIXED: Card visibility function - only show other players' cards during revealing phase
-        function shouldPlayerCardBeVisible(player) {
-            // Always show your own card
-            if (player.id === playerId) {
-                return true;
-            }
-            
-            // Only show other players' cards during the revealing phase at the end of the round
-            if (currentGame.turnPhase === 'revealing') {
-                return true;
-            }
-            
-            // Don't show other players' cards during normal gameplay, even if they've looked at them
-            return false;
-        }
-
         function canTradeWith(player) {
             if (!currentGame) return false;
-            
             const isMyTurn = currentGame.currentPlayerId === playerId;
-            const gameStarted = currentGame.state === 'playing';
-            const tradingPhase = currentGame.turnPhase === 'trading';
-            
-            if (!isMyTurn || !gameStarted || !tradingPhase || player.lives <= 0) {
-                return false;
-            }
-            
-            const myPlayer = currentGame.players.find(p => p.id === playerId);
-            if (myPlayer?.card && isKing(myPlayer.card)) {
-                return false;
-            }
-            
-            const nextTradeablePlayer = getNextTradeablePlayer();
-            const canTrade = nextTradeablePlayer && player.id === nextTradeablePlayer.id;
-            
-            if (canTrade) {
-                log(`🔄 ${player.name} is valid trade target`);
-            }
-            
-            return canTrade;
+            return isMyTurn && player.lives > 0 && currentGame.state === 'playing' && currentGame.turnPhase === 'trading';
         }
 
+        // FIXED: Available players rendering - NO DUPLICATES
         function renderAvailablePlayers() {
             const playersScroll = document.getElementById('playersScroll');
             if (!playersScroll) return;
@@ -2218,24 +1597,23 @@
 
             if (!currentGame || !currentGame.players) return;
 
-            const playerCount = currentGame.players.length;
-            if (playerCount <= 5) {
-                return;
-            }
-
+            // CRITICAL: Create Set to track already added players
             const addedPlayerIds = new Set();
-            const playersNotInFocus = currentGame.players.filter(player => {
-                return !isPlayerInFocus(player.id);
-            });
 
-            playersNotInFocus.forEach(player => {
+            currentGame.players.forEach(player => {
+                // PREVENT DUPLICATES: Skip if already added
                 if (addedPlayerIds.has(player.id)) {
+                    log(`⚠️ Skipping duplicate player: ${player.name} (${player.id})`);
                     return;
                 }
                 addedPlayerIds.add(player.id);
 
                 const playerDiv = document.createElement('div');
                 let playerClasses = 'available-player';
+                
+                if (isPlayerInFocus(player.id)) {
+                    playerClasses += ' focused';
+                }
                 
                 if (player.id === currentGame.currentPlayerId) {
                     playerClasses += ' current-turn';
@@ -2245,11 +1623,14 @@
                     playerClasses += ' dealer';
                 }
                 
-                if (canTradeWith(player)) {
-                    playerClasses += ' tradeable';
-                }
-                
                 playerDiv.className = playerClasses;
+                
+                if (isPlayerInFocus(player.id)) {
+                    const checkMark = document.createElement('div');
+                    checkMark.className = 'check-mark';
+                    checkMark.textContent = '✓';
+                    playerDiv.appendChild(checkMark);
+                }
 
                 const playerNameDiv = document.createElement('div');
                 playerNameDiv.className = 'player-name';
@@ -2259,10 +1640,7 @@
                 const miniCard = document.createElement('div');
                 miniCard.className = 'mini-card';
                 
-                // FIXED: Use the same card visibility logic
-                const shouldShowCard = shouldPlayerCardBeVisible(player);
-                
-                if (player.card && shouldShowCard) {
+                if (player.card && (player.cardRevealed || currentGame.turnPhase === 'revealing' || (player.id === playerId && player.cardRevealed))) {
                     const isRed = player.card.suit === '♥' || player.card.suit === '♦';
                     miniCard.className += isRed ? ' red' : ' black';
                     miniCard.textContent = `${player.card.value}${player.card.suit}`;
@@ -2283,18 +1661,12 @@
                 playersScroll.appendChild(playerDiv);
             });
 
-            log(`✅ Rendered ${addedPlayerIds.size} available players`);
+            log(`✅ Rendered ${addedPlayerIds.size} unique players`);
         }
 
+        // FIXED: Add to focus - prevent duplicates
         function addToFocus(player) {
             if (!focusedPlayers) initializeFocusState();
-            
-            const playerCount = currentGame.players.length;
-            
-            if (playerCount <= 5) {
-                log(`Auto-fill mode active - cannot manually add players`);
-                return;
-            }
             
             if (isPlayerInFocus(player.id)) {
                 log(`Player ${player.name} already in focus`);
@@ -2323,19 +1695,10 @@
         function removeFromFocus(playerId) {
             if (!focusedPlayers) return;
             
-            const playerCount = currentGame.players.length;
-            
-            if (playerCount <= 5) {
-                log(`Auto-fill mode active - cannot manually remove players`);
-                return;
-            }
-            
             if (focusedPlayers.custom1 && focusedPlayers.custom1.id === playerId) {
                 focusedPlayers.custom1 = null;
-                log(`Removed player from custom1`);
             } else if (focusedPlayers.custom2 && focusedPlayers.custom2.id === playerId) {
                 focusedPlayers.custom2 = null;
-                log(`Removed player from custom2`);
             }
 
             renderPersonalTable();
@@ -2373,93 +1736,62 @@
 
         // Game actions
         function startGame() {
-            if (!socket || !currentGame) {
-                showToast('Game not ready', 'error');
-                return;
-            }
-            
-            if (currentGame.hostId !== playerId) {
-                showToast('Only the host can start the game', 'error');
-                return;
-            }
+    if (!socket || !currentGame) {
+        showToast('Game not ready', 'error');
+        return;
+    }
+    
+    // FIXED: Handle host ID with potential timestamp
+    const isHost = currentGame.hostId === playerId || currentGame.hostId.startsWith(playerId);
+    
+    if (!isHost) {
+        showToast('Only the host can start the game', 'error');
+        return;
+    }
 
-            const settings = { startingLives: 3, deckCount: 1 };
+    const settings = { startingLives: 3, deckCount: 1 };
 
-            socket.emit('start-game', { 
-                gameId: currentGame.id,
-                settings 
-            });
-            log('🚀 Starting game...');
-        }
+    function startGame() {
+    if (!socket || !currentGame) {
+        showToast('Game not ready', 'error');
+        return;
+    }
+    
+    const isHost = currentGame.hostId === playerId || currentGame.hostId.startsWith(playerId);
+    
+    if (!isHost) {
+        showToast('Only the host can start the game', 'error');
+        return;
+    }
+
+    const settings = { startingLives: 3, deckCount: 1 };
+
+    socket.emit('start-game', { 
+        gameId: currentGame.id,
+        settings 
+    });
+    log('🚀 Starting game...');
+}
 
         function flipCard() {
-            if (!socket || !currentGame) {
-                log(`❌ Flip card failed: no socket or game`);
-                return;
-            }
-            
-            log(`🎴 Flipping card for player ${playerId}`);
+            if (!socket || !currentGame) return;
             socket.emit('flip-card', { gameId: currentGame.id });
-            
-            markPlayerAsLooked(playerId);
+            log('🎴 Flipping your card...');
         }
 
         function keepCard() {
-            if (!socket || !currentGame) {
-                log(`❌ Keep card failed: no socket or game`);
-                return;
-            }
-            
-            // Check if it's actually my turn
-            if (currentGame.currentPlayerId !== playerId) {
-                log(`❌ Keep card failed: not my turn (current: ${currentGame.currentPlayerId}, me: ${playerId})`);
-                showToast('Not your turn!', 'warning');
-                return;
-            }
-            
-            const myPlayer = currentGame.players?.find(p => p.id === playerId);
-            if (myPlayer?.card && isKing(myPlayer.card)) {
-                log('👑 Keeping King (automatic)');
-                showToast('Keeping your King! 👑', 'success');
-            } else {
-                log('✋ Keeping your card...');
-            }
-            
+            if (!socket || !currentGame) return;
             socket.emit('skip-turn', { gameId: currentGame.id });
+            log('✋ Keeping your card...');
         }
 
         function requestTrade(targetPlayerId) {
             if (!socket || !currentGame) return;
-            
-            if (!canPerformTrade()) {
-                log(`❌ Cannot perform trade right now`);
-                return;
-            }
-            
-            if (!hasPlayerLooked(targetPlayerId)) {
-                const targetPlayer = currentGame.players.find(p => p.id === targetPlayerId);
-                const targetName = targetPlayer?.name || 'Player';
-                
-                log(`🔔 ${targetName} must look at their card first!`);
-                showToast(`${targetName} must look at their card first! 👆`, 'warning');
-                
-                startNudge(targetPlayerId, `${targetName}, look at your card before trade!`);
-                return;
-            }
-            
-            log(`🔄 Requesting trade: ${playerId} → ${targetPlayerId}`);
-            
-            const myIndex = currentGame.players.findIndex(p => p.id === playerId);
-            const targetIndex = currentGame.players.findIndex(p => p.id === targetPlayerId);
-            const expectedNextIndex = (myIndex + 1) % currentGame.players.length;
-            
-            log(`🔍 Trade Debug: My index: ${myIndex}, Target index: ${targetIndex}, Expected next: ${expectedNextIndex}`);
-            log(`🔍 Current turn: ${currentGame.currentPlayerId}, My turn: ${currentGame.currentPlayerId === playerId}`);
-            
             socket.emit('trade-request', { 
                 gameId: currentGame.id,
                 targetPlayerId 
             });
+            log(`🔄 Requesting trade with player`);
         }
 
         function endRound() {
@@ -2468,10 +1800,11 @@
             log('⏰ Ending round...');
         }
 
+        // FIXED: Leave game with complete cleanup
         function leaveGame() {
             if (confirm('Are you sure you want to leave the game?')) {
                 leaveVideoCall().catch(console.error);
-                completeCleanup();
+                completeCleanup(); // Complete cleanup
                 showMainMenu();
                 log('🚪 Left game and cleaned up completely');
             }
@@ -2641,10 +1974,11 @@
             }
         }
 
-        // Initialize with clean state
+        // FIXED: Initialize with clean state
         document.addEventListener('DOMContentLoaded', function() {
-            log('🎮 Game initialized with complete features!');
+            log('🎮 Game initialized with bulletproof cleanup!');
             
+            // Initialize clean state
             initializeFocusState();
             
             const chatInput = document.getElementById('chatInput');
@@ -2660,6 +1994,7 @@
                 completeCleanup();
             });
             
+            // Handle page refresh - force complete cleanup
             window.addEventListener('beforeunload', () => {
                 if (socket) {
                     socket.removeAllListeners();

@@ -1001,14 +1001,9 @@
             };
         }
 
-        // NEW: Enhanced Gesture Detection System
+        // NEW: Gesture Detection System
         function initializeGestureHandlers(cardElement, targetPlayerId) {
-            if (!cardElement) {
-                log(`❌ No card element to initialize gestures for player ${targetPlayerId}`);
-                return;
-            }
-
-            log(`🎯 Initializing gesture handlers for player ${targetPlayerId}`);
+            if (!cardElement) return;
 
             // Touch events for mobile
             cardElement.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -1022,15 +1017,12 @@
 
             // Store player ID for gesture handling
             cardElement.dataset.playerId = targetPlayerId;
-            
-            log(`✅ Gesture handlers set for player ${targetPlayerId}`);
         }
 
         function handleTouchStart(e) {
             e.preventDefault();
             const touch = e.touches[0];
             startGesture(touch.clientX, touch.clientY, e.target);
-            log(`📱 Touch start: ${touch.clientX}, ${touch.clientY}`);
         }
 
         function handleTouchMove(e) {
@@ -1042,13 +1034,11 @@
 
         function handleTouchEnd(e) {
             e.preventDefault();
-            log(`📱 Touch end`);
             endGesture();
         }
 
         function handleMouseStart(e) {
             startGesture(e.clientX, e.clientY, e.target);
-            log(`🖱️ Mouse start: ${e.clientX}, ${e.clientY}`);
         }
 
         function handleMouseMove(e) {
@@ -1057,7 +1047,6 @@
         }
 
         function handleMouseEnd(e) {
-            log(`🖱️ Mouse end`);
             endGesture();
         }
 
@@ -1067,7 +1056,6 @@
             gestureState.startTime = Date.now();
             gestureState.isTracking = true;
             gestureState.element = element;
-            log(`🎯 Gesture started at ${x}, ${y}`);
         }
 
         function updateGesture(x, y) {
@@ -1083,7 +1071,6 @@
                 if (cardElement && deltaX > 50) {
                     cardElement.style.transform = `translateX(${Math.min(deltaX - 50, 30)}px) rotate(${Math.min((deltaX - 50) / 5, 10)}deg)`;
                     cardElement.style.opacity = '0.8';
-                    log(`👉 Swipe feedback: deltaX=${deltaX}`);
                 }
             }
         }
@@ -1094,8 +1081,6 @@
             const duration = Date.now() - gestureState.startTime;
             const cardElement = gestureState.element.closest('.card-display');
             
-            log(`🎯 Gesture ended, duration: ${duration}ms`);
-            
             if (cardElement) {
                 // Check for swipe based on transform applied during updateGesture
                 const transform = cardElement.style.transform || '';
@@ -1105,37 +1090,23 @@
                 cardElement.style.transform = '';
                 cardElement.style.opacity = '';
                 
-                // Get the player ID from the card element's dataset
                 const targetPlayerId = cardElement.dataset.playerId;
-                log(`🎯 Target player ID: ${targetPlayerId}`);
-                
-                if (!targetPlayerId) {
-                    log(`❌ No target player ID found in card element`);
-                    gestureState.isTracking = false;
-                    gestureState.element = null;
-                    return;
-                }
                 
                 if (wasSwipeRight) {
                     // Swipe right detected
-                    log(`👉 Swipe right detected for player ${targetPlayerId}`);
                     handleSwipeRight(targetPlayerId);
                 } else if (duration < 300) {
                     // Quick tap
                     if (gestureState.lastTap && Date.now() - gestureState.lastTap < 500) {
                         // Double tap - Keep card
-                        log(`👆👆 Double tap detected for player ${targetPlayerId}`);
                         handleDoubleTap(targetPlayerId);
                         gestureState.lastTap = 0;
                     } else {
                         // Single tap - Look at card
-                        log(`👆 Single tap detected for player ${targetPlayerId}`);
                         gestureState.lastTap = Date.now();
                         handleSingleTap(targetPlayerId);
                     }
                 }
-            } else {
-                log(`❌ No card element found for gesture`);
             }
             
             // Reset gesture state
@@ -1144,48 +1115,40 @@
         }
 
         function handleSwipeRight(targetPlayerId) {
-            log(`👉 Swipe feedback: Swipe right for player ${targetPlayerId}`);
-            if (targetPlayerId === playerId) {
+            log(`👉 Swipe right detected for player ${targetPlayerId}`);
+            if (targetPlayerId === socket?.id) {
                 // Check if we can trade
                 if (canPerformTrade()) {
                     const nextPlayer = getNextTradeablePlayer();
                     if (nextPlayer) {
-                        log(`🔄 Trading with ${nextPlayer.name}`);
                         requestTrade(nextPlayer.id);
                     } else {
-                        log(`❌ No valid trade target found`);
                         showToast('No valid trade target!', 'warning');
                     }
                 } else {
-                    log(`❌ Cannot trade right now`);
                     showToast('Cannot trade right now!', 'warning');
                 }
             }
         }
 
         function handleDoubleTap(targetPlayerId) {
-            log(`✅ Double tap: Processing for player ${targetPlayerId}`);
-            if (targetPlayerId === playerId) {
+            log(`👆👆 Double tap detected for player ${targetPlayerId}`);
+            if (targetPlayerId === socket?.id) {
                 if (currentGame?.currentPlayerId === targetPlayerId) {
-                    log(`✅ Double tap: It's my turn, keeping card`);
                     keepCard();
                 } else {
-                    log(`❌ Double tap: Not my turn`);
                     showToast('Not your turn!', 'warning');
                 }
             }
         }
 
         function handleSingleTap(targetPlayerId) {
-            log(`👆 Single tap: Processing for player ${targetPlayerId}`);
-            if (targetPlayerId === playerId) {
+            log(`👆 Single tap detected for player ${targetPlayerId}`);
+            if (targetPlayerId === socket?.id) {
                 const myPlayer = currentGame?.players?.find(p => p.id === targetPlayerId);
                 if (myPlayer && myPlayer.hasCard && !playerCardLooks[targetPlayerId]) {
-                    log(`👁️ Single tap: Flipping card for first look`);
                     flipCard();
                     markPlayerAsLooked(targetPlayerId);
-                } else {
-                    log(`👁️ Single tap: Player already looked or no card`);
                 }
             }
         }
@@ -1221,18 +1184,13 @@
             const tradingPhase = currentGame?.turnPhase === 'trading';
             const myPlayer = currentGame?.players?.find(p => p.id === playerId);
             
-            log(`🔍 Trade check: myTurn=${isMyTurn}, gameStarted=${gameStarted}, tradingPhase=${tradingPhase}`);
-            
             // Can't trade if I have a King
             if (myPlayer?.card && isKing(myPlayer.card)) {
-                log(`👑 Cannot trade: I have a King`);
                 showToast('Kings cannot be traded! 👑', 'warning');
                 return false;
             }
             
-            const canTrade = isMyTurn && gameStarted && tradingPhase;
-            log(`🔍 Final trade result: ${canTrade}`);
-            return canTrade;
+            return isMyTurn && gameStarted && tradingPhase;
         }
 
         function getNextTradeablePlayer() {
@@ -2061,7 +2019,6 @@
             const cardDisplay = document.createElement('div');
             cardDisplay.className = 'card-display';
             
-            // FIXED: Card visibility logic - only show other players' cards during revealing phase
             const shouldShowCard = shouldPlayerCardBeVisible(player);
             
             if (player.id === playerId) {
@@ -2094,11 +2051,15 @@
                 cardDisplay.className += ' face-down';
                 cardDisplay.textContent = '🂠';
                 
-                // Only add gesture handlers for my own card
                 if (player.id === playerId) {
                     setTimeout(() => {
                         initializeGestureHandlers(cardDisplay, player.id);
                     }, 100);
+                    
+                    cardDisplay.onclick = () => {
+                        flipCard();
+                        markPlayerAsLooked(player.id);
+                    };
                 }
                 
                 if (player.id !== playerId && !hasPlayerLooked(player.id) && player.hasCard) {
@@ -2168,19 +2129,19 @@
             return slot;
         }
 
-        // FIXED: Card visibility function - only show other players' cards during revealing phase
         function shouldPlayerCardBeVisible(player) {
-            // Always show your own card
             if (player.id === playerId) {
                 return true;
             }
             
-            // Only show other players' cards during the revealing phase at the end of the round
             if (currentGame.turnPhase === 'revealing') {
                 return true;
             }
             
-            // Don't show other players' cards during normal gameplay, even if they've looked at them
+            if (player.cardRevealed) {
+                return true;
+            }
+            
             return false;
         }
 
@@ -2259,7 +2220,6 @@
                 const miniCard = document.createElement('div');
                 miniCard.className = 'mini-card';
                 
-                // FIXED: Use the same card visibility logic
                 const shouldShowCard = shouldPlayerCardBeVisible(player);
                 
                 if (player.card && shouldShowCard) {
@@ -2393,29 +2353,15 @@
         }
 
         function flipCard() {
-            if (!socket || !currentGame) {
-                log(`❌ Flip card failed: no socket or game`);
-                return;
-            }
-            
-            log(`🎴 Flipping card for player ${playerId}`);
+            if (!socket || !currentGame) return;
             socket.emit('flip-card', { gameId: currentGame.id });
+            log('🎴 Flipping your card...');
             
             markPlayerAsLooked(playerId);
         }
 
         function keepCard() {
-            if (!socket || !currentGame) {
-                log(`❌ Keep card failed: no socket or game`);
-                return;
-            }
-            
-            // Check if it's actually my turn
-            if (currentGame.currentPlayerId !== playerId) {
-                log(`❌ Keep card failed: not my turn (current: ${currentGame.currentPlayerId}, me: ${playerId})`);
-                showToast('Not your turn!', 'warning');
-                return;
-            }
+            if (!socket || !currentGame) return;
             
             const myPlayer = currentGame.players?.find(p => p.id === playerId);
             if (myPlayer?.card && isKing(myPlayer.card)) {
@@ -2432,7 +2378,6 @@
             if (!socket || !currentGame) return;
             
             if (!canPerformTrade()) {
-                log(`❌ Cannot perform trade right now`);
                 return;
             }
             
