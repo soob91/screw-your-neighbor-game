@@ -971,6 +971,45 @@ io.on('connection', (socket) => {
   
   console.log(`User connected: ${socket.id} (Active: ${serverStats.activeConnections})`);
 
+  // AUTO-REJOIN: Check if this is a reconnecting player
+  socket.on('check-reconnect', (data) => {
+    try {
+      const { userId } = data;
+      if (userId) {
+        const existingGame = gameManager.getPlayerGame(userId);
+        if (existingGame) {
+          const player = existingGame.players.find(p => p.id === userId);
+          if (player && !player.connected) {
+            // This is a reconnecting player - auto-rejoin them
+            socket.join(existingGame.id);
+            socket.gameId = existingGame.id;
+            socket.userId = userId;
+
+            // Mark as reconnected
+            player.connected = true;
+            player.socketId = socket.id;
+            delete player.disconnectedAt;
+
+            console.log(`🔄 Auto-rejoined: ${player.name} to game ${existingGame.id}`);
+
+            // Send them back into the game
+            socket.emit('auto-rejoined', {
+              game: existingGame.getPlayerView(userId)
+            });
+
+            // Notify others they're back
+            socket.to(existingGame.id).emit('player-reconnected', {
+              playerId: userId,
+              playerName: player.name
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Reconnect error:', error);
+    }
+  });
+
   // Heartbeat for connection monitoring
   socket.on('heartbeat', (data) => {
     socket.emit('heartbeat-ack', { 
@@ -1459,23 +1498,39 @@ io.on('connection', (socket) => {
   socket.on('disconnect', (reason) => {
     serverStats.activeConnections--;
     console.log(`User disconnected: ${socket.id} (${reason}) (Active: ${serverStats.activeConnections})`);
-    
+
     if (socket.userId) {
-      contactManager.removeUser(socket.userId);
+      // For mobile disconnections, don't immediately remove from contacts
+      if (reason !== 'transport close') {
+        contactManager.removeUser(socket.userId);
+      }
     }
-    
+
     if (socket.gameId) {
       const game = gameManager.getGame(socket.gameId);
       if (game) {
         if (socket.isSpectator) {
           game.removeSpectator(socket.userId);
         } else {
-          game.handlePlayerDisconnect(socket.userId);
+          // IMPROVED: Handle mobile disconnections gracefully
+          if (reason === 'transport close') {
+            // Mobile disconnect - mark as temporarily disconnected
+            const player = game.players.find(p => p.id === socket.userId);
+            if (player) {
+              player.connected = false;
+              player.disconnectedAt = Date.now();
+              console.log(`📱 Mobile player ${player.name} temporarily disconnected`);
+            }
+          } else {
+            // Normal disconnect - handle as before
+            game.handlePlayerDisconnect(socket.userId);
+          }
         }
-        
+
         io.to(socket.gameId).emit('player-disconnected', {
           playerId: socket.userId,
-          isSpectator: socket.isSpectator || false
+          isSpectator: socket.isSpectator || false,
+          isTemporary: reason === 'transport close'
         });
 
         if (game.settings.isPublic) {
@@ -1484,7 +1539,6 @@ io.on('connection', (socket) => {
       }
     }
   });
-});
 
 // Initialize managers
 gameManager = new GameManager();

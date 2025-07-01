@@ -2797,7 +2797,7 @@ function disableAllGameButtons() {
 
                 log(`📹 Attempting to join channel: ${channelName}`);
 
-                await agoraClient.join(appId, channelName, '007eJxTYDhlHj+3eMbMaUYzO2fUvM96tvnD84WPQr6Zfnzz7l7l1kuaCgzJaalpFoYGhinJyYYmFgZGiRZpluYpFhYGpknGqUnJlhpMyRkNgYwM3dvZGRihEMRnZyhJLS4xNDJmYAAAFPwj5w==', uid);
+                await agoraClient.join(appId, channelName, null, uid);
                 log('📹 Successfully joined channel');
 
                 try {
@@ -3046,9 +3046,16 @@ function disableAllGameButtons() {
             socket.on('connect', () => {
                 log('✅ FRESH connection established! ID: ' + socket.id);
                 document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
-                
+
                 playerName = document.getElementById('playerName').value || 'Player';
-                playerId = socket.id;
+
+                // RECONNECTION: Check if we were previously in a game
+                if (playerId && currentGame) {
+                    log('🔄 Checking for reconnection...');
+                    socket.emit('check-reconnect', { userId: playerId });
+                } else {
+                    playerId = socket.id;
+                }
             });
 
             socket.on('disconnect', (reason) => {
@@ -3127,6 +3134,22 @@ function disableAllGameButtons() {
                 if (currentGame.hostId === playerId) {
                     showHostControls();
                 }
+            });
+
+            socket.on('auto-rejoined', function (data) {
+                log('🔄 Auto-rejoined game successfully!');
+                currentGame = data.game;
+                showGameContent();
+                updateGameDisplay();
+                updatePersonalTable();
+                showToast('Reconnected to game!', 'success');
+            });
+
+            socket.on('player-reconnected', function (data) {
+                log(`🔄 ${data.playerName} reconnected to game`);
+                showToast(`${data.playerName} reconnected!`, 'success');
+                updateGameDisplay();
+                updatePersonalTable();
             });
 
             socket.on('player-joined', function(data) {
