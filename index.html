@@ -3035,18 +3035,18 @@ function disableAllGameButtons() {
 
                 socket = io(serverUrl, {
                 transports: ['websocket', 'polling'],
-                timeout: 45000,  // Increased for mobile networks
+                timeout: 60000,  // 60 seconds for mobile
                 reconnection: true,
-                reconnectionDelay: 2000,  // Longer delay for mobile
-                reconnectionAttempts: 10,  // More attempts
+                reconnectionDelay: 3000,  // Wait 3 seconds before trying
+                reconnectionAttempts: 15,  // Try 15 times
                 maxReconnectionAttempts: 15,
-                reconnectionDelayMax: 10000,  // Cap the delay
+                reconnectionDelayMax: 15000,  // Max 15 second delay
                 randomizationFactor: 0.5,
                 forceNew: true,
-                // Mobile-specific settings
-                pingTimeout: 60000,
-                pingInterval: 25000,
-                upgradeTimeout: 30000
+                // Mobile-optimized settings
+                pingTimeout: 90000,  // 90 seconds for ping timeout
+                pingInterval: 30000,  // Ping every 30 seconds
+                upgradeTimeout: 45000  // 45 seconds for upgrade timeout
             });
             
             socket.on('connect', () => {
