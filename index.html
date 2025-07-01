@@ -1633,8 +1633,36 @@ function disableAllGameButtons() {
                         playerCard.classList.add('king-auto');
                     }
                 }, 100);
+
+                // ADD THIS NEW SECTION HERE:
+                setTimeout(() => {
+                    handleKingAutoAdvance(player.id);  // <-- ADD THIS LINE
+                }, 500);
             }
         }
+
+        // Auto-advance when King is revealed
+            function handleKingAutoAdvance(playerId) {
+                const player = currentGame?.players?.find(p => p.id === playerId);
+                if (!player || !player.card || !isKing(player.card)) return;
+
+                log(`👑 Auto-advancing ${player.name} (has King)`);
+
+                // If the King holder is the current player, auto-skip their turn
+                if (playerId === currentGame?.currentPlayerId) {
+                    log(`👑 Auto-skipping ${player.name}'s turn (has King)`);  // <-- FIXED
+
+                    // Add visual feedback
+                    showToast(`${player.name}'s King auto-advances! 👑`, 'success');  // <-- FIXED
+
+                    // Auto-emit skip turn after a brief delay for visual feedback
+                    setTimeout(() => {
+                        if (socket && currentGame) {
+                            socket.emit('skip-turn', { gameId: currentGame.id });
+                        }
+                    }, 1500); // 1.5 second delay so player sees the King
+                }
+            }
 
         function canPerformTrade() {
             const isMyTurn = currentGame?.currentPlayerId === playerId;
