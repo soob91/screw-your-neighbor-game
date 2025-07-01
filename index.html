@@ -2293,30 +2293,34 @@ function disableAllGameButtons() {
             const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
             const isDealerTurn = isDealer && currentGame?.currentPlayerId === playerId && currentGame?.state === 'playing';
 
+            // Replace the big banner with a small corner badge
             if (isDealerTurn) {
-                const dealerNotification = document.createElement('div');
-                dealerNotification.className = 'dealer-notification'; // Add class for easy removal
-                dealerNotification.style.cssText = `
-                    position: absolute;
-                    top: -5px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: linear-gradient(45deg, #f39c12, #e67e22);
-                    color: white;
-                    padding: 4px 12px;
-                    border-radius: 12px;
-                    font-weight: bold;
-                    font-size: 0.7rem;
-                    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.4);
-                    animation: pulse 2s infinite;
-                    z-index: 50;
-                    white-space: nowrap;
-                `;
-                dealerNotification.textContent = '🏁 DEALER TURN - Final Action!';
-                document.querySelector('.personal-table').style.position = 'relative';
-                document.querySelector('.personal-table').appendChild(dealerNotification);
+                const dealerBadge = document.createElement('div');
+                dealerBadge.className = 'dealer-badge';
+                dealerBadge.style.cssText = `
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 0.6rem;
+        box-shadow: 0 2px 6px rgba(243, 156, 18, 0.4);
+        z-index: 10;
+        animation: pulse 2s infinite;
+        border: 1px solid rgba(255,255,255,0.3);
+    `;
+                dealerBadge.textContent = '🏁 FINAL';
+
+                // Add to the center slot (current player's card area)
+                const centerSlot = document.querySelector('[data-player-id="' + playerId + '"]')?.closest('.focus-slot');
+                if (centerSlot) {
+                    centerSlot.style.position = 'relative';
+                    centerSlot.appendChild(dealerBadge);
+                }
             }
-        }
 
         function createFocusSlot(type, player, removable) {
             const slot = document.createElement('div');
