@@ -1009,7 +1009,7 @@ io.on('connection', (socket) => {
       console.error('Reconnect error:', error);
     }
   });
-
+  
   // Heartbeat for connection monitoring
   socket.on('heartbeat', (data) => {
     socket.emit('heartbeat-ack', { 
