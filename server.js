@@ -613,7 +613,7 @@ class Game {
       fromPlayerId: fromPlayer.id,  // ADD: Player IDs for client
       toPlayerId: toPlayer.id       // ADD: Player IDs for client
     };
-}
+  }
 
   async skipPlayerTurn(playerId) {
     this.updateActivity();
@@ -1009,7 +1009,7 @@ io.on('connection', (socket) => {
       console.error('Reconnect error:', error);
     }
   });
-  
+
   // Heartbeat for connection monitoring
   socket.on('heartbeat', (data) => {
     socket.emit('heartbeat-ack', { 
@@ -1539,6 +1539,7 @@ io.on('connection', (socket) => {
       }
     }
   });
+});
 
 // Initialize managers
 gameManager = new GameManager();
