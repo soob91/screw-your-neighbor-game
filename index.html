@@ -3033,14 +3033,20 @@ function disableAllGameButtons() {
                 'http://localhost:3001' :
                 window.location.origin;
 
-            socket = io(serverUrl, {
+                socket = io(serverUrl, {
                 transports: ['websocket', 'polling'],
-                timeout: 20000,
+                timeout: 45000,  // Increased for mobile networks
                 reconnection: true,
-                reconnectionDelay: 1000,
-                reconnectionAttempts: 5,
-                maxReconnectionAttempts: 10,
-                forceNew: true
+                reconnectionDelay: 2000,  // Longer delay for mobile
+                reconnectionAttempts: 10,  // More attempts
+                maxReconnectionAttempts: 15,
+                reconnectionDelayMax: 10000,  // Cap the delay
+                randomizationFactor: 0.5,
+                forceNew: true,
+                // Mobile-specific settings
+                pingTimeout: 60000,
+                pingInterval: 25000,
+                upgradeTimeout: 30000
             });
             
             socket.on('connect', () => {
@@ -3058,13 +3064,192 @@ function disableAllGameButtons() {
                 }
             });
 
+            // Mobile background/foreground handling
+            let isAppInBackground = false;
+            let reconnectOnForeground = false;
+
+            // Detect when app goes to background/foreground
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) {
+                    // App went to background
+                    isAppInBackground = true;
+                    log('📱 App went to background - preparing for potential disconnect');
+
+                    // Save current state
+                    if (currentGame && playerId) {
+                        localStorage.setItem('gameReconnectData', JSON.stringify({
+                            gameId: currentGame.id,
+                            playerId: playerId,
+                            playerName: playerName,
+                            timestamp: Date.now()
+                        }));
+                    }
+                } else {
+                    // App came back to foreground
+                    isAppInBackground = false;
+                    log('📱 App returned to foreground - checking connection');
+
+                    // Check if we need to reconnect
+                    if (socket && !socket.connected && currentGame) {
+                        log('📱 Socket disconnected while in background - attempting reconnect');
+                        reconnectOnForeground = true;
+                        attemptMobileReconnection();
+                    }
+                }
+            });
+
+            // Mobile heartbeat system functions (ADD THESE FIRST)
+            let heartbeatInterval = null;
+
+            function startMobileHeartbeat() {
+                if (heartbeatInterval) clearInterval(heartbeatInterval);
+
+                heartbeatInterval = setInterval(() => {
+                    if (socket && socket.connected && !isAppInBackground) {
+                        socket.emit('heartbeat', {
+                            timestamp: Date.now(),
+                            gameId: currentGame?.id,
+                            playerId: playerId
+                        });
+                    }
+                }, 30000); // Every 30 seconds
+            }
+
+            function stopMobileHeartbeat() {
+                if (heartbeatInterval) {
+                    clearInterval(heartbeatInterval);
+                    heartbeatInterval = null;
+                }
+            }
+
+            function attemptMobileReconnection() {
+                if (!currentGame || !playerId) {
+                    log('📱 No game state to reconnect to');
+                    return;
+                }
+
+                log('📱 Attempting mobile reconnection...');
+                showToast('Reconnecting...', 'info');
+
+                // Try to reconnect the socket
+                if (socket) {
+                    socket.removeAllListeners();
+                    socket.disconnect();
+                    socket = null;
+                }
+
+                // Create fresh connection
+                connectToServer();
+
+                // Set up one-time connection handler for reconnection
+                const reconnectHandler = () => {
+                    log('📱 Socket reconnected - checking for existing game');
+
+                    // Give server a moment to process connection
+                    setTimeout(() => {
+                        socket.emit('check-reconnect', {
+                            userId: playerId,
+                            gameId: currentGame.id
+                        });
+                    }, 500);
+
+                    // Remove this handler after use
+                    socket.off('connect', reconnectHandler);
+                };
+
+                if (socket) {
+                    socket.on('connect', reconnectHandler);
+
+                    // Add timeout for reconnection attempt
+                    setTimeout(() => {
+                        if (socket && !socket.connected) {
+                            log('📱 Mobile reconnection timeout - may need manual refresh');
+                            showToast('Connection timeout - tap refresh if needed', 'error');
+                        }
+                    }, 15000);
+                }
+            }
+
+            // Network change detection for mobile
+            window.addEventListener('online', function () {
+                log('📱 Network connection restored');
+                if (socket && !socket.connected && currentGame) {
+                    log('📱 Attempting reconnection after network restoration');
+                    setTimeout(() => {
+                        attemptMobileReconnection();
+                    }, 1000);
+                }
+            });
+
+            window.addEventListener('offline', function () {
+                log('📱 Network connection lost');
+                showToast('Network connection lost - will reconnect automatically', 'warning');
+            });
+
+            // Enhanced disconnect handler (REPLACES existing socket.on('disconnect'))
             socket.on('disconnect', (reason) => {
                 log(`❌ Disconnected: ${reason}`);
                 document.getElementById('connectionStatus').innerHTML = '🔴 Disconnected';
-                
+
+                // Stop heartbeat when disconnected
+                stopMobileHeartbeat();
+
+                // Handle mobile-specific disconnect reasons
+                if (reason === 'transport close' || reason === 'ping timeout' || reason === 'transport error') {
+                    log('📱 Mobile-style disconnect detected');
+
+                    if (!isAppInBackground && currentGame) {
+                        // Immediate reconnection attempt for foreground disconnects
+                        showToast('Connection lost - reconnecting...', 'warning');
+                        setTimeout(() => {
+                            if (!socket || !socket.connected) {
+                                log('📱 Auto-reconnecting after mobile disconnect');
+                                attemptMobileReconnection();
+                            }
+                        }, 2000);
+                    } else {
+                        // Flag for reconnection when app comes back to foreground
+                        reconnectOnForeground = true;
+                        log('📱 Will reconnect when app returns to foreground');
+                    }
+                } else {
+                    // Handle other disconnect reasons
+                    log(`📱 Non-mobile disconnect: ${reason}`);
+                    if (currentGame) {
+                        showToast('Disconnected - trying to reconnect...', 'error');
+                        setTimeout(() => {
+                            if (!socket || !socket.connected) {
+                                attemptMobileReconnection();
+                            }
+                        }, 3000);
+                    }
+                }
+
                 if (isVideoJoined) {
                     leaveVideoCall().catch(console.error);
                 }
+            });
+
+            // Enhanced connect handler (UPDATE existing socket.on('connect'))
+            socket.on('connect', () => {
+                log('✅ FRESH connection established! ID: ' + socket.id);
+                document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
+
+                playerName = document.getElementById('playerName').value || 'Player';
+
+                // Start mobile heartbeat
+                startMobileHeartbeat();
+
+                // RECONNECTION: Check if we were previously in a game
+                if (playerId && currentGame) {
+                    log('🔄 Checking for reconnection...');
+                    socket.emit('check-reconnect', { userId: playerId });
+                } else {
+                    playerId = socket.id;
+                }
+
+                // Clear reconnection flag
+                reconnectOnForeground = false;
             });
 
             socket.on('connect_error', (error) => {
@@ -3134,6 +3319,14 @@ function disableAllGameButtons() {
                 if (currentGame.hostId === playerId) {
                     showHostControls();
                 }
+            });
+
+            // Add heartbeat response handler
+            socket.on('heartbeat-ack', (data) => {
+                // Update connection status to show healthy connection
+                document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
+                // Optional: log successful heartbeat (uncomment for debugging)
+                // log('💓 Heartbeat acknowledged');
             });
 
             socket.on('auto-rejoined', function (data) {
