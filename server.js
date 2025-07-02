@@ -1409,6 +1409,21 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('trade-request', async (data) => {
+    try {
+      const { targetPlayerId } = data;
+      const game = gameManager.getGame(socket.gameId);
+      if (!game) throw new Error('Game not found');
+
+      const result = await game.requestTrade(socket.userId, targetPlayerId);
+      sendGameUpdateToAll(socket.gameId, 'trade-completed', { result });
+
+    } catch (error) {
+      serverStats.errors++;
+      socket.emit('error', { message: error.message });
+    }
+  });
+
   socket.on('dealer-skip-trade', async () => {
     try {
       const game = gameManager.getGame(socket.gameId);
