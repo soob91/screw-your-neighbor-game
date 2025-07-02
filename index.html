@@ -1251,14 +1251,6 @@
                 document.querySelectorAll('.menu-screen').forEach(el => el.classList.add('hidden'));
                 document.getElementById('quick-match').classList.remove('hidden');
 
-                setTimeout(() => {
-                    connectToServer();
-                    setTimeout(() => {
-                        createPublicGame();
-                    }, 1000);
-                }, 100);
-            }
-
         function addChatMessage(playerName, message) {
             const chatMessages = document.getElementById('chatMessages');
             if (chatMessages) {
