@@ -1246,11 +1246,6 @@
             }
         }
 
-        function showQuickMatch() {
-                completeCleanup();
-                document.querySelectorAll('.menu-screen').forEach(el => el.classList.add('hidden'));
-                document.getElementById('quick-match').classList.remove('hidden');
-
         function addChatMessage(playerName, message) {
             const chatMessages = document.getElementById('chatMessages');
             if (chatMessages) {
@@ -2326,6 +2321,7 @@ function disableAllGameButtons() {
                     centerSlot.appendChild(dealerBadge);
                 }
             }
+        } 
 
         function createFocusSlot(type, player, removable) {
             const slot = document.createElement('div');
