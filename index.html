@@ -3316,6 +3316,24 @@ function disableAllGameButtons() {
                 }
             });
 
+            socket.on('dealer-king-auto-end', function (data) {
+                log('🏁 Round auto-ended - dealer had revealed King');
+                currentGame = data.game;
+
+                updateGameDisplay();
+                updatePersonalTable();
+
+                showToast('Round ended - dealer has King! 👑', 'warning');
+
+                // Auto-trigger round end UI
+                setTimeout(() => {
+                    if (currentGame.turnPhase === 'revealing') {
+                        log('🎯 Triggering round end after dealer King auto-end');
+                        socket.emit('end-round', { gameId: currentGame.id });
+                    }
+                }, 1500);
+            });
+
             socket.on('private-game-created', function(data) {
                 log('🎮 FRESH private game created! ID: ' + data.game.id);
                 currentGame = data.game;

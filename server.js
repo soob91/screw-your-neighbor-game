@@ -1339,12 +1339,34 @@ io.on('connection', (socket) => {
   });
 
   // Game actions
-  socket.on('skip-turn', async () => {
+  socket.on('skip-turn', async (data) => {
     try {
       const game = gameManager.getGame(socket.gameId);
       if (!game) throw new Error('Game not found');
 
       const result = await game.skipPlayerTurn(socket.userId);
+
+      // NEW: Check if next player is dealer with revealed King
+      const activePlayers = game.players.filter(p => p.lives > 0);
+      const dealer = activePlayers[game.dealerIndex];
+      const nextPlayer = activePlayers[game.currentPlayerIndex];
+
+      if (nextPlayer && nextPlayer.id === dealer.id &&
+        dealer.card && dealer.card.value === 'K' && dealer.cardRevealed) {
+
+        console.log(`🏁 AUTO-ENDING: ${game.players.find(p => p.id === socket.userId)?.name} kept card, dealer has revealed King`);
+
+        // Force round to end
+        game.turnPhase = 'revealing';
+
+        sendGameUpdateToAll(socket.gameId, 'dealer-king-auto-end', {
+          message: 'Round ends - dealer has revealed King!',
+          result
+        });
+        return;
+      }
+
+      // Normal turn skip logic
       sendGameUpdateToAll(socket.gameId, 'turn-skipped', {
         playerId: socket.userId,
         playerName: game.players.find(p => p.id === socket.userId)?.name,
@@ -1352,23 +1374,7 @@ io.on('connection', (socket) => {
       });
 
     } catch (error) {
-      serverStats.errors++;
-      socket.emit('error', { message: error.message });
-    }
-  });
-
-  socket.on('trade-request', async (data) => {
-    try {
-      const { targetPlayerId } = data;
-      const game = gameManager.getGame(socket.gameId);
-      if (!game) throw new Error('Game not found');
-
-      const result = await game.requestTrade(socket.userId, targetPlayerId);
-      sendGameUpdateToAll(socket.gameId, 'trade-completed', { result });
-
-    } catch (error) {
-      serverStats.errors++;
-      socket.emit('error', { message: error.message });
+      // error handling...
     }
   });
 
