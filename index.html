@@ -3037,6 +3037,7 @@ function disableAllGameButtons() {
         }
 
         // Menu navigation
+
         function showMainMenu() {
             completeCleanup();
             document.querySelectorAll('.menu-screen, #gameContent').forEach(el => el.classList.add('hidden'));
@@ -4183,22 +4184,22 @@ function disableAllGameButtons() {
             }
         });
 
-        // Memory cleanup
-        setInterval(() => {
-            const gameMessages = document.getElementById('gameMessages');
-            if (gameMessages && gameMessages.children.length > 100) {
-                while (gameMessages.children.length > 50) {
-                    gameMessages.removeChild(gameMessages.firstChild);
+            // Memory cleanup
+            setInterval(() => {
+                const gameMessages = document.getElementById('gameMessages');
+                if (gameMessages && gameMessages.children.length > 100) {
+                    while (gameMessages.children.length > 50) {
+                        gameMessages.removeChild(gameMessages.firstChild);
+                    }
                 }
-            }
-            
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages && chatMessages.children.length > 50) {
-                while (chatMessages.children.length > 25) {
-                    chatMessages.removeChild(chatMessages.firstChild);
+
+                const chatMessages = document.getElementById('chatMessages');
+                if (chatMessages && chatMessages.children.length > 50) {
+                    while (chatMessages.children.length > 25) {
+                        chatMessages.removeChild(chatMessages.firstChild);
+                    }
                 }
-            }
-        }, 30000);
+            }, 30000);
     </script>
 </body>
 </html>
