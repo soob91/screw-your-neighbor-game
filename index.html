@@ -1261,19 +1261,6 @@
         }
 
         function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 3000);
-        }
-
-        function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.textContent = message;
@@ -1608,9 +1595,22 @@ function disableAllGameButtons() {
                 return player && player.card && isKing(player.card);
         }
 
-        function handleKingAutoReveal(player) {
-            if (shouldAutoRevealKing(player)) {
-                log(`👑 AUTO-REVEALING King for ${player.name}`);
+                function handleKingAutoReveal(player) {
+                    if (shouldAutoRevealKing(player)) {
+                        // Prevent multiple auto-reveals of the same King
+                        const autoRevealKey = `${player.id}-king-revealed`;
+                        if (window.autoRevealedKings && window.autoRevealedKings[autoRevealKey]) {
+                            log(`👑 King already auto-revealed for ${player.name} - skipping`);
+                            return;
+                        }
+
+                        // Initialize tracking if needed
+                        if (!window.autoRevealedKings) {
+                            window.autoRevealedKings = {};
+                        }
+                        window.autoRevealedKings[autoRevealKey] = true;
+
+                        log(`👑 AUTO-REVEALING King for ${player.name}`);
         
                 // Mark as revealed for all players to see
                 player.cardRevealed = true;
@@ -1626,17 +1626,14 @@ function disableAllGameButtons() {
                 markPlayerAsLooked(player.id);
                 showToast(`${player.name} has a King! 👑`, 'warning');
         
-                // Add visual King reveal animation
+                // IMPROVED: Only auto-advance if it's actually their turn AND we're in trading phase
                 setTimeout(() => {
-                    const playerCard = document.querySelector(`[data-player-id="${player.id}"] .card-display`);
-                    if (playerCard) {
-                        playerCard.classList.add('king-auto');
+                    if (currentGame?.currentPlayerId === player.id &&
+                        (currentGame?.turnPhase === 'trading' || currentGame?.turnPhase === 'dealer-turn')) {
+                        handleKingAutoAdvance(player.id);
+                    } else {
+                        log(`👑 Not auto-advancing ${player.name} - not their turn or wrong phase`);
                     }
-                }, 100);
-
-                // ADD THIS NEW SECTION HERE:
-                setTimeout(() => {
-                    handleKingAutoAdvance(player.id);  // <-- ADD THIS LINE
                 }, 500);
             }
         }
@@ -1648,20 +1645,32 @@ function disableAllGameButtons() {
 
                 log(`👑 Auto-advancing ${player.name} (has King)`);
 
-                // If the King holder is the current player, auto-skip their turn
-                if (playerId === currentGame?.currentPlayerId) {
-                    log(`👑 Auto-skipping ${player.name}'s turn (has King)`);  // <-- FIXED
-
-                    // Add visual feedback
-                    showToast(`${player.name}'s King auto-advances! 👑`, 'success');  // <-- FIXED
-
-                    // Auto-emit skip turn after a brief delay for visual feedback
-                    setTimeout(() => {
-                        if (socket && currentGame) {
-                            socket.emit('skip-turn', { gameId: currentGame.id });
-                        }
-                    }, 1500); // 1.5 second delay so player sees the King
+                // Check if it's actually this player's turn
+                if (playerId !== currentGame?.currentPlayerId) {
+                    log(`👑 Not ${player.name}'s turn - skipping auto-advance`);
+                    return;
                 }
+
+                // Check if we're in the right phase
+                if (currentGame?.turnPhase !== 'trading' && currentGame?.turnPhase !== 'dealer-turn') {
+                    log(`👑 Wrong phase (${currentGame?.turnPhase}) - skipping auto-advance`);
+                    return;
+                }
+
+                log(`👑 Auto-skipping ${player.name}'s turn (has King)`);
+
+                // Add visual feedback
+                showToast(`${player.name}'s King auto-advances! 👑`, 'success');
+
+                // Auto-emit skip turn after a brief delay for visual feedback
+                setTimeout(() => {
+                    if (socket && currentGame && currentGame.currentPlayerId === playerId) {
+                        log(`👑 Emitting skip-turn for ${player.name}`);
+                        socket.emit('skip-turn', { gameId: currentGame.id });
+                    } else {
+                        log(`👑 Conditions changed - not emitting skip-turn`);
+                    }
+                }, 1500);
             }
 
         function canPerformTrade() {
@@ -1787,9 +1796,10 @@ function disableAllGameButtons() {
         }
 
         function resetCardLooks() {
-            playerCardLooks = {};
-            log('🔄 Reset all card look tracking');
-        }
+                playerCardLooks = {};
+                window.autoRevealedKings = {}; // Add this line
+                log('🔄 Reset all card look tracking and King reveals'); // Updated log message
+            }
 
         // Nudge System
         function startNudge(playerId, reason = 'Look at your card') {
@@ -2107,78 +2117,93 @@ function disableAllGameButtons() {
         }
 
         function autoFillAllPlayers(myPlayerIndex, playerCount) {
-            const players = currentGame.players;
-            
-            // Deduplicate players by ID to prevent duplicate issues
-            const uniquePlayers = [];
-            const seenIds = new Set();
-            
-            players.forEach(player => {
-                if (!seenIds.has(player.id)) {
-                    uniquePlayers.push(player);
-                    seenIds.add(player.id);
-                }
-            });
-            
-            log(`🔧 Deduplication: ${players.length} players -> ${uniquePlayers.length} unique players`);
-            
-            // Update currentGame with deduplicated players
-            currentGame.players = uniquePlayers;
-            
-            // Recalculate indices with clean player list
-            const cleanMyPlayerIndex = uniquePlayers.findIndex(p => p.id === playerId);
-            const cleanPlayerCount = uniquePlayers.length;
-            
-            if (cleanMyPlayerIndex === -1) {
-                log(`❌ Cannot find myself in clean players list`);
-                return;
-            }
-            
-            focusedPlayers.currentTurn = uniquePlayers[cleanMyPlayerIndex];
-            
-            const leftNeighborIndex = (cleanMyPlayerIndex - 1 + cleanPlayerCount) % cleanPlayerCount;
-            const rightNeighborIndex = (cleanMyPlayerIndex + 1) % cleanPlayerCount;
-            
-            // Smart arrangement: prioritize living players for neighbors
-            const alivePlayers = uniquePlayers.filter(p => p.lives > 0);
-            const deadPlayers = uniquePlayers.filter(p => p.lives <= 0);
+                const players = currentGame.players;
 
-            if (alivePlayers.length > 1) {
-                // Find my position among alive players
-                const myAliveIndex = alivePlayers.findIndex(p => p.id === playerId);
-                const aliveCount = alivePlayers.length;
-    
-                if (myAliveIndex !== -1) {
-                    const leftAliveIndex = (myAliveIndex - 1 + aliveCount) % aliveCount;
-                    const rightAliveIndex = (myAliveIndex + 1) % aliveCount;
-        
-                    focusedPlayers.leftNeighbor = alivePlayers[leftAliveIndex];
-                    focusedPlayers.rightNeighbor = alivePlayers[rightAliveIndex];
-        
-                    // Fill custom slots with remaining alive players, then dead players
-                    const otherAlivePlayers = alivePlayers.filter((p, index) => 
-                        index !== myAliveIndex && 
-                        index !== leftAliveIndex && 
-                        index !== rightAliveIndex
-                    );
-        
-                    const customPlayers = [...otherAlivePlayers, ...deadPlayers];
-                    focusedPlayers.custom1 = customPlayers[0] || null;
-                    focusedPlayers.custom2 = customPlayers[1] || null;
+                // Deduplicate players by ID to prevent duplicate issues
+                const uniquePlayers = [];
+                const seenIds = new Set();
+
+                players.forEach(player => {
+                    if (!seenIds.has(player.id)) {
+                        uniquePlayers.push(player);
+                        seenIds.add(player.id);
+                    }
+                });
+
+                log(`🔧 Deduplication: ${players.length} players -> ${uniquePlayers.length} unique players`);
+
+                // Update currentGame with deduplicated players
+                currentGame.players = uniquePlayers;
+
+                // Recalculate indices with clean player list
+                const cleanMyPlayerIndex = uniquePlayers.findIndex(p => p.id === playerId);
+                const cleanPlayerCount = uniquePlayers.length;
+
+                if (cleanMyPlayerIndex === -1) {
+                    log(`❌ Cannot find myself in clean players list`);
+                    return;
                 }
-            } else {
-                // Fallback to original logic if somehow we have no alive players
-                focusedPlayers.leftNeighbor = uniquePlayers[leftNeighborIndex];
-                focusedPlayers.rightNeighbor = uniquePlayers[rightNeighborIndex];
-    
-                const remainingPlayers = uniquePlayers.filter((p, index) => 
-                    index !== cleanMyPlayerIndex && 
-                    index !== leftNeighborIndex && 
-                    index !== rightNeighborIndex
-                );
-    
-                focusedPlayers.custom1 = remainingPlayers[0] || null;
-                focusedPlayers.custom2 = remainingPlayers[1] || null;
+
+                focusedPlayers.currentTurn = uniquePlayers[cleanMyPlayerIndex];
+
+                const leftNeighborIndex = (cleanMyPlayerIndex - 1 + cleanPlayerCount) % cleanPlayerCount;
+                const rightNeighborIndex = (cleanMyPlayerIndex + 1) % cleanPlayerCount;
+
+                // Smart arrangement: prioritize living players for neighbors
+                const alivePlayers = uniquePlayers.filter(p => p.lives > 0);
+                const deadPlayers = uniquePlayers.filter(p => p.lives <= 0);
+
+                if (alivePlayers.length > 1) {
+                    // Find my position among alive players
+                    const myAliveIndex = alivePlayers.findIndex(p => p.id === playerId);
+                    const aliveCount = alivePlayers.length;
+
+                    if (myAliveIndex !== -1) {
+                        if (aliveCount === 2) {
+                            // 🎯 FIXED: Special 2-player layout - no duplicates!
+                            const otherPlayer = alivePlayers.find(p => p.id !== playerId);
+                            focusedPlayers.leftNeighbor = null;
+                            focusedPlayers.rightNeighbor = otherPlayer;
+                            focusedPlayers.custom1 = null;
+                            focusedPlayers.custom2 = null;
+
+                            log(`🎯 2-player layout: Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${otherPlayer?.name}`);
+                        } else {
+                            // Normal logic for 3+ players
+                            const leftAliveIndex = (myAliveIndex - 1 + aliveCount) % aliveCount;
+                            const rightAliveIndex = (myAliveIndex + 1) % aliveCount;
+
+                            focusedPlayers.leftNeighbor = alivePlayers[leftAliveIndex];
+                            focusedPlayers.rightNeighbor = alivePlayers[rightAliveIndex];
+
+                            // Fill custom slots with remaining alive players, then dead players
+                            const otherAlivePlayers = alivePlayers.filter((p, index) =>
+                                index !== myAliveIndex &&
+                                index !== leftAliveIndex &&
+                                index !== rightAliveIndex
+                            );
+
+                            const customPlayers = [...otherAlivePlayers, ...deadPlayers];
+                            focusedPlayers.custom1 = customPlayers[0] || null;
+                            focusedPlayers.custom2 = customPlayers[1] || null;
+
+                            log(`🎯 Multi-player layout: Left=${alivePlayers[leftAliveIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${alivePlayers[rightAliveIndex]?.name}`);
+                        }
+                    }
+                } else {
+                    // Fallback to original logic if somehow we have no alive players
+                    focusedPlayers.leftNeighbor = uniquePlayers[leftNeighborIndex];
+                    focusedPlayers.rightNeighbor = uniquePlayers[rightNeighborIndex];
+
+                    const remainingPlayers = uniquePlayers.filter((p, index) =>
+                        index !== cleanMyPlayerIndex &&
+                        index !== leftNeighborIndex &&
+                        index !== rightNeighborIndex
+                    );
+
+                    focusedPlayers.custom1 = remainingPlayers[0] || null;
+                    focusedPlayers.custom2 = remainingPlayers[1] || null;
+                }
             }
             
             log(`🎯 Clean personal view: Left=${uniquePlayers[leftNeighborIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${uniquePlayers[rightNeighborIndex]?.name}`);
@@ -2382,11 +2407,7 @@ function disableAllGameButtons() {
             if (player.id === playerId) {
                 log(`🎴 My card state: hasCard=${player.hasCard}, card=${player.card ? `${player.card.value}${player.card.suit}` : 'null'}, revealed=${player.cardRevealed}, shouldShow=${shouldShowCard}`);
             }
-            
-            if (shouldAutoRevealKing(player)) {
-                handleKingAutoReveal(player);
-            }
-            
+               
             if (player.card && shouldShowCard && player.lives > 0) {
                 const card = player.card;
                 const isRed = card.suit === '♥' || card.suit === '♦';
@@ -4114,17 +4135,15 @@ function disableAllGameButtons() {
                             }
 
                             window.addEventListener('beforeunload', () => {
-                                completeCleanup();
-                            });
-
-                            window.addEventListener('beforeunload', () => {
-                                if (socket) {
-                                    socket.removeAllListeners();
-                                    socket.disconnect();
-                                }
-                                if (isVideoJoined) {
-                                    leaveVideoCall().catch(console.error);
-                                }
+                                    completeCleanup();
+                                    if (socket) {
+                                        socket.removeAllListeners();
+                                        socket.disconnect();
+                                    }
+                                    if (isVideoJoined) {
+                                        leaveVideoCall().catch(console.error);
+                                    }
+                                });
 
         // Initialize with clean state
         document.addEventListener('DOMContentLoaded', function() {
@@ -4162,8 +4181,6 @@ function disableAllGameButtons() {
                     }
                 });
             }
-            
-            });
         });
 
         // Memory cleanup
