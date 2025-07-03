@@ -3625,6 +3625,13 @@
                 log(`⏭️ Player ${data.playerId} ${action} and ended turn`);
                 currentGame = data.game;
 
+                // Check if NEW current player has King and auto-advance
+                const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
+                if (currentPlayer && shouldAutoRevealKing(currentPlayer)) {
+                    log(`👑 NEW current player ${currentPlayer.name} has King - auto-advancing`);
+                    setTimeout(() => handleKingAutoAdvance(currentPlayer.id), 500);
+                }
+
                 // Check if turn went past dealer (shouldn't happen)
                 const dealer = currentGame.players?.find(p => p.id === currentGame.dealerId);
                 const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
