@@ -2885,7 +2885,7 @@ function disableAllGameButtons() {
 
         async function handleUserPublished(user, mediaType) {
             log(`📹 ${user.uid} started ${mediaType}`);
-            
+        function handleUserPublished(user, mediaType) {
             try {
                 await agoraClient.subscribe(user, mediaType);
                 
