@@ -3634,7 +3634,6 @@
 
                 // Check if turn went past dealer (shouldn't happen)
                 const dealer = currentGame.players?.find(p => p.id === currentGame.dealerId);
-                const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
 
                 if (dealer && data.playerId === dealer.id) {
                     log('🎯 Dealer just acted - round should end now!');
