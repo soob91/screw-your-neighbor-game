@@ -2936,7 +2936,7 @@
 
                 log(`📹 Attempting to join channel: ${channelName}`);
 
-                await agoraClient.join(appId, channelName, null, uid);
+                await agoraClient.join(appId, channelName, '007eJxTYCi5bLt+duriRK4T85Nu9B/k8hCvZnPIt9rqIntDbY3SozIFhuS01DQLQwPDlORkQxMLA6NEizRL8xQLCwPTJOPUpGTL1N+pGQ2BjAyHIuYzMTJAIIjPzlCSWlxiaGTMwAAAaO4flA==', uid);
                 log('📹 Successfully joined channel');
 
                 try {
@@ -3563,6 +3563,13 @@
                             setTimeout(() => handleKingAutoReveal(player), 500);
                         }
                     });
+                }
+
+                // ADD THIS: Check if current player has King and auto-advance
+                const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
+                if (currentPlayer && shouldAutoRevealKing(currentPlayer)) {
+                    log(`👑 Current player ${currentPlayer.name} has King after cards dealt - auto-advancing`);
+                    setTimeout(() => handleKingAutoAdvance(currentPlayer.id), 1500);
                 }
 
                 updateGameDisplay();
