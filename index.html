@@ -4085,54 +4085,69 @@
         // MODIFY the existing handleJackBlock function to auto-advance
             // REPLACE the existing handleJackBlock function with this enhanced version:
 
-            function handleJackBlock(fromPlayerId, toPlayerId) {
-                if (!fromPlayerId || !toPlayerId) return;
+                function handleJackBlock(fromPlayerId, toPlayerId) {
+                    if (!fromPlayerId || !toPlayerId) return;
 
-                // Find the actual player objects from the game state
-                const fromPlayer = currentGame?.players?.find(p => p.id === fromPlayerId);
-                const toPlayer = currentGame?.players?.find(p => p.id === toPlayerId);
+                    // Find the actual player objects from the game state
+                    const fromPlayer = currentGame?.players?.find(p => p.id === fromPlayerId);
+                    const toPlayer = currentGame?.players?.find(p => p.id === toPlayerId);
 
-                if (!fromPlayer || !toPlayer) {
-                    log(`❌ Could not find players for Jack block: ${fromPlayerId} -> ${toPlayerId}`);
-                    return;
-                }
+                    if (!fromPlayer || !toPlayer) {
+                        log(`❌ Could not find players for Jack block: ${fromPlayerId} -> ${toPlayerId}`);
+                        return;
+                    }
 
-                log(`🃏 ${toPlayer.name}'s Jack blocks ${fromPlayer.name} - SCREW YOU!`);
+                    log(`🃏 ${toPlayer.name}'s Jack blocks ${fromPlayer.name} - SCREW YOU!`);
 
-                // 1. Mark the Jack holder as having revealed their card to everyone
-                toPlayer.cardRevealed = true;
-                markPlayerAsLooked(toPlayer.id);
+                    // 1. Mark the Jack holder as having revealed their card to everyone
+                    toPlayer.cardRevealed = true;
+                    markPlayerAsLooked(toPlayer.id);
 
-                // 2. Show dramatic "SCREW YOU!" message
-                showJackScrewYouMessage(fromPlayer.name, toPlayer.name);
+                    // 2. Show dramatic "SCREW YOU!" message
+                    showJackScrewYouMessage(fromPlayer.name, toPlayer.name);
 
-                // 3. Add special Jack reveal animation to the card
-                setTimeout(() => {
-                    addJackRevealAnimation(toPlayer.id);
-                }, 100);
-
-                // 4. Show toast notification
-                showToast(`${toPlayer.name} blocks with a Jack! 🃏`, 'warning');
-
-                // 🆕 5. NEW: Auto-advance the Jack holder after the animation
-                // Check if it's the Jack holder's turn to auto-advance them
-                if (currentGame?.currentPlayerId === toPlayer.id) {
-                    log(`🃏 Auto-advancing ${toPlayer.name} after Jack block`);
-
-                    // Wait for the dramatic animation to finish, then auto-advance
+                    // 3. Add special Jack reveal animation to the card
                     setTimeout(() => {
-                        if (socket && currentGame && currentGame.currentPlayerId === toPlayer.id) {
-                            log(`🃏 Emitting skip-turn for Jack holder ${toPlayer.name}`);
-                            socket.emit('skip-turn', { gameId: currentGame.id });
-                            showToast(`${toPlayer.name}'s Jack auto-advances! 🃏`, 'success');
-                        } else {
-                            log(`🃏 Conditions changed - not auto-advancing Jack holder`);
+                        addJackRevealAnimation(toPlayer.id);
+                    }, 100);
+
+                    // 4. Show toast notification
+                    showToast(`${toPlayer.name} blocks with a Jack! 🃏`, 'warning');
+
+                    // 🆕 5. FIXED: Auto-advance logic - monitor for Jack holder's turn
+                    log(`🃏 Setting up auto-advance monitor for Jack holder ${toPlayer.name}`);
+
+                    // Set up a monitoring function that will auto-advance when it becomes the Jack holder's turn
+                    const jackAutoAdvanceMonitor = () => {
+                        // Check if it's now the Jack holder's turn
+                        if (currentGame?.currentPlayerId === toPlayer.id && currentGame?.state === 'playing') {
+                            log(`🃏 Jack holder ${toPlayer.name}'s turn detected - auto-advancing!`);
+
+                            // Auto-advance after animation completes
+                            setTimeout(() => {
+                                if (socket && currentGame && currentGame.currentPlayerId === toPlayer.id) {
+                                    log(`🃏 Emitting skip-turn for Jack holder ${toPlayer.name}`);
+                                    socket.emit('skip-turn', { gameId: currentGame.id });
+                                    showToast(`${toPlayer.name}'s Jack auto-advances! 🃏`, 'success');
+                                } else {
+                                    log(`🃏 Conditions changed - not auto-advancing Jack holder`);
+                                }
+                            }, 1000); // Shorter delay since they already saw the animation
+
+                            // Clear the monitor
+                            clearInterval(monitorInterval);
                         }
-                    }, 3500); // Wait for "SCREW YOU" animation to finish (3 seconds) + small buffer
-                } else {
-                    log(`🃏 Not ${toPlayer.name}'s turn - no auto-advance needed`);
+                    };
+
+                    // Start monitoring for the Jack holder's turn (check every 500ms for up to 10 seconds)
+                    const monitorInterval = setInterval(jackAutoAdvanceMonitor, 500);
+
+                    // Safety cleanup after 10 seconds
+                    setTimeout(() => {
+                        clearInterval(monitorInterval);
+                        log(`🃏 Jack auto-advance monitor cleanup for ${toPlayer.name}`);
+                    }, 10000);
                 }
-            }
 
             // ALTERNATIVE: If you want it even faster, change the timeout to 2000ms instead of 3500ms
             // The dramatic message shows for 2.5 seconds, so 2000ms would overlap slightly but still look good
