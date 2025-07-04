@@ -3735,11 +3735,24 @@
                 }
             });
 
+            // 1. MODIFY the existing 'game-finished' event handler
+            // REPLACE the existing socket.on('game-finished') with this:
+
             socket.on('game-finished', function (data) {
                 log(`🎉 Game finished!`);
                 currentGame = data.game;
 
-                if (data.winner) {
+                // NEW: Check for tie game first
+                if (data.tie) {
+                    // Show tie game announcement  
+                    showTieAnnouncement(data.tiedPlayers || []);
+                    showToast(`🤝 TIE GAME!`, 'warning');
+
+                    // Disable all game buttons except Leave
+                    disableAllGameButtons();
+                }
+                // Original winner logic
+                else if (data.winner) {
                     // Show big winner announcement
                     showWinnerAnnouncement(data.winner.name);
                     showToast(`🏆 ${data.winner.name} Wins the Game!`, 'success');
@@ -3755,6 +3768,84 @@
                     leaveVideoCall().catch(console.error);
                 }, 10000); // Give more time to celebrate
             });
+
+            // 2. ADD this new function for tie announcements
+            function showTieAnnouncement(tiedPlayers = []) {
+                // Create big tie overlay
+                const tieOverlay = document.createElement('div');
+                tieOverlay.className = 'tie-announcement';
+                tieOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.5s ease;
+    `;
+
+                const tieContent = document.createElement('div');
+                tieContent.style.cssText = `
+        background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        color: white;
+        padding: 40px 60px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        animation: bounceIn 0.6s ease;
+    `;
+
+                // Build tied players text
+                let tiedPlayersText = '';
+                if (tiedPlayers.length > 0) {
+                    const playerNames = tiedPlayers.map(p => p.name || p).join(' & ');
+                    tiedPlayersText = `<p style="font-size: 1.2rem; margin: 10px 0 0 0; opacity: 0.9;">${playerNames} tied!</p>`;
+                }
+
+                tieContent.innerHTML = `
+        <h1 style="font-size: 3rem; margin: 0 0 20px 0;">🤝</h1>
+        <h2 style="font-size: 2rem; margin: 0 0 10px 0;">TIE GAME!</h2>
+        ${tiedPlayersText}
+        <button onclick="closeTieAnnouncement()" style="
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+        ">Continue</button>
+    `;
+
+                tieOverlay.appendChild(tieContent);
+                document.body.appendChild(tieOverlay);
+            }
+
+            // 3. ADD this function to close tie announcement
+            function closeTieAnnouncement() {
+                const overlay = document.querySelector('.tie-announcement');
+                if (overlay) {
+                    overlay.remove();
+                }
+            }
+
+            // 4. SERVER-SIDE: This is what your server should send for a tie:
+            // When server detects final 2 players have same card value:
+            /*
+            socket.emit('game-finished', {
+                game: currentGame,
+                tie: true,
+                tiedPlayers: [
+                    { id: 'player1', name: 'Alice' },
+                    { id: 'player2', name: 'Bob' }
+                ]
+            });
+            */
 
             socket.on('chat-message', function (data) {
                 addChatMessage(data.playerName || 'Unknown', data.message);
@@ -3991,35 +4082,60 @@
         }
 
         // ADD this new function to handle Jack blocks dramatically:
-        function handleJackBlock(fromPlayerId, toPlayerId) {
-            if (!fromPlayerId || !toPlayerId) return;
+        // MODIFY the existing handleJackBlock function to auto-advance
+            // REPLACE the existing handleJackBlock function with this enhanced version:
 
-            // Find the actual player objects from the game state
-            const fromPlayer = currentGame?.players?.find(p => p.id === fromPlayerId);
-            const toPlayer = currentGame?.players?.find(p => p.id === toPlayerId);
+            function handleJackBlock(fromPlayerId, toPlayerId) {
+                if (!fromPlayerId || !toPlayerId) return;
 
-            if (!fromPlayer || !toPlayer) {
-                log(`❌ Could not find players for Jack block: ${fromPlayerId} -> ${toPlayerId}`);
-                return;
+                // Find the actual player objects from the game state
+                const fromPlayer = currentGame?.players?.find(p => p.id === fromPlayerId);
+                const toPlayer = currentGame?.players?.find(p => p.id === toPlayerId);
+
+                if (!fromPlayer || !toPlayer) {
+                    log(`❌ Could not find players for Jack block: ${fromPlayerId} -> ${toPlayerId}`);
+                    return;
+                }
+
+                log(`🃏 ${toPlayer.name}'s Jack blocks ${fromPlayer.name} - SCREW YOU!`);
+
+                // 1. Mark the Jack holder as having revealed their card to everyone
+                toPlayer.cardRevealed = true;
+                markPlayerAsLooked(toPlayer.id);
+
+                // 2. Show dramatic "SCREW YOU!" message
+                showJackScrewYouMessage(fromPlayer.name, toPlayer.name);
+
+                // 3. Add special Jack reveal animation to the card
+                setTimeout(() => {
+                    addJackRevealAnimation(toPlayer.id);
+                }, 100);
+
+                // 4. Show toast notification
+                showToast(`${toPlayer.name} blocks with a Jack! 🃏`, 'warning');
+
+                // 🆕 5. NEW: Auto-advance the Jack holder after the animation
+                // Check if it's the Jack holder's turn to auto-advance them
+                if (currentGame?.currentPlayerId === toPlayer.id) {
+                    log(`🃏 Auto-advancing ${toPlayer.name} after Jack block`);
+
+                    // Wait for the dramatic animation to finish, then auto-advance
+                    setTimeout(() => {
+                        if (socket && currentGame && currentGame.currentPlayerId === toPlayer.id) {
+                            log(`🃏 Emitting skip-turn for Jack holder ${toPlayer.name}`);
+                            socket.emit('skip-turn', { gameId: currentGame.id });
+                            showToast(`${toPlayer.name}'s Jack auto-advances! 🃏`, 'success');
+                        } else {
+                            log(`🃏 Conditions changed - not auto-advancing Jack holder`);
+                        }
+                    }, 3500); // Wait for "SCREW YOU" animation to finish (3 seconds) + small buffer
+                } else {
+                    log(`🃏 Not ${toPlayer.name}'s turn - no auto-advance needed`);
+                }
             }
 
-            log(`🃏 ${toPlayer.name}'s Jack blocks ${fromPlayer.name} - SCREW YOU!`);
-
-            // 1. Mark the Jack holder as having revealed their card to everyone
-            toPlayer.cardRevealed = true;
-            markPlayerAsLooked(toPlayer.id);
-
-            // 2. Show dramatic "SCREW YOU!" message
-            showJackScrewYouMessage(fromPlayer.name, toPlayer.name);
-
-            // 3. Add special Jack reveal animation to the card
-            setTimeout(() => {
-                addJackRevealAnimation(toPlayer.id);
-            }, 100);
-
-            // 4. Show toast notification
-            showToast(`${toPlayer.name} blocks with a Jack! 🃏`, 'warning');
-        }
+            // ALTERNATIVE: If you want it even faster, change the timeout to 2000ms instead of 3500ms
+            // The dramatic message shows for 2.5 seconds, so 2000ms would overlap slightly but still look good
 
         // ADD this function for the dramatic "SCREW YOU!" message:
         // ENHANCED: Flying spinning Jack card version
