@@ -1486,54 +1486,268 @@
             }
         }
 
-        function showWinnerAnnouncement(winnerName) {
-            // Create big winner overlay
-            const winnerOverlay = document.createElement('div');
-            winnerOverlay.className = 'winner-announcement';
-            winnerOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-                animation: fadeIn 0.5s ease;
-            `;
+        // 1. MODIFY the existing showWinnerAnnouncement function to ADD auto-continue:
+            // FIND your existing showWinnerAnnouncement function and ADD this auto-continue section to it
 
-            const winnerContent = document.createElement('div');
-            winnerContent.style.cssText = `
-                background: linear-gradient(45deg, #f39c12, #e67e22);
+            function showWinnerAnnouncement(winnerName) {
+                // Create big winner overlay
+                const winnerOverlay = document.createElement('div');
+                winnerOverlay.className = 'winner-announcement';
+                winnerOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.5s ease;
+    `;
+
+                const winnerContent = document.createElement('div');
+                winnerContent.style.cssText = `
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        color: white;
+        padding: 40px 60px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        animation: bounceIn 0.6s ease;
+    `;
+
+                // KEEP your existing winner content, then ADD this auto-continue section:
+                winnerContent.innerHTML = `
+        <h1 style="font-size: 3rem; margin: 0 0 20px 0;">🏆</h1>
+        <h2 style="font-size: 2rem; margin: 0 0 10px 0;">${winnerName} Wins!</h2>
+        <p style="font-size: 1.2rem; margin: 0 0 10px 0; opacity: 0.9;">Congratulations!</p>
+        
+        <!-- FUTURE: Winner video/animated picture will go here -->
+        
+        <!-- NEW: Auto-Continue Section -->
+        <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin: 20px 0;">
+            <h3 style="font-size: 1.4rem; margin: 0 0 10px 0;">🚀 Next game starting in...</h3>
+            <div id="countdownTimer" style="font-size: 3rem; font-weight: bold; margin: 10px 0;">15</div>
+            <div id="playersReady" style="font-size: 1.1rem; margin: 10px 0; opacity: 0.9;">
+                3/3 players ready
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+            <button onclick="stayForNextGame()" style="
+                padding: 12px 24px;
+                background: #27ae60;
+                border: 2px solid white;
                 color: white;
-                padding: 40px 60px;
-                border-radius: 20px;
-                text-align: center;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                animation: bounceIn 0.6s ease;
-            `;
+                border-radius: 10px;
+                font-size: 1.1rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='#2ecc71'" onmouseout="this.style.background='#27ae60'">
+                ✅ I'm Ready!
+            </button>
+            
+            <button onclick="leaveAfterGame()" style="
+                padding: 12px 24px;
+                background: #e74c3c;
+                border: 2px solid white;
+                color: white;
+                border-radius: 10px;
+                font-size: 1.1rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
+                🚪 Leave Game
+            </button>
+        </div>
+    `;
 
-            winnerContent.innerHTML = `
-                <h1 style="font-size: 3rem; margin: 0 0 20px 0;">🏆</h1>
-                <h2 style="font-size: 2rem; margin: 0 0 10px 0;">${winnerName} Wins!</h2>
-                <p style="font-size: 1.2rem; margin: 0; opacity: 0.9;">Congratulations!</p>
-                <button onclick="closeWinnerAnnouncement()" style="
-                    margin-top: 20px;
-                    padding: 10px 20px;
-                    background: rgba(255,255,255,0.2);
-                    border: 2px solid white;
-                    color: white;
-                    border-radius: 10px;
-                    font-size: 1rem;
-                    cursor: pointer;
-                ">Continue</button>
-            `;
+                winnerOverlay.appendChild(winnerContent);
+                document.body.appendChild(winnerOverlay);
 
-            winnerOverlay.appendChild(winnerContent);
-            document.body.appendChild(winnerOverlay);
-        }
+                // Start the auto-continue countdown
+                startAutoContinueCountdown();
+            }
+
+            // 2. ADD auto-continue countdown system:
+
+            let autoContinueTimer = null;
+            let countdownSeconds = 15;
+            let playersReadyForNext = new Set(); // Track who's staying
+
+            function startAutoContinueCountdown() {
+                log('🚀 Starting auto-continue countdown...');
+
+                // Reset state
+                countdownSeconds = 15;
+                playersReadyForNext.clear();
+
+                // Add myself as ready by default (auto-opt-in)
+                playersReadyForNext.add(playerId);
+
+                // Emit to server that auto-continue started
+                if (socket && currentGame) {
+                    socket.emit('auto-continue-started', {
+                        gameId: currentGame.id,
+                        playerId: playerId,
+                        ready: true
+                    });
+                }
+
+                // Update display immediately
+                updateAutoContinueDisplay();
+
+                // Start countdown timer
+                autoContinueTimer = setInterval(() => {
+                    countdownSeconds--;
+                    updateAutoContinueDisplay();
+
+                    if (countdownSeconds <= 0) {
+                        clearInterval(autoContinueTimer);
+                        triggerAutoContinue();
+                    }
+                }, 1000);
+            }
+
+            function updateAutoContinueDisplay() {
+                const timerElement = document.getElementById('countdownTimer');
+                const readyElement = document.getElementById('playersReady');
+
+                if (timerElement) {
+                    timerElement.textContent = countdownSeconds;
+                    // Add urgency colors
+                    if (countdownSeconds <= 5) {
+                        timerElement.style.color = '#e74c3c'; // Red
+                    } else if (countdownSeconds <= 10) {
+                        timerElement.style.color = '#f39c12'; // Orange
+                    }
+                }
+
+                if (readyElement && currentGame) {
+                    const totalPlayers = currentGame.players.length;
+                    const readyCount = playersReadyForNext.size;
+                    readyElement.textContent = `${readyCount}/${totalPlayers} players ready`;
+
+                    // Green when everyone ready
+                    if (readyCount === totalPlayers) {
+                        readyElement.style.color = '#2ecc71';
+                        readyElement.textContent += ' 🎉';
+                    }
+                }
+            }
+
+            function stayForNextGame() {
+                log('✅ Player confirmed ready for next game');
+
+                // Add to ready set
+                playersReadyForNext.add(playerId);
+
+                // Emit to server
+                if (socket && currentGame) {
+                    socket.emit('auto-continue-ready', {
+                        gameId: currentGame.id,
+                        playerId: playerId,
+                        ready: true
+                    });
+                }
+
+                // Update display
+                updateAutoContinueDisplay();
+
+                // Visual feedback
+                showToast('Ready for next game! 🚀', 'success');
+
+                // Disable ready button, enable leave button
+                const readyBtn = event.target;
+                readyBtn.style.background = '#2ecc71';
+                readyBtn.textContent = '✅ Ready!';
+                readyBtn.disabled = true;
+            }
+
+            function leaveAfterGame() {
+                log('🚪 Player choosing to leave after game');
+
+                // Remove from ready set
+                playersReadyForNext.delete(playerId);
+
+                // Emit to server
+                if (socket && currentGame) {
+                    socket.emit('auto-continue-ready', {
+                        gameId: currentGame.id,
+                        playerId: playerId,
+                        ready: false
+                    });
+                }
+
+                // Stop the countdown and leave
+                if (autoContinueTimer) {
+                    clearInterval(autoContinueTimer);
+                }
+
+                // Clean exit
+                closeWinnerAnnouncement();
+                completeCleanup();
+                showMainMenu();
+
+                showToast('Thanks for playing! 👋', 'success');
+            }
+
+            function triggerAutoContinue() {
+                log('🚀 Auto-continue timer finished - starting next game!');
+
+                // Close winner screen
+                closeWinnerAnnouncement();
+
+                // Check if enough players ready
+                if (playersReadyForNext.size >= 2) {
+                    // Start new game with ready players
+                    if (socket && currentGame) {
+                        socket.emit('start-auto-continue', {
+                            gameId: currentGame.id,
+                            readyPlayers: Array.from(playersReadyForNext)
+                        });
+                    }
+                    showToast('🚀 New game starting with ready players!', 'success');
+                } else {
+                    // Not enough players - return to main menu
+                    completeCleanup();
+                    showMainMenu();
+                    showToast('Not enough players for next game', 'warning');
+                }
+            }
+
+            // 3. ADD socket event handlers for auto-continue (add these to setupSocketEvents function):
+
+            // ADD these to your existing setupSocketEvents() function:
+            
+            socket.on('auto-continue-update', function(data) {
+    // Update who's ready for next game
+    playersReadyForNext = new Set(data.readyPlayers);
+    updateAutoContinueDisplay();
+    log(`📊 Auto-continue update: ${data.readyPlayers.length} players ready`);
+});
+
+socket.on('auto-continue-game-starting', function(data) {
+    log('🚀 Auto-continue new game starting!');
+    currentGame = data.game;
+    
+    // Close any winner announcements
+    closeWinnerAnnouncement();
+    
+    // Reset game state for new round
+    resetCardLooks();
+    clearAllNudges();
+    
+    updateGameDisplay();
+    updatePersonalTable();
+    
+    showToast('🎮 New game started!', 'success');
+});
+        
 
         function closeWinnerAnnouncement() {
             const overlay = document.querySelector('.winner-announcement');
@@ -3323,553 +3537,492 @@
                 log('📱 Network connection lost');
                 showToast('Network connection lost - will reconnect automatically', 'warning');
             });
-
-            // Enhanced disconnect handler
-            socket.on('disconnect', (reason) => {
-                log(`❌ Disconnected: ${reason}`);
-                document.getElementById('connectionStatus').innerHTML = '🔴 Disconnected';
-
-                // Stop heartbeat when disconnected
-                stopMobileHeartbeat();
-
-                // Handle mobile-specific disconnect reasons
-                if (reason === 'transport close' || reason === 'ping timeout' || reason === 'transport error') {
-                    log('📱 Mobile-style disconnect detected');
-
-                    if (!isAppInBackground && currentGame) {
-                        // Immediate reconnection attempt for foreground disconnects
-                        showToast('Connection lost - reconnecting...', 'warning');
-                        setTimeout(() => {
-                            if (!socket || !socket.connected) {
-                                log('📱 Auto-reconnecting after mobile disconnect');
-                                attemptMobileReconnection();
-                            }
-                        }, 2000);
-                    } else {
-                        // Flag for reconnection when app comes back to foreground
-                        reconnectOnForeground = true;
-                        log('📱 Will reconnect when app returns to foreground');
-                    }
-                } else {
-                    // Handle other disconnect reasons
-                    log(`📱 Non-mobile disconnect: ${reason}`);
-                    if (currentGame) {
-                        showToast('Disconnected - trying to reconnect...', 'error');
-                        setTimeout(() => {
-                            if (!socket || !socket.connected) {
-                                attemptMobileReconnection();
-                            }
-                        }, 3000);
-                    }
-                }
-
-                if (isVideoJoined) {
-                    leaveVideoCall().catch(console.error);
-                }
-            });
-
-            // Enhanced connect handler
-            socket.on('connect', () => {
-                log('✅ FRESH connection established! ID: ' + socket.id);
-                document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
-
-                playerName = document.getElementById('playerName').value || 'Player';
-
-                // Start mobile heartbeat
-                startMobileHeartbeat();
-
-                // RECONNECTION: Check if we were previously in a game
-                if (playerId && currentGame) {
-                    log('🔄 Checking for reconnection...');
-                    socket.emit('check-reconnect', { userId: playerId });
-                } else {
-                    playerId = socket.id;
-                }
-
-                // Clear reconnection flag
-                reconnectOnForeground = false;
-            });
-
-            socket.on('connect_error', (error) => {
-                log(`❌ Connection error: ${error.message}`);
-                showToast('Connection failed. Make sure server is running on port 3001.', 'error');
-            });
-
-            setupSocketEvents();
-        }
-
+            
         // Socket event handlers
-        function setupSocketEvents() {
-            socket.on('public-game-created', function (data) {
-                log('🎮 FRESH public game created! ID: ' + data.game.id);
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-                updatePersonalTable();
-                showHostControls();
-            });
+            function setupSocketEvents() {
+                // ===== CONNECTION EVENTS =====
+                socket.on('connect', () => {
+                    log('✅ FRESH connection established! ID: ' + socket.id);
+                    document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
 
-            socket.on('king-auto-revealed', function (data) {
-                log(`👑 King auto-revealed for player ${data.playerId}`);
-                const player = currentGame.players?.find(p => p.id === data.playerId);
-                if (player) {
-                    player.cardRevealed = true;
-                    markPlayerAsLooked(data.playerId);
+                    playerName = document.getElementById('playerName').value || 'Player';
+
+                    // Start mobile heartbeat
+                    startMobileHeartbeat();
+
+                    // RECONNECTION: Check if we were previously in a game
+                    if (playerId && currentGame) {
+                        log('🔄 Checking for reconnection...');
+                        socket.emit('check-reconnect', { userId: playerId });
+                    } else {
+                        playerId = socket.id;
+                    }
+
+                    // Clear reconnection flag
+                    reconnectOnForeground = false;
+                });
+
+                socket.on('disconnect', (reason) => {
+                    log(`❌ Disconnected: ${reason}`);
+                    document.getElementById('connectionStatus').innerHTML = '🔴 Disconnected';
+
+                    // Stop heartbeat when disconnected
+                    stopMobileHeartbeat();
+
+                    // Handle mobile-specific disconnect reasons
+                    if (reason === 'transport close' || reason === 'ping timeout' || reason === 'transport error') {
+                        log('📱 Mobile-style disconnect detected');
+
+                        if (!isAppInBackground && currentGame) {
+                            // Immediate reconnection attempt for foreground disconnects
+                            showToast('Connection lost - reconnecting...', 'warning');
+                            setTimeout(() => {
+                                if (!socket || !socket.connected) {
+                                    log('📱 Auto-reconnecting after mobile disconnect');
+                                    attemptMobileReconnection();
+                                }
+                            }, 2000);
+                        } else {
+                            // Flag for reconnection when app comes back to foreground
+                            reconnectOnForeground = true;
+                            log('📱 Will reconnect when app returns to foreground');
+                        }
+                    } else {
+                        // Handle other disconnect reasons
+                        log(`📱 Non-mobile disconnect: ${reason}`);
+                        if (currentGame) {
+                            showToast('Disconnected - trying to reconnect...', 'error');
+                            setTimeout(() => {
+                                if (!socket || !socket.connected) {
+                                    attemptMobileReconnection();
+                                }
+                            }, 3000);
+                        }
+                    }
+
+                    if (isVideoJoined) {
+                        leaveVideoCall().catch(console.error);
+                    }
+                });
+
+                socket.on('connect_error', (error) => {
+                    log(`❌ Connection error: ${error.message}`);
+                    showToast('Connection failed. Make sure server is running on port 3001.', 'error');
+                });
+
+                // Add heartbeat response handler
+                socket.on('heartbeat-ack', (data) => {
+                    // Update connection status to show healthy connection
+                    document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
+                });
+
+                // ===== GAME CREATION & JOINING EVENTS =====
+                socket.on('public-game-created', function (data) {
+                    log('🎮 FRESH public game created! ID: ' + data.game.id);
+                    currentGame = data.game;
+                    showGameContent();
                     updateGameDisplay();
                     updatePersonalTable();
-                    showToast(`${player.name}'s King is revealed! 👑`, 'warning');
-                }
-            });
-
-            socket.on('dealer-king-auto-end', function (data) {
-                log('🏁 Round auto-ended - dealer had revealed King');
-                currentGame = data.game;
-
-                updateGameDisplay();
-                updatePersonalTable();
-
-                showToast('Round ended - dealer has King! 👑', 'warning');
-
-                // Auto-trigger round end UI
-                setTimeout(() => {
-                    if (currentGame.turnPhase === 'revealing') {
-                        log('🎯 Triggering round end after dealer King auto-end');
-                        socket.emit('end-round', { gameId: currentGame.id });
-                    }
-                }, 1500);
-            });
-
-            socket.on('private-game-created', function (data) {
-                log('🎮 FRESH private game created! ID: ' + data.game.id);
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-                updatePersonalTable();
-                showHostControls();
-
-                if (data.friendCode) {
-                    showToast(`Game Code: ${data.friendCode}`, 'success');
-                }
-            });
-
-            socket.on('game-created', function (data) {
-                log('🎮 FRESH game created! ID: ' + data.game.id);
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-                updatePersonalTable();
-                showHostControls();
-
-                if (data.friendCode) {
-                    showToast(`Game Code: ${data.friendCode}`, 'success');
-                }
-            });
-
-            socket.on('game-joined', function (data) {
-                log('🎮 Joined game! ID: ' + data.game.id);
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-                updatePersonalTable();
-
-                if (currentGame.hostId === playerId) {
                     showHostControls();
-                }
-            });
+                });
 
-            // Add heartbeat response handler
-            socket.on('heartbeat-ack', (data) => {
-                // Update connection status to show healthy connection
-                document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
-            });
+                socket.on('private-game-created', function (data) {
+                    log('🎮 FRESH private game created! ID: ' + data.game.id);
+                    currentGame = data.game;
+                    showGameContent();
+                    updateGameDisplay();
+                    updatePersonalTable();
+                    showHostControls();
 
-            socket.on('auto-rejoined', function (data) {
-                log('🔄 Auto-rejoined game successfully!');
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('Reconnected to game!', 'success');
-            });
-
-            socket.on('player-reconnected', function (data) {
-                log(`🔄 ${data.playerName} reconnected to game`);
-                showToast(`${data.playerName} reconnected!`, 'success');
-                updateGameDisplay();
-                updatePersonalTable();
-            });
-
-            socket.on('player-joined', function (data) {
-                log(`👋 Player joined: ${data.newPlayer?.name || 'Unknown'}`);
-                currentGame = data.game;
-
-                // Check for duplicate players and warn
-                if (currentGame.players) {
-                    const playerNames = currentGame.players.map(p => p.name);
-                    const playerIds = currentGame.players.map(p => p.id);
-                    const duplicateNames = playerNames.filter((name, index) => playerNames.indexOf(name) !== index);
-                    const duplicateIds = playerIds.filter((id, index) => playerIds.indexOf(id) !== index);
-
-                    if (duplicateNames.length > 0) {
-                        log(`⚠️ WARNING: Duplicate player names detected: ${duplicateNames.join(', ')}`);
+                    if (data.friendCode) {
+                        showToast(`Game Code: ${data.friendCode}`, 'success');
                     }
-                    if (duplicateIds.length > 0) {
-                        log(`⚠️ WARNING: Duplicate player IDs detected: ${duplicateIds.join(', ')}`);
+                });
+
+                socket.on('game-created', function (data) {
+                    log('🎮 FRESH game created! ID: ' + data.game.id);
+                    currentGame = data.game;
+                    showGameContent();
+                    updateGameDisplay();
+                    updatePersonalTable();
+                    showHostControls();
+
+                    if (data.friendCode) {
+                        showToast(`Game Code: ${data.friendCode}`, 'success');
                     }
-                }
+                });
 
-                updateGameDisplay();
-                updatePersonalTable();
-            });
+                socket.on('game-joined', function (data) {
+                    log('🎮 Joined game! ID: ' + data.game.id);
+                    currentGame = data.game;
+                    showGameContent();
+                    updateGameDisplay();
+                    updatePersonalTable();
 
-            socket.on('game-started', function (data) {
-                log('🎮 Game started!');
-                currentGame = data.game;
+                    if (currentGame.hostId === playerId) {
+                        showHostControls();
+                    }
+                });
 
-                resetCardLooks();
-                clearAllNudges();
+                socket.on('auto-rejoined', function (data) {
+                    log('🔄 Auto-rejoined game successfully!');
+                    currentGame = data.game;
+                    showGameContent();
+                    updateGameDisplay();
+                    updatePersonalTable();
+                    showToast('Reconnected to game!', 'success');
+                });
 
-                hideHostControls();
-                updateGameDisplay();
-                updatePersonalTable();
+                socket.on('player-reconnected', function (data) {
+                    log(`🔄 ${data.playerName} reconnected to game`);
+                    showToast(`${data.playerName} reconnected!`, 'success');
+                    updateGameDisplay();
+                    updatePersonalTable();
+                });
 
-                setTimeout(() => {
-                    initializeVideoCall();
-                }, 1000);
-            });
+                socket.on('player-joined', function (data) {
+                    log(`👋 Player joined: ${data.newPlayer?.name || 'Unknown'}`);
+                    currentGame = data.game;
 
-            socket.on('round-started', function (data) {
-                log(`🔄 New round started!`);
-                currentGame = data.game;
+                    // Check for duplicate players and warn
+                    if (currentGame.players) {
+                        const playerNames = currentGame.players.map(p => p.name);
+                        const playerIds = currentGame.players.map(p => p.id);
+                        const duplicateNames = playerNames.filter((name, index) => playerNames.indexOf(name) !== index);
+                        const duplicateIds = playerIds.filter((id, index) => playerIds.indexOf(id) !== index);
 
-                resetCardLooks();
-                clearAllNudges();
-
-                updateGameDisplay();
-                updatePersonalTable();
-            });
-
-            socket.on('cards-dealt', function (data) {
-                log('🎴 Cards dealt!');
-                currentGame = data.game;
-
-                resetCardLooks();
-                clearAllNudges();
-
-                // Check for any Kings that should auto-reveal
-                if (currentGame.players) {
-                    currentGame.players.forEach(player => {
-                        if (shouldAutoRevealKing(player)) {
-                            setTimeout(() => handleKingAutoReveal(player), 500);
+                        if (duplicateNames.length > 0) {
+                            log(`⚠️ WARNING: Duplicate player names detected: ${duplicateNames.join(', ')}`);
                         }
-                    });
-                }
+                        if (duplicateIds.length > 0) {
+                            log(`⚠️ WARNING: Duplicate player IDs detected: ${duplicateIds.join(', ')}`);
+                        }
+                    }
 
-                // ADD THIS: Check if current player has King and auto-advance
-                const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
-                if (currentPlayer && shouldAutoRevealKing(currentPlayer)) {
-                    log(`👑 Current player ${currentPlayer.name} has King after cards dealt - auto-advancing`);
-                    setTimeout(() => handleKingAutoAdvance(currentPlayer.id), 1500);
-                }
+                    updateGameDisplay();
+                    updatePersonalTable();
+                });
 
-                updateGameDisplay();
-                updatePersonalTable();
+                // ===== GAME FLOW EVENTS =====
+                socket.on('game-started', function (data) {
+                    log('🎮 Game started!');
+                    currentGame = data.game;
 
-                // Start nudging players who haven't looked at their cards
-                setTimeout(() => {
+                    resetCardLooks();
+                    clearAllNudges();
+
+                    hideHostControls();
+                    updateGameDisplay();
+                    updatePersonalTable();
+
+                    setTimeout(() => {
+                        initializeVideoCall();
+                    }, 1000);
+                });
+
+                socket.on('round-started', function (data) {
+                    log(`🔄 New round started!`);
+                    currentGame = data.game;
+
+                    resetCardLooks();
+                    clearAllNudges();
+
+                    updateGameDisplay();
+                    updatePersonalTable();
+                });
+
+                socket.on('cards-dealt', function (data) {
+                    log('🎴 Cards dealt!');
+                    currentGame = data.game;
+
+                    resetCardLooks();
+                    clearAllNudges();
+
+                    // Check for any Kings that should auto-reveal
                     if (currentGame.players) {
                         currentGame.players.forEach(player => {
-                            if (player.hasCard && !hasPlayerLooked(player.id) && player.id !== playerId) {
-                                startNudge(player.id, `${player.name} should look at their card`);
+                            if (shouldAutoRevealKing(player)) {
+                                setTimeout(() => handleKingAutoReveal(player), 500);
                             }
                         });
                     }
-                }, 3000);
-            });
 
-            socket.on('trade-completed', function (data) {
-                const result = data.result;
-                if (result.tradedWithDeck) {
-                    log('🎴 SPECIAL RULE: Dealer had King - traded with deck instead!');
-                } else if (result.traded) {
-                    log('✅ Cards swapped successfully!');
-
-                    // Both players have now "looked" at their new cards
-                    if (result.fromPlayerId) markPlayerAsLooked(result.fromPlayerId);
-                    if (result.toPlayerId) markPlayerAsLooked(result.toPlayerId);
-
-                } else if (result.blocked) {
-                    log('🚫 Trade BLOCKED by Jack - "Screw You!"');
-
-                    // 🃏 ENHANCED JACK REVEAL LOGIC
-                    handleJackBlock(result.fromPlayerId, result.toPlayerId);
-
-                } else if (result.kingRevealed) {
-                    if (result.roundEnded) {
-                        log('👑 King revealed but Jack blocks pass-through - Round ends!');
-                    } else {
-                        log('👑 King revealed - can pass to next player!');
+                    // ADD THIS: Check if current player has King and auto-advance
+                    const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
+                    if (currentPlayer && shouldAutoRevealKing(currentPlayer)) {
+                        log(`👑 Current player ${currentPlayer.name} has King after cards dealt - auto-advancing`);
+                        setTimeout(() => handleKingAutoAdvance(currentPlayer.id), 1500);
                     }
-                }
-                currentGame = data.game;
 
-                // Check for new Kings that should auto-reveal
-                if (currentGame.players) {
-                    currentGame.players.forEach(player => {
-                        if (shouldAutoRevealKing(player)) {
-                            handleKingAutoReveal(player);
+                    updateGameDisplay();
+                    updatePersonalTable();
+
+                    // Start nudging players who haven't looked at their cards
+                    setTimeout(() => {
+                        if (currentGame.players) {
+                            currentGame.players.forEach(player => {
+                                if (player.hasCard && !hasPlayerLooked(player.id) && player.id !== playerId) {
+                                    startNudge(player.id, `${player.name} should look at their card`);
+                                }
+                            });
                         }
-                    });
-                }
+                    }, 3000);
+                });
 
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('Trade completed!', 'success');
-            });
+                // ===== SPECIAL KING & JACK EVENTS =====
+                socket.on('king-auto-revealed', function (data) {
+                    log(`👑 King auto-revealed for player ${data.playerId}`);
+                    const player = currentGame.players?.find(p => p.id === data.playerId);
+                    if (player) {
+                        player.cardRevealed = true;
+                        markPlayerAsLooked(data.playerId);
+                        updateGameDisplay();
+                        updatePersonalTable();
+                        showToast(`${player.name}'s King is revealed! 👑`, 'warning');
+                    }
+                });
 
-            socket.on('turn-skipped', function (data) {
-                const action = data.result.wasKing ? 'kept their King' : 'kept their card';
-                log(`⏭️ Player ${data.playerId} ${action} and ended turn`);
-                currentGame = data.game;
+                socket.on('dealer-king-auto-end', function (data) {
+                    log('🏁 Round auto-ended - dealer had revealed King');
+                    currentGame = data.game;
 
-                // Check if NEW current player has King and auto-advance
-                const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
-                if (currentPlayer && shouldAutoRevealKing(currentPlayer)) {
-                    log(`👑 NEW current player ${currentPlayer.name} has King - auto-advancing`);
-                    setTimeout(() => handleKingAutoAdvance(currentPlayer.id), 500);
-                }
+                    updateGameDisplay();
+                    updatePersonalTable();
 
-                // Check if turn went past dealer (shouldn't happen)
-                const dealer = currentGame.players?.find(p => p.id === currentGame.dealerId);
+                    showToast('Round ended - dealer has King! 👑', 'warning');
 
-                if (dealer && data.playerId === dealer.id) {
-                    log('🎯 Dealer just acted - round should end now!');
+                    // Auto-trigger round end UI
+                    setTimeout(() => {
+                        if (currentGame.turnPhase === 'revealing') {
+                            log('🎯 Triggering round end after dealer King auto-end');
+                            socket.emit('end-round', { gameId: currentGame.id });
+                        }
+                    }, 1500);
+                });
+
+                // ===== GAME ACTION EVENTS =====
+                socket.on('trade-completed', function (data) {
+                    const result = data.result;
+                    if (result.tradedWithDeck) {
+                        log('🎴 SPECIAL RULE: Dealer had King - traded with deck instead!');
+                    } else if (result.traded) {
+                        log('✅ Cards swapped successfully!');
+
+                        // Both players have now "looked" at their new cards
+                        if (result.fromPlayerId) markPlayerAsLooked(result.fromPlayerId);
+                        if (result.toPlayerId) markPlayerAsLooked(result.toPlayerId);
+
+                    } else if (result.blocked) {
+                        log('🚫 Trade BLOCKED by Jack - "Screw You!"');
+
+                        // 🃏 ENHANCED JACK REVEAL LOGIC
+                        handleJackBlock(result.fromPlayerId, result.toPlayerId);
+
+                    } else if (result.kingRevealed) {
+                        if (result.roundEnded) {
+                            log('👑 King revealed but Jack blocks pass-through - Round ends!');
+                        } else {
+                            log('👑 King revealed - can pass to next player!');
+                        }
+                    }
+                    currentGame = data.game;
+
+                    // Check for new Kings that should auto-reveal
+                    if (currentGame.players) {
+                        currentGame.players.forEach(player => {
+                            if (shouldAutoRevealKing(player)) {
+                                handleKingAutoReveal(player);
+                            }
+                        });
+                    }
+
+                    updateGameDisplay();
+                    updatePersonalTable();
+                    showToast('Trade completed!', 'success');
+                });
+
+                socket.on('turn-skipped', function (data) {
+                    const action = data.result.wasKing ? 'kept their King' : 'kept their card';
+                    log(`⏭️ Player ${data.playerId} ${action} and ended turn`);
+                    currentGame = data.game;
+
+                    // Check if NEW current player has King and auto-advance
+                    const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
+                    if (currentPlayer && shouldAutoRevealKing(currentPlayer)) {
+                        log(`👑 NEW current player ${currentPlayer.name} has King - auto-advancing`);
+                        setTimeout(() => handleKingAutoAdvance(currentPlayer.id), 500);
+                    }
+
+                    // Check if turn went past dealer (shouldn't happen)
+                    const dealer = currentGame.players?.find(p => p.id === currentGame.dealerId);
+
+                    if (dealer && data.playerId === dealer.id) {
+                        log('🎯 Dealer just acted - round should end now!');
+                        setTimeout(() => {
+                            if (currentGame.turnPhase !== 'revealing') {
+                                log('🏁 Auto-ending round after dealer action');
+                                socket.emit('end-round', { gameId: currentGame.id });
+                            }
+                        }, 500);
+                    } else if (dealer && currentPlayer && currentPlayer.id !== dealer.id) {
+                        // Check if we somehow skipped past the dealer
+                        const dealerIndex = currentGame.players.findIndex(p => p.id === dealer.id);
+                        const currentIndex = currentGame.players.findIndex(p => p.id === currentPlayer.id);
+
+                        if (dealerIndex !== -1 && currentIndex !== -1) {
+                            // Simple check: if current player comes after dealer in the list, we may have gone too far
+                            const playerCount = currentGame.players.length;
+                            const expectedNextAfterDealer = (dealerIndex + 1) % playerCount;
+
+                            if (currentIndex === expectedNextAfterDealer) {
+                                log('⚠️ WARNING: Turn passed dealer - forcing round end');
+                                socket.emit('end-round', { gameId: currentGame.id });
+                            }
+                        }
+                    }
+
+                    updateGameDisplay();
+                    updatePersonalTable();
+                });
+
+                socket.on('card-flipped', function (data) {
+                    log(`🎴 Player ${data.playerId} flipped their card`);
+                    currentGame = data.game;
+
+                    markPlayerAsLooked(data.playerId);
+
+                    // Check if this revealed a King
+                    const player = currentGame.players?.find(p => p.id === data.playerId);
+                    if (player && shouldAutoRevealKing(player)) {
+                        handleKingAutoReveal(player);
+                    }
+
+                    updateGameDisplay();
+                    updatePersonalTable();
+                });
+
+                socket.on('dealer-traded-deck', function (data) {
+                    log('🎴 Dealer traded with deck - Round should end!');
+                    currentGame = data.game;
+                    updateGameDisplay();
+                    updatePersonalTable();
+                    showToast('Dealer traded with deck!', 'info');
+
+                    // Force round end after dealer action
                     setTimeout(() => {
                         if (currentGame.turnPhase !== 'revealing') {
-                            log('🏁 Auto-ending round after dealer action');
+                            log('🏁 Forcing round end after dealer deck trade');
                             socket.emit('end-round', { gameId: currentGame.id });
                         }
-                    }, 500);
-                } else if (dealer && currentPlayer && currentPlayer.id !== dealer.id) {
-                    // Check if we somehow skipped past the dealer
-                    const dealerIndex = currentGame.players.findIndex(p => p.id === dealer.id);
-                    const currentIndex = currentGame.players.findIndex(p => p.id === currentPlayer.id);
+                    }, 1000);
+                });
 
-                    if (dealerIndex !== -1 && currentIndex !== -1) {
-                        // Simple check: if current player comes after dealer in the list, we may have gone too far
-                        const playerCount = currentGame.players.length;
-                        const expectedNextAfterDealer = (dealerIndex + 1) % playerCount;
+                socket.on('dealer-skipped-trade', function (data) {
+                    log('🎴 Dealer kept their card - Round should end!');
+                    currentGame = data.game;
+                    updateGameDisplay();
+                    updatePersonalTable();
+                    showToast('Dealer kept their card!', 'info');
 
-                        if (currentIndex === expectedNextAfterDealer) {
-                            log('⚠️ WARNING: Turn passed dealer - forcing round end');
+                    // Force round end after dealer action
+                    setTimeout(() => {
+                        if (currentGame.turnPhase !== 'revealing') {
+                            log('🏁 Forcing round end after dealer keep');
                             socket.emit('end-round', { gameId: currentGame.id });
                         }
+                    }, 1000);
+                });
+
+                // ===== ROUND & GAME ENDING EVENTS =====
+                socket.on('round-ended', function (data) {
+                    log(`🏁 Round ${data.result?.round || ''} ended`);
+                    currentGame = data.game;
+
+                    resetCardLooks();
+                    clearAllNudges();
+
+                    updateGameDisplay();
+                    updatePersonalTable();
+
+                    if (data.result?.losers) {
+                        const losers = data.result.losers.map(l => l.name).join(', ');
+                        showToast(`Losers: ${losers}`, 'warning');
                     }
-                }
+                });
 
-                updateGameDisplay();
-                updatePersonalTable();
-            });
+                socket.on('game-finished', function (data) {
+                    log(`🎉 Game finished!`);
+                    currentGame = data.game;
 
-            socket.on('card-flipped', function (data) {
-                log(`🎴 Player ${data.playerId} flipped their card`);
-                currentGame = data.game;
+                    // NEW: Check for tie game first
+                    if (data.tie) {
+                        // Show tie game announcement  
+                        showTieAnnouncement(data.tiedPlayers || []);
+                        showToast(`🤝 TIE GAME!`, 'warning');
 
-                markPlayerAsLooked(data.playerId);
-
-                // Check if this revealed a King
-                const player = currentGame.players?.find(p => p.id === data.playerId);
-                if (player && shouldAutoRevealKing(player)) {
-                    handleKingAutoReveal(player);
-                }
-
-                updateGameDisplay();
-                updatePersonalTable();
-            });
-
-            socket.on('dealer-traded-deck', function (data) {
-                log('🎴 Dealer traded with deck - Round should end!');
-                currentGame = data.game;
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('Dealer traded with deck!', 'info');
-
-                // Force round end after dealer action
-                setTimeout(() => {
-                    if (currentGame.turnPhase !== 'revealing') {
-                        log('🏁 Forcing round end after dealer deck trade');
-                        socket.emit('end-round', { gameId: currentGame.id });
+                        // Disable all game buttons except Leave
+                        disableAllGameButtons();
                     }
-                }, 1000);
-            });
+                    // Original winner logic
+                    else if (data.winner) {
+                        // Show big winner announcement
+                        showWinnerAnnouncement(data.winner.name);
+                        showToast(`🏆 ${data.winner.name} Wins the Game!`, 'success');
 
-            socket.on('dealer-skipped-trade', function (data) {
-                log('🎴 Dealer kept their card - Round should end!');
-                currentGame = data.game;
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('Dealer kept their card!', 'info');
-
-                // Force round end after dealer action
-                setTimeout(() => {
-                    if (currentGame.turnPhase !== 'revealing') {
-                        log('🏁 Forcing round end after dealer keep');
-                        socket.emit('end-round', { gameId: currentGame.id });
+                        // Disable all game buttons except Leave
+                        disableAllGameButtons();
                     }
-                }, 1000);
-            });
 
-            socket.on('round-ended', function (data) {
-                log(`🏁 Round ${data.result?.round || ''} ended`);
-                currentGame = data.game;
+                    updateGameDisplay();
+                    updatePersonalTable();
 
-                resetCardLooks();
-                clearAllNudges();
+                    setTimeout(() => {
+                        leaveVideoCall().catch(console.error);
+                    }, 10000); // Give more time to celebrate
+                });
 
-                updateGameDisplay();
-                updatePersonalTable();
+                // ===== AUTO-CONTINUE EVENTS =====
+                socket.on('auto-continue-update', function (data) {
+                    playersReadyForNext = new Set(data.readyPlayers);
+                    updateAutoContinueDisplay();
+                    log(`📊 Auto-continue update: ${data.readyPlayers.length} players ready`);
+                });
 
-                if (data.result?.losers) {
-                    const losers = data.result.losers.map(l => l.name).join(', ');
-                    showToast(`Losers: ${losers}`, 'warning');
-                }
-            });
+                socket.on('auto-continue-game-starting', function (data) {
+                    log('🚀 Auto-continue new game starting!');
+                    currentGame = data.game;
+                    closeWinnerAnnouncement();
+                    resetCardLooks();
+                    clearAllNudges();
+                    updateGameDisplay();
+                    updatePersonalTable();
+                    showToast('🎮 New game started!', 'success');
+                });
 
-            // 1. MODIFY the existing 'game-finished' event handler
-            // REPLACE the existing socket.on('game-finished') with this:
+                // ===== CHAT & ERROR EVENTS =====
+                socket.on('chat-message', function (data) {
+                    addChatMessage(data.playerName || 'Unknown', data.message);
+                });
 
-            socket.on('game-finished', function (data) {
-                log(`🎉 Game finished!`);
-                currentGame = data.game;
+                socket.on('error', function (data) {
+                    log(`❌ Error: ${data.message}`);
 
-                // NEW: Check for tie game first
-                if (data.tie) {
-                    // Show tie game announcement  
-                    showTieAnnouncement(data.tiedPlayers || []);
-                    showToast(`🤝 TIE GAME!`, 'warning');
+                    // Handle specific duplicate username errors
+                    if (data.message && data.message.toLowerCase().includes('name') && data.message.toLowerCase().includes('taken')) {
+                        showToast('Username already taken in this game! Try a different name.', 'error');
 
-                    // Disable all game buttons except Leave
-                    disableAllGameButtons();
-                }
-                // Original winner logic
-                else if (data.winner) {
-                    // Show big winner announcement
-                    showWinnerAnnouncement(data.winner.name);
-                    showToast(`🏆 ${data.winner.name} Wins the Game!`, 'success');
+                        // Suggest a random suffix
+                        const currentName = document.getElementById('playerName').value.trim();
+                        const randomSuffix = Math.floor(Math.random() * 999) + 1;
+                        const suggestedName = `${currentName}${randomSuffix}`;
 
-                    // Disable all game buttons except Leave
-                    disableAllGameButtons();
-                }
-
-                updateGameDisplay();
-                updatePersonalTable();
-
-                setTimeout(() => {
-                    leaveVideoCall().catch(console.error);
-                }, 10000); // Give more time to celebrate
-            });
-
-            // 2. ADD this new function for tie announcements
-            function showTieAnnouncement(tiedPlayers = []) {
-                // Create big tie overlay
-                const tieOverlay = document.createElement('div');
-                tieOverlay.className = 'tie-announcement';
-                tieOverlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        animation: fadeIn 0.5s ease;
-    `;
-
-                const tieContent = document.createElement('div');
-                tieContent.style.cssText = `
-        background: linear-gradient(45deg, #9b59b6, #8e44ad);
-        color: white;
-        padding: 40px 60px;
-        border-radius: 20px;
-        text-align: center;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        animation: bounceIn 0.6s ease;
-    `;
-
-                // Build tied players text
-                let tiedPlayersText = '';
-                if (tiedPlayers.length > 0) {
-                    const playerNames = tiedPlayers.map(p => p.name || p).join(' & ');
-                    tiedPlayersText = `<p style="font-size: 1.2rem; margin: 10px 0 0 0; opacity: 0.9;">${playerNames} tied!</p>`;
-                }
-
-                tieContent.innerHTML = `
-        <h1 style="font-size: 3rem; margin: 0 0 20px 0;">🤝</h1>
-        <h2 style="font-size: 2rem; margin: 0 0 10px 0;">TIE GAME!</h2>
-        ${tiedPlayersText}
-        <button onclick="closeTieAnnouncement()" style="
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: rgba(255,255,255,0.2);
-            border: 2px solid white;
-            color: white;
-            border-radius: 10px;
-            font-size: 1rem;
-            cursor: pointer;
-        ">Continue</button>
-    `;
-
-                tieOverlay.appendChild(tieContent);
-                document.body.appendChild(tieOverlay);
+                        document.getElementById('playerName').value = suggestedName;
+                        showToast(`Try "${suggestedName}" instead`, 'warning');
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                });
             }
-
-            // 3. ADD this function to close tie announcement
-            function closeTieAnnouncement() {
-                const overlay = document.querySelector('.tie-announcement');
-                if (overlay) {
-                    overlay.remove();
-                }
-            }
-
-            // 4. SERVER-SIDE: This is what your server should send for a tie:
-            // When server detects final 2 players have same card value:
-            /*
-            socket.emit('game-finished', {
-                game: currentGame,
-                tie: true,
-                tiedPlayers: [
-                    { id: 'player1', name: 'Alice' },
-                    { id: 'player2', name: 'Bob' }
-                ]
-            });
-            */
-
-            socket.on('chat-message', function (data) {
-                addChatMessage(data.playerName || 'Unknown', data.message);
-            });
-
-            socket.on('error', function (data) {
-                log(`❌ Error: ${data.message}`);
-
-                // Handle specific duplicate username errors
-                if (data.message && data.message.toLowerCase().includes('name') && data.message.toLowerCase().includes('taken')) {
-                    showToast('Username already taken in this game! Try a different name.', 'error');
-
-                    // Suggest a random suffix
-                    const currentName = document.getElementById('playerName').value.trim();
-                    const randomSuffix = Math.floor(Math.random() * 999) + 1;
-                    const suggestedName = `${currentName}${randomSuffix}`;
-
-                    document.getElementById('playerName').value = suggestedName;
-                    showToast(`Try "${suggestedName}" instead`, 'warning');
-                } else {
-                    showToast(data.message, 'error');
-                }
-            });
-        }
 
         // Game creation with validation
         function createPublicGame() {
