@@ -2850,7 +2850,7 @@
             try {
                 const channelName = currentGame?.gameCode || currentGame?.id || 'test123';
                 const uid = Math.floor(Math.random() * 1000000);
-                const appId = 'cfef8101dcc14802a8f97d8805b3ebc9'; // Add your app ID here
+                const appId = '6dc9368154fd49b3b0543e2a99dbee24'; // Add your app ID here
 
                 if (appId === 'YOUR_AGORA_APP_ID') {
                     log('❌ Agora App ID not configured - video disabled');
@@ -2860,7 +2860,7 @@
 
                 log(`📹 Attempting to join channel: ${channelName}`);
 
-                await agoraClient.join(appId, channelName, '007eJxTYCi5bLt+duriRK4T85Nu9B/k8hCvZnPIt9rqIntDbY3SozIFhuS01DQLQwPDlORkQxMLA6NEizRL8xQLCwPTJOPUpGTL1N+pGQ2BjAyHIuYzMTJAIIjPzlCSWlxiaGTMwAAAaO4flA==', uid);
+                await agoraClient.join(appId, channelName, null, uid);
                 log('📹 Successfully joined channel');
 
                 try {
