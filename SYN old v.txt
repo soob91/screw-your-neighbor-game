@@ -79,12 +79,9 @@
         }
 
         @keyframes pulse {
-
-            0%,
-            100% {
+            0%, 100% {
                 box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
             }
-
             50% {
                 box-shadow: 0 0 25px rgba(0, 255, 0, 0.6);
             }
@@ -301,29 +298,16 @@
         }
 
         @keyframes shake {
-
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-
-            25% {
-                transform: translateX(-3px) rotate(-1deg);
-            }
-
-            75% {
-                transform: translateX(3px) rotate(1deg);
-            }
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px) rotate(-1deg); }
+            75% { transform: translateX(3px) rotate(1deg); }
         }
 
         @keyframes pulse-glow {
-
-            0%,
-            100% {
+            0%, 100% {
                 box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
                 border-color: rgba(255, 215, 0, 0.6);
             }
-
             50% {
                 box-shadow: 0 0 25px rgba(255, 215, 0, 0.9);
                 border-color: rgba(255, 215, 0, 1);
@@ -346,12 +330,10 @@
                 transform: scale(1) rotate(0deg);
                 box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
             }
-
             50% {
                 transform: scale(1.1) rotate(5deg);
                 box-shadow: 0 0 30px rgba(255, 215, 0, 1);
             }
-
             100% {
                 transform: scale(1.02) rotate(0deg);
                 box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
@@ -506,12 +488,9 @@
         }
 
         @keyframes tradeGlow {
-
-            0%,
-            100% {
+            0%, 100% {
                 box-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
             }
-
             50% {
                 box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
             }
@@ -768,13 +747,8 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* Responsive Design */
@@ -855,7 +829,6 @@
                 transform: translateX(100%);
                 opacity: 0;
             }
-
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -917,13 +890,8 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         @keyframes bounceIn {
@@ -931,11 +899,9 @@
                 transform: scale(0.3);
                 opacity: 0;
             }
-
             50% {
                 transform: scale(1.1);
             }
-
             100% {
                 transform: scale(1);
                 opacity: 1;
@@ -1001,13 +967,11 @@
                 transform: scale(0.3);
                 background: rgba(255, 0, 0, 0);
             }
-
             50% {
                 opacity: 1;
                 transform: scale(1.1);
                 background: rgba(255, 0, 0, 0.9);
             }
-
             100% {
                 opacity: 1;
                 transform: scale(1);
@@ -1020,12 +984,10 @@
                 transform: scale(0.3) rotate(-10deg);
                 opacity: 0;
             }
-
             50% {
                 transform: scale(1.1) rotate(5deg);
                 opacity: 1;
             }
-
             100% {
                 transform: scale(1) rotate(0deg);
                 opacity: 1;
@@ -1033,23 +995,18 @@
         }
 
         @keyframes jackBlockPulse {
-
-            0%,
-            100% {
+            0%, 100% {
                 box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
                 transform: scale(1.05);
             }
-
             25% {
                 box-shadow: 0 0 40px rgba(231, 76, 60, 1);
                 transform: scale(1.15) rotate(2deg);
             }
-
             50% {
                 box-shadow: 0 0 50px rgba(231, 76, 60, 1);
                 transform: scale(1.2) rotate(-2deg);
             }
-
             75% {
                 box-shadow: 0 0 40px rgba(231, 76, 60, 1);
                 transform: scale(1.15) rotate(1deg);
@@ -1057,13 +1014,8 @@
         }
 
         @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-
-            to {
-                opacity: 0;
-            }
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
 
         @keyframes jackFlyOut {
@@ -1072,13 +1024,11 @@
                 opacity: 1;
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             }
-
             25% {
                 transform: scale(1.5) rotate(360deg);
                 opacity: 1;
                 box-shadow: 0 0 30px rgba(231, 76, 60, 0.6);
             }
-
             50% {
                 transform: scale(2) rotate(720deg);
                 opacity: 1;
@@ -1088,7 +1038,6 @@
                 margin-left: -40px;
                 margin-top: -55px;
             }
-
             100% {
                 transform: scale(3) rotate(1080deg);
                 opacity: 1;
@@ -1105,12 +1054,10 @@
                 transform: scale(0.3);
                 opacity: 0;
             }
-
             50% {
                 transform: scale(1.2);
                 opacity: 1;
             }
-
             100% {
                 transform: scale(1);
                 opacity: 1;
@@ -1122,7 +1069,6 @@
                 transform: scale(2.5) rotate(1440deg) translateX(calc(50vw - 50%)) translateY(calc(50vh - 50%));
                 opacity: 1;
             }
-
             100% {
                 transform: scale(0.5) rotate(1800deg) translateX(150vw) translateY(-50vh);
                 opacity: 0;
@@ -2834,19 +2780,6 @@
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 log('📹 Agora client created successfully');
 
-                client.on("user-published", async (user, mediaType) => {
-                    console.log(`📹 User ${user.uid} published ${mediaType}`);
-
-                    if (mediaType === "video") {
-                        await client.subscribe(user, mediaType);
-                        console.log(`📹 Subscribed to ${user.uid} video`);
-
-                        // DISPLAY THE REMOTE VIDEO
-                        user.videoTrack.play(`video-${user.uid}`);
-                        console.log(`📹 Playing video for ${user.uid}`);
-                    }
-                });
-
                 agoraClient.on("user-published", handleUserPublished);
                 agoraClient.on("user-unpublished", handleUserUnpublished);
                 agoraClient.on("user-left", handleUserLeft);
@@ -2863,7 +2796,7 @@
             try {
                 const channelName = currentGame?.gameCode || currentGame?.id || 'test123';
                 const uid = Math.floor(Math.random() * 1000000);
-                const appId = '6dc9368154fd49b3b0543e2a99dbee24'; // Add your app ID here
+                const appId = 'cfef8101dcc14802a8f97d8805b3ebc9'; // Add your app ID here
 
                 if (appId === 'YOUR_AGORA_APP_ID') {
                     log('❌ Agora App ID not configured - video disabled');
@@ -2873,7 +2806,7 @@
 
                 log(`📹 Attempting to join channel: ${channelName}`);
 
-                await agoraClient.join(appId, channelName, null, uid);
+                await agoraClient.join(appId, channelName, '007eJxTYCi5bLt+duriRK4T85Nu9B/k8hCvZnPIt9rqIntDbY3SozIFhuS01DQLQwPDlORkQxMLA6NEizRL8xQLCwPTJOPUpGTL1N+pGQ2BjAyHIuYzMTJAIIjPzlCSWlxiaGTMwAAAaO4flA==', uid);
                 log('📹 Successfully joined channel');
 
                 try {
@@ -3483,1098 +3416,3 @@
                     player.cardRevealed = true;
                     markPlayerAsLooked(data.playerId);
                     updateGameDisplay();
-                    updatePersonalTable();
-                    showToast(`${player.name}'s King is revealed! 👑`, 'warning');
-                }
-            });
-
-            socket.on('dealer-king-auto-end', function (data) {
-                log('🏁 Round auto-ended - dealer had revealed King');
-                currentGame = data.game;
-
-                updateGameDisplay();
-                updatePersonalTable();
-
-                showToast('Round ended - dealer has King! 👑', 'warning');
-
-                // Auto-trigger round end UI
-                setTimeout(() => {
-                    if (currentGame.turnPhase === 'revealing') {
-                        log('🎯 Triggering round end after dealer King auto-end');
-                        socket.emit('end-round', { gameId: currentGame.id });
-                    }
-                }, 1500);
-            });
-
-            // ===== GAME ACTION EVENTS =====
-            socket.on('trade-completed', function (data) {
-                const result = data.result;
-                if (result.tradedWithDeck) {
-                    log('🎴 SPECIAL RULE: Dealer had King - traded with deck instead!');
-                } else if (result.traded) {
-                    log('✅ Cards swapped successfully!');
-
-                    // Both players have now "looked" at their new cards
-                    if (result.fromPlayerId) markPlayerAsLooked(result.fromPlayerId);
-                    if (result.toPlayerId) markPlayerAsLooked(result.toPlayerId);
-
-                } else if (result.blocked) {
-                    log('🚫 Trade BLOCKED by Jack - "Screw You!"');
-
-                    // 🃏 ENHANCED JACK REVEAL LOGIC
-                    handleJackBlock(result.fromPlayerId, result.toPlayerId);
-
-                } else if (result.kingRevealed) {
-                    if (result.roundEnded) {
-                        log('👑 King revealed but Jack blocks pass-through - Round ends!');
-                    } else {
-                        log('👑 King revealed - can pass to next player!');
-                    }
-                }
-                currentGame = data.game;
-
-                // Check for new Kings that should auto-reveal
-                if (currentGame.players) {
-                    currentGame.players.forEach(player => {
-                        if (shouldAutoRevealKing(player)) {
-                            handleKingAutoReveal(player);
-                        }
-                    });
-                }
-
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('Trade completed!', 'success');
-            });
-
-            socket.on('turn-skipped', function (data) {
-                const action = data.result.wasKing ? 'kept their King' : 'kept their card';
-                log(`⏭️ Player ${data.playerId} ${action} and ended turn`);
-                currentGame = data.game;
-
-                // Check if NEW current player has King and auto-advance
-                const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
-                if (currentPlayer && shouldAutoRevealKing(currentPlayer)) {
-                    log(`👑 NEW current player ${currentPlayer.name} has King - auto-advancing`);
-                    setTimeout(() => handleKingAutoAdvance(currentPlayer.id), 500);
-                }
-
-                // Check if turn went past dealer (shouldn't happen)
-                const dealer = currentGame.players?.find(p => p.id === currentGame.dealerId);
-
-                if (dealer && data.playerId === dealer.id) {
-                    log('🎯 Dealer just acted - round should end now!');
-                    setTimeout(() => {
-                        if (currentGame.turnPhase !== 'revealing') {
-                            log('🏁 Auto-ending round after dealer action');
-                            socket.emit('end-round', { gameId: currentGame.id });
-                        }
-                    }, 500);
-                } else if (dealer && currentPlayer && currentPlayer.id !== dealer.id) {
-                    // Check if we somehow skipped past the dealer
-                    const dealerIndex = currentGame.players.findIndex(p => p.id === dealer.id);
-                    const currentIndex = currentGame.players.findIndex(p => p.id === currentPlayer.id);
-
-                    if (dealerIndex !== -1 && currentIndex !== -1) {
-                        // Simple check: if current player comes after dealer in the list, we may have gone too far
-                        const playerCount = currentGame.players.length;
-                        const expectedNextAfterDealer = (dealerIndex + 1) % playerCount;
-
-                        if (currentIndex === expectedNextAfterDealer) {
-                            log('⚠️ WARNING: Turn passed dealer - forcing round end');
-                            socket.emit('end-round', { gameId: currentGame.id });
-                        }
-                    }
-                }
-
-                updateGameDisplay();
-                updatePersonalTable();
-            });
-
-            socket.on('card-flipped', function (data) {
-                log(`🎴 Player ${data.playerId} flipped their card`);
-                currentGame = data.game;
-
-                markPlayerAsLooked(data.playerId);
-
-                // Check if this revealed a King
-                const player = currentGame.players?.find(p => p.id === data.playerId);
-                if (player && shouldAutoRevealKing(player)) {
-                    handleKingAutoReveal(player);
-                }
-
-                updateGameDisplay();
-                updatePersonalTable();
-            });
-
-            socket.on('dealer-traded-deck', function (data) {
-                log('🎴 Dealer traded with deck - Round should end!');
-                currentGame = data.game;
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('Dealer traded with deck!', 'info');
-
-                // Force round end after dealer action
-                setTimeout(() => {
-                    if (currentGame.turnPhase !== 'revealing') {
-                        log('🏁 Forcing round end after dealer deck trade');
-                        socket.emit('end-round', { gameId: currentGame.id });
-                    }
-                }, 1000);
-            });
-
-            socket.on('dealer-skipped-trade', function (data) {
-                log('🎴 Dealer kept their card - Round should end!');
-                currentGame = data.game;
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('Dealer kept their card!', 'info');
-
-                // Force round end after dealer action
-                setTimeout(() => {
-                    if (currentGame.turnPhase !== 'revealing') {
-                        log('🏁 Forcing round end after dealer keep');
-                        socket.emit('end-round', { gameId: currentGame.id });
-                    }
-                }, 1000);
-            });
-
-            // ===== ROUND & GAME ENDING EVENTS =====
-            socket.on('round-ended', function (data) {
-                log(`🏁 Round ${data.result?.round || ''} ended`);
-                currentGame = data.game;
-
-                resetCardLooks();
-                clearAllNudges();
-
-                updateGameDisplay();
-                updatePersonalTable();
-
-                if (data.result?.losers) {
-                    const losers = data.result.losers.map(l => l.name).join(', ');
-                    showToast(`Losers: ${losers}`, 'warning');
-                }
-            });
-
-            socket.on('game-finished', function (data) {
-                log(`🎉 Game finished!`);
-                currentGame = data.game;
-
-                // NEW: Check for tie game first
-                if (data.tie) {
-                    // Show tie game announcement  
-                    showTieAnnouncement(data.tiedPlayers || []);
-                    showToast(`🤝 TIE GAME!`, 'warning');
-
-                    // Disable all game buttons except Leave
-                    disableAllGameButtons();
-                }
-                // Original winner logic
-                else if (data.winner) {
-                    // Show big winner announcement
-                    showWinnerAnnouncement(data.winner.name);
-                    showToast(`🏆 ${data.winner.name} Wins the Game!`, 'success');
-
-                    // Disable all game buttons except Leave
-                    disableAllGameButtons();
-                }
-
-                updateGameDisplay();
-                updatePersonalTable();
-
-                setTimeout(() => {
-                    leaveVideoCall().catch(console.error);
-                }, 10000); // Give more time to celebrate
-            });
-
-            // ===== AUTO-CONTINUE EVENTS =====
-            socket.on('auto-continue-update', function (data) {
-                playersReadyForNext = new Set(data.readyPlayers);
-                updateAutoContinueDisplay();
-                log(`📊 Auto-continue update: ${data.readyPlayers.length} players ready`);
-            });
-
-            socket.on('auto-continue-game-starting', function (data) {
-                log('🚀 Auto-continue new game starting!');
-                currentGame = data.game;
-                closeWinnerAnnouncement();
-                resetCardLooks();
-                clearAllNudges();
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('🎮 New game started!', 'success');
-            });
-
-            // ===== CHAT & ERROR EVENTS =====
-            socket.on('chat-message', function (data) {
-                addChatMessage(data.playerName || 'Unknown', data.message);
-            });
-
-            socket.on('error', function (data) {
-                log(`❌ Error: ${data.message}`);
-
-                // Handle specific duplicate username errors
-                if (data.message && data.message.toLowerCase().includes('name') && data.message.toLowerCase().includes('taken')) {
-                    showToast('Username already taken in this game! Try a different name.', 'error');
-
-                    // Suggest a random suffix
-                    const currentName = document.getElementById('playerName').value.trim();
-                    const randomSuffix = Math.floor(Math.random() * 999) + 1;
-                    const suggestedName = `${currentName}${randomSuffix}`;
-
-                    document.getElementById('playerName').value = suggestedName;
-                    showToast(`Try "${suggestedName}" instead`, 'warning');
-                } else {
-                    showToast(data.message, 'error');
-                }
-            });
-        }
-
-        // Game creation with validation
-        function createPublicGame() {
-            if (!socket || !socket.connected) {
-                log('❌ No socket connection - reconnecting...');
-                connectToServer();
-                setTimeout(createPublicGame, 1000);
-                return;
-            }
-
-            const rawPlayerName = document.getElementById('playerName').value.trim() || 'Player';
-
-            // Validate username
-            if (!validatePlayerName(rawPlayerName)) {
-                return;
-            }
-
-            playerName = rawPlayerName;
-
-            // Check if already in a game with this name
-            if (checkForDuplicateUsername(playerName)) {
-                return;
-            }
-
-            log(`🎮 Creating FRESH public game for ${playerName} (${socket.id})`);
-
-            socket.emit('quick-match', {
-                playerName: playerName,
-                userId: socket.id,
-                token: `demo_token_${socket.id}`
-            });
-        }
-
-        function createPrivateGame() {
-            if (!socket) {
-                connectToServer();
-                setTimeout(createPrivateGame, 1000);
-                return;
-            }
-
-            const rawPlayerName = document.getElementById('playerName').value.trim() || 'Player';
-
-            // Validate username
-            if (!validatePlayerName(rawPlayerName)) {
-                return;
-            }
-
-            playerName = rawPlayerName;
-
-            const settings = {
-                startingLives: parseInt(document.getElementById('startingLives').value),
-                deckCount: parseInt(document.getElementById('deckCount').value),
-                tournamentMode: 'single',
-                cardStyle: 'classic'
-            };
-
-            socket.emit('create-private-game', {
-                playerName: playerName,
-                userId: socket.id,
-                token: `demo_token_${socket.id}`,
-                settings: settings
-            });
-        }
-
-        function joinGame() {
-            const gameCode = document.getElementById('gameCode').value.trim().toUpperCase();
-            if (!gameCode) {
-                showToast('Please enter a game code', 'error');
-                return;
-            }
-
-            if (!socket) {
-                connectToServer();
-                setTimeout(() => joinGame(), 1000);
-                return;
-            }
-
-            const rawPlayerName = document.getElementById('playerName').value.trim() || 'Player';
-
-            // Validate username
-            if (!validatePlayerName(rawPlayerName)) {
-                return;
-            }
-
-            playerName = rawPlayerName;
-
-            socket.emit('join-game', {
-                friendCode: gameCode,
-                playerName: playerName,
-                userId: socket.id,
-                token: `demo_token_${socket.id}`
-            });
-        }
-
-        // Game display updates
-        function updateGameDisplay() {
-            if (!currentGame) return;
-
-            if (updateTimeout) {
-                clearTimeout(updateTimeout);
-            }
-
-            updateTimeout = setTimeout(() => {
-                performGameDisplayUpdate();
-            }, 50);
-        }
-
-        function performGameDisplayUpdate() {
-            if (!currentGame) return;
-
-            document.getElementById('gameCodeDisplay').innerHTML = `Game: <strong>${currentGame.gameCode || currentGame.id || 'UNKNOWN'}</strong>`;
-            document.getElementById('playerCount').innerHTML = `Players: <strong>${currentGame.players?.length || 0}/${currentGame.maxPlayers || 8}</strong>`;
-
-            updateButtonStates();
-        }
-
-        function updateButtonStates() {
-            if (!currentGame) return;
-
-            const myPlayer = currentGame.players?.find(p => p.id === playerId);
-            const isMyTurn = currentGame.currentPlayerId === playerId;
-            const gameStarted = currentGame.state === 'playing';
-            const canEndRound = gameStarted && currentGame.turnPhase === 'revealing';
-            const canTrade = canPerformTrade();
-
-            // Detect if I'm the dealer and it's my turn (final turn of round)
-            const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
-            const isDealerTurn = isDealer && isMyTurn && gameStarted;
-
-            // Main control buttons
-            const flipBtn = document.getElementById('flipCardBtn');
-            const keepBtn = document.getElementById('keepCardBtn');
-            const tradeBtn = document.getElementById('tradeCardBtn');
-            const endBtn = document.getElementById('endRoundBtn');
-
-            if (flipBtn) {
-                flipBtn.disabled = !gameStarted || !myPlayer || !myPlayer.hasCard;
-                flipBtn.style.opacity = flipBtn.disabled ? '0.5' : '1';
-            }
-            if (keepBtn) {
-                // Update button text for dealer
-                if (isDealerTurn) {
-                    keepBtn.textContent = '✋ Keep & End Round';
-                    keepBtn.style.background = '#f39c12'; // Orange for dealer
-                } else {
-                    keepBtn.textContent = '✋ Keep Card';
-                    keepBtn.style.background = '#27ae60'; // Green for normal
-                }
-                keepBtn.disabled = !isMyTurn || !gameStarted;
-                keepBtn.style.opacity = keepBtn.disabled ? '0.5' : '1';
-            }
-            if (tradeBtn) {
-                // Update button text for dealer
-                if (isDealerTurn) {
-                    tradeBtn.textContent = '🎴 Trade w/ Deck';
-                    tradeBtn.style.background = '#e74c3c'; // Red for dealer deck trade
-                } else {
-                    tradeBtn.textContent = '🔄 Trade Card';
-                    tradeBtn.style.background = '#3498db'; // Blue for normal trade
-                }
-                tradeBtn.disabled = !canTrade && !isDealerTurn;
-                tradeBtn.style.opacity = tradeBtn.disabled ? '0.5' : '1';
-            }
-            if (endBtn) {
-                endBtn.disabled = !canEndRound;
-                endBtn.style.opacity = endBtn.disabled ? '0.5' : '1';
-            }
-
-            // Update all card action buttons
-            document.querySelectorAll('.action-button').forEach(btn => {
-                if (btn.textContent.includes('Keep')) {
-                    btn.disabled = !isMyTurn || !gameStarted;
-                    btn.style.opacity = btn.disabled ? '0.5' : '1';
-
-                    // Update card-level button text for dealer
-                    if (isDealerTurn) {
-                        btn.textContent = '✋ Keep & End';
-                        btn.style.background = '#f39c12';
-                    } else {
-                        btn.textContent = '✋ Keep';
-                        btn.style.background = '#27ae60';
-                    }
-                }
-                if (btn.textContent.includes('Trade')) {
-                    btn.disabled = !canTrade && !isDealerTurn;
-                    btn.style.opacity = btn.disabled ? '0.5' : '1';
-
-                    // Update card-level button text for dealer
-                    if (isDealerTurn) {
-                        btn.textContent = '🎴 Deck';
-                        btn.style.background = '#e74c3c';
-                    } else {
-                        btn.textContent = '🔄 Trade';
-                        btn.style.background = '#3498db';
-                    }
-                }
-            });
-
-            log(`🔄 Button states updated: myTurn=${isMyTurn}, gameStarted=${gameStarted}, phase=${currentGame.turnPhase}, canTrade=${canTrade}, isDealerTurn=${isDealerTurn}`);
-        }
-
-        function showHostControls() {
-            if (currentGame?.hostId === playerId && currentGame?.state === 'waiting') {
-                document.getElementById('hostControls')?.classList.remove('hidden');
-            }
-        }
-
-        function hideHostControls() {
-            document.getElementById('hostControls')?.classList.add('hidden');
-        }
-
-        // Enhanced Jack block handling with auto-advance
-        function handleJackBlock(fromPlayerId, toPlayerId) {
-            if (!fromPlayerId || !toPlayerId) return;
-
-            // Find the actual player objects from the game state
-            const fromPlayer = currentGame?.players?.find(p => p.id === fromPlayerId);
-            const toPlayer = currentGame?.players?.find(p => p.id === toPlayerId);
-
-            if (!fromPlayer || !toPlayer) {
-                log(`❌ Could not find players for Jack block: ${fromPlayerId} -> ${toPlayerId}`);
-                return;
-            }
-
-            log(`🃏 ${toPlayer.name}'s Jack blocks ${fromPlayer.name} - SCREW YOU!`);
-
-            // 1. Mark the Jack holder as having revealed their card to everyone
-            toPlayer.cardRevealed = true;
-            markPlayerAsLooked(toPlayer.id);
-
-            // 2. Show dramatic "SCREW YOU!" message
-            showJackScrewYouMessage(fromPlayer.name, toPlayer.name);
-
-            // 3. Add special Jack reveal animation to the card
-            setTimeout(() => {
-                addJackRevealAnimation(toPlayer.id);
-            }, 100);
-
-            // 4. Show toast notification
-            showToast(`${toPlayer.name} blocks with a Jack! 🃏`, 'warning');
-
-            // 5. Auto-advance logic - monitor for Jack holder's turn
-            log(`🃏 Setting up auto-advance monitor for Jack holder ${toPlayer.name}`);
-
-            // Set up a monitoring function that will auto-advance when it becomes the Jack holder's turn
-            const jackAutoAdvanceMonitor = () => {
-                // Check if it's now the Jack holder's turn
-                if (currentGame?.currentPlayerId === toPlayer.id && currentGame?.state === 'playing') {
-                    log(`🃏 Jack holder ${toPlayer.name}'s turn detected - auto-advancing!`);
-
-                    // Auto-advance after animation completes
-                    setTimeout(() => {
-                        if (socket && currentGame && currentGame.currentPlayerId === toPlayer.id) {
-                            log(`🃏 Emitting skip-turn for Jack holder ${toPlayer.name}`);
-                            socket.emit('skip-turn', { gameId: currentGame.id });
-                            showToast(`${toPlayer.name}'s Jack auto-advances! 🃏`, 'success');
-                        } else {
-                            log(`🃏 Conditions changed - not auto-advancing Jack holder`);
-                        }
-                    }, 1000); // Shorter delay since they already saw the animation
-
-                    // Clear the monitor
-                    clearInterval(monitorInterval);
-                }
-            };
-
-            // Start monitoring for the Jack holder's turn (check every 500ms for up to 10 seconds)
-            const monitorInterval = setInterval(jackAutoAdvanceMonitor, 500);
-
-            // Safety cleanup after 10 seconds
-            setTimeout(() => {
-                clearInterval(monitorInterval);
-                log(`🃏 Jack auto-advance monitor cleanup for ${toPlayer.name}`);
-            }, 10000);
-        }
-
-        // Flying spinning Jack card animation
-        function showJackScrewYouMessage(blockedPlayerName, jackPlayerName) {
-            // Step 1: Find the Jack holder's card to get its position
-            const jackPlayer = currentGame?.players?.find(p => p.name === jackPlayerName);
-            if (!jackPlayer) {
-                // Fallback to original overlay if we can't find the player
-                showOriginalScrewYouOverlay(blockedPlayerName, jackPlayerName);
-                return;
-            }
-
-            const jackCardElement = document.querySelector(`[data-player-id="${jackPlayer.id}"] .card-display`);
-            if (!jackCardElement) {
-                // Fallback to original overlay if we can't find the card
-                showOriginalScrewYouOverlay(blockedPlayerName, jackPlayerName);
-                return;
-            }
-
-            // Step 2: Get the card's current position
-            const cardRect = jackCardElement.getBoundingClientRect();
-            const startX = cardRect.left + cardRect.width / 2;
-            const startY = cardRect.top + cardRect.height / 2;
-
-            // Step 3: Create the flying Jack card
-            const flyingJack = document.createElement('div');
-            flyingJack.className = 'flying-jack-card';
-            flyingJack.style.cssText = `
-                position: fixed;
-                left: ${startX - 40}px;
-                top: ${startY - 55}px;
-                width: 80px;
-                height: 110px;
-                background: linear-gradient(145deg, #ffffff, #f8f8f8);
-                border: 2px solid #ddd;
-                border-radius: 8px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                color: #333;
-                font-weight: bold;
-                font-family: 'Times New Roman', serif;
-                font-size: 1rem;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-                z-index: 1001;
-                pointer-events: none;
-                animation: jackFlyOut 2.5s ease-out forwards;
-            `;
-
-            // Step 4: Add the Jack card content
-            const jackCard = jackPlayer.card;
-            if (jackCard) {
-                const isRed = jackCard.suit === '♥' || jackCard.suit === '♦';
-                if (isRed) {
-                    flyingJack.style.color = '#d32f2f';
-                }
-
-                flyingJack.innerHTML = `
-                    <div style="font-size: 1.1rem; margin-bottom: 2px;">${jackCard.value}</div>
-                    <div style="font-size: 1.3rem;">${jackCard.suit}</div>
-                `;
-            } else {
-                // Fallback Jack content
-                flyingJack.innerHTML = `
-                    <div style="font-size: 1.1rem; margin-bottom: 2px;">J</div>
-                    <div style="font-size: 1.3rem;">♠</div>
-                `;
-            }
-
-            // Step 5: Add the flying card to the page
-            document.body.appendChild(flyingJack);
-
-            // Step 6: Add "SCREW YOU!" text directly on the landed card
-            setTimeout(() => {
-                addScrewYouTextToCard(flyingJack, blockedPlayerName, jackPlayerName);
-            }, 2500); // Wait for the card animation to complete
-        }
-
-        // Original overlay function (fallback)
-        function showOriginalScrewYouOverlay(blockedPlayerName, jackPlayerName) {
-            // Create big dramatic overlay
-            const screwYouOverlay = document.createElement('div');
-            screwYouOverlay.className = 'jack-screw-you-overlay';
-            screwYouOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-                animation: jackRevealBurst 0.6s ease-out;
-                pointer-events: none;
-            `;
-
-            const screwYouContent = document.createElement('div');
-            screwYouContent.style.cssText = `
-                background: linear-gradient(45deg, #e74c3c, #c0392b);
-                color: white;
-                padding: 30px 50px;
-                border-radius: 15px;
-                text-align: center;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                border: 4px solid #fff;
-                animation: jackBounceIn 0.8s ease-out;
-            `;
-
-            screwYouContent.innerHTML = `
-                <h1 style="font-size: 3rem; margin: 0 0 15px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🃏</h1>
-                <h2 style="font-size: 2.5rem; margin: 0 0 10px 0; font-weight: bold;">SCREW YOU!</h2>
-                <p style="font-size: 1.3rem; margin: 0; opacity: 0.9;">${jackPlayerName} blocks ${blockedPlayerName}!</p>
-            `;
-
-            screwYouOverlay.appendChild(screwYouContent);
-            document.body.appendChild(screwYouOverlay);
-
-            // Auto-remove after 3 seconds
-            setTimeout(() => {
-                if (screwYouOverlay.parentNode) {
-                    screwYouOverlay.style.animation = 'fadeOut 0.5s ease-out';
-                    setTimeout(() => {
-                        screwYouOverlay.remove();
-                    }, 500);
-                }
-            }, 2500);
-        }
-
-        // Jack card animation
-        function addJackRevealAnimation(playerId) {
-            const playerCard = document.querySelector(`[data-player-id="${playerId}"] .card-display`);
-            if (!playerCard) return;
-
-            log(`🃏 Adding Jack reveal animation for player ${playerId}`);
-
-            // Add special Jack blocking animation class
-            playerCard.classList.add('jack-block-reveal');
-
-            // Remove animation class after it completes
-            setTimeout(() => {
-                playerCard.classList.remove('jack-block-reveal');
-            }, 2000);
-        }
-
-        // Add "SCREW YOU!" text to the landed card
-        function addScrewYouTextToCard(flyingJack, blockedPlayerName, jackPlayerName) {
-            log('🃏 Adding text to card...');
-
-            // Create simple text overlay
-            const textOverlay = document.createElement('div');
-            textOverlay.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(231, 76, 60, 0.95);
-                color: white;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                border-radius: 8px;
-                font-weight: bold;
-                text-align: center;
-                z-index: 1002;
-            `;
-
-            textOverlay.innerHTML = `
-                <div style="font-size: 1.4rem; margin-bottom: 5px;">💥</div>
-                <div style="font-size: 1.2rem; line-height: 1.2;">YOU GOT<br>SCREWED!</div>
-            `;
-
-            // Add text to card
-            flyingJack.appendChild(textOverlay);
-            log('🃏 Text added to card');
-
-            // FORCE remove after 3 seconds - no matter what
-            setTimeout(() => {
-                log('🃏 Removing card now...');
-                if (flyingJack && flyingJack.parentNode) {
-                    flyingJack.remove();
-                }
-            }, 3000);
-        }
-
-        // Emergency function to clear stuck cards
-        function clearStuckCard() {
-            const stuckCards = document.querySelectorAll('.flying-jack-card');
-            stuckCards.forEach(card => card.remove());
-            log('🧹 Cleared stuck cards');
-            showToast('Cleared stuck card!', 'success');
-        }
-
-        // Winner announcement with auto-continue
-        function showWinnerAnnouncement(winnerName) {
-            // Create big winner overlay
-            const winnerOverlay = document.createElement('div');
-            winnerOverlay.className = 'winner-announcement';
-            winnerOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-                animation: fadeIn 0.5s ease;
-            `;
-
-            const winnerContent = document.createElement('div');
-            winnerContent.style.cssText = `
-                background: linear-gradient(45deg, #f39c12, #e67e22);
-                color: white;
-                padding: 40px 60px;
-                border-radius: 20px;
-                text-align: center;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                animation: bounceIn 0.6s ease;
-            `;
-
-            winnerContent.innerHTML = `
-                <h1 style="font-size: 3rem; margin: 0 0 20px 0;">🏆</h1>
-                <h2 style="font-size: 2rem; margin: 0 0 10px 0;">${winnerName} Wins!</h2>
-                <p style="font-size: 1.2rem; margin: 0 0 10px 0; opacity: 0.9;">Congratulations!</p>
-                
-                <!-- Auto-Continue Section -->
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin: 20px 0;">
-                    <h3 style="font-size: 1.4rem; margin: 0 0 10px 0;">🚀 Next game starting in...</h3>
-                    <div id="countdownTimer" style="font-size: 3rem; font-weight: bold; margin: 10px 0;">15</div>
-                    <div id="playersReady" style="font-size: 1.1rem; margin: 10px 0; opacity: 0.9;">
-                        3/3 players ready
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
-                    <button onclick="stayForNextGame()" style="
-                        padding: 12px 24px;
-                        background: #27ae60;
-                        border: 2px solid white;
-                        color: white;
-                        border-radius: 10px;
-                        font-size: 1.1rem;
-                        font-weight: bold;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='#2ecc71'" onmouseout="this.style.background='#27ae60'">
-                        ✅ I'm Ready!
-                    </button>
-                    
-                    <button onclick="leaveAfterGame()" style="
-                        padding: 12px 24px;
-                        background: #e74c3c;
-                        border: 2px solid white;
-                        color: white;
-                        border-radius: 10px;
-                        font-size: 1.1rem;
-                        font-weight: bold;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
-                        🚪 Leave Game
-                    </button>
-                </div>
-            `;
-
-            winnerOverlay.appendChild(winnerContent);
-            document.body.appendChild(winnerOverlay);
-
-            // Start the auto-continue countdown
-            startAutoContinueCountdown();
-        }
-
-        // Tie game announcement
-        function showTieAnnouncement(tiedPlayers) {
-            const tieOverlay = document.createElement('div');
-            tieOverlay.className = 'tie-announcement';
-            tieOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-                animation: fadeIn 0.5s ease;
-            `;
-
-            const tieContent = document.createElement('div');
-            tieContent.style.cssText = `
-                background: linear-gradient(45deg, #9b59b6, #8e44ad);
-                color: white;
-                padding: 40px 60px;
-                border-radius: 20px;
-                text-align: center;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                animation: bounceIn 0.6s ease;
-            `;
-
-            const tiedPlayerNames = tiedPlayers.map(p => p.name).join(' & ');
-
-            tieContent.innerHTML = `
-                <h1 style="font-size: 3rem; margin: 0 0 20px 0;">🤝</h1>
-                <h2 style="font-size: 2rem; margin: 0 0 10px 0;">TIE GAME!</h2>
-                <p style="font-size: 1.2rem; margin: 0 0 20px 0; opacity: 0.9;">${tiedPlayerNames} tied for the win!</p>
-                
-                <button onclick="closeWinnerAnnouncement(); leaveGame();" style="
-                    padding: 15px 30px;
-                    background: #e74c3c;
-                    border: 2px solid white;
-                    color: white;
-                    border-radius: 10px;
-                    font-size: 1.1rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
-                    🚪 Leave Game
-                </button>
-            `;
-
-            tieOverlay.appendChild(tieContent);
-            document.body.appendChild(tieOverlay);
-        }
-
-        // Auto-continue countdown system
-        function startAutoContinueCountdown() {
-            log('🚀 Starting auto-continue countdown...');
-
-            // Reset state
-            countdownSeconds = 15;
-            playersReadyForNext.clear();
-
-            // Add myself as ready by default (auto-opt-in)
-            playersReadyForNext.add(playerId);
-
-            // Emit to server that auto-continue started
-            if (socket && currentGame) {
-                socket.emit('auto-continue-started', {
-                    gameId: currentGame.id,
-                    playerId: playerId,
-                    ready: true
-                });
-            }
-
-            // Update display immediately
-            updateAutoContinueDisplay();
-
-            // Start countdown timer
-            autoContinueTimer = setInterval(() => {
-                countdownSeconds--;
-                updateAutoContinueDisplay();
-
-                if (countdownSeconds <= 0) {
-                    clearInterval(autoContinueTimer);
-                    triggerAutoContinue();
-                }
-            }, 1000);
-        }
-
-        function updateAutoContinueDisplay() {
-            const timerElement = document.getElementById('countdownTimer');
-            const readyElement = document.getElementById('playersReady');
-
-            if (timerElement) {
-                timerElement.textContent = countdownSeconds;
-                // Add urgency colors
-                if (countdownSeconds <= 5) {
-                    timerElement.style.color = '#e74c3c'; // Red
-                } else if (countdownSeconds <= 10) {
-                    timerElement.style.color = '#f39c12'; // Orange
-                }
-            }
-
-            if (readyElement && currentGame) {
-                const totalPlayers = currentGame.players.length;
-                const readyCount = playersReadyForNext.size;
-                readyElement.textContent = `${readyCount}/${totalPlayers} players ready`;
-
-                // Green when everyone ready
-                if (readyCount === totalPlayers) {
-                    readyElement.style.color = '#2ecc71';
-                    readyElement.textContent += ' 🎉';
-                }
-            }
-        }
-
-        function stayForNextGame() {
-            log('✅ Player confirmed ready for next game');
-
-            // Add to ready set
-            playersReadyForNext.add(playerId);
-
-            // Emit to server
-            if (socket && currentGame) {
-                socket.emit('auto-continue-ready', {
-                    gameId: currentGame.id,
-                    playerId: playerId,
-                    ready: true
-                });
-            }
-
-            // Update display
-            updateAutoContinueDisplay();
-
-            // Visual feedback
-            showToast('Ready for next game! 🚀', 'success');
-
-            // Disable ready button, enable leave button
-            const readyBtn = event.target;
-            readyBtn.style.background = '#2ecc71';
-            readyBtn.textContent = '✅ Ready!';
-            readyBtn.disabled = true;
-        }
-
-        function leaveAfterGame() {
-            log('🚪 Player choosing to leave after game');
-
-            // Remove from ready set
-            playersReadyForNext.delete(playerId);
-
-            // Emit to server
-            if (socket && currentGame) {
-                socket.emit('auto-continue-ready', {
-                    gameId: currentGame.id,
-                    playerId: playerId,
-                    ready: false
-                });
-            }
-
-            // Stop the countdown and leave
-            if (autoContinueTimer) {
-                clearInterval(autoContinueTimer);
-            }
-
-            // Clean exit
-            closeWinnerAnnouncement();
-            completeCleanup();
-            showMainMenu();
-
-            showToast('Thanks for playing! 👋', 'success');
-        }
-
-        function triggerAutoContinue() {
-            log('🚀 Auto-continue timer finished - starting next game!');
-
-            // Close winner screen
-            closeWinnerAnnouncement();
-
-            // Check if enough players ready
-            if (playersReadyForNext.size >= 2) {
-                // Start new game with ready players
-                if (socket && currentGame) {
-                    socket.emit('start-auto-continue', {
-                        gameId: currentGame.id,
-                        readyPlayers: Array.from(playersReadyForNext)
-                    });
-                }
-                showToast('🚀 New game starting with ready players!', 'success');
-            } else {
-                // Not enough players - return to main menu
-                completeCleanup();
-                showMainMenu();
-                showToast('Not enough players for next game', 'warning');
-            }
-        }
-
-        function closeWinnerAnnouncement() {
-            const overlay = document.querySelector('.winner-announcement, .tie-announcement');
-            if (overlay) {
-                overlay.remove();
-            }
-        }
-
-        function disableAllGameButtons() {
-            // Disable main control buttons
-            document.getElementById('flipCardBtn').disabled = true;
-            document.getElementById('keepCardBtn').disabled = true;
-            document.getElementById('tradeCardBtn').disabled = true;
-            document.getElementById('endRoundBtn').disabled = true;
-
-            // Hide start game button if visible
-            const hostControls = document.getElementById('hostControls');
-            if (hostControls) {
-                hostControls.classList.add('hidden');
-            }
-
-            // Disable all card action buttons
-            document.querySelectorAll('.action-button').forEach(btn => {
-                btn.disabled = true;
-                btn.style.opacity = '0.3';
-            });
-
-            log('🔒 All game buttons disabled - game finished');
-        }
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            completeCleanup();
-            if (socket) {
-                socket.removeAllListeners();
-                socket.disconnect();
-            }
-            if (isVideoJoined) {
-                leaveVideoCall().catch(console.error);
-            }
-        });
-
-        // Initialize with clean state
-        document.addEventListener('DOMContentLoaded', function () {
-            log('🎮 Game initialized with complete features!');
-
-            initializeFocusState();
-
-            const chatInput = document.getElementById('chatInput');
-            if (chatInput) {
-                chatInput.addEventListener('keypress', function (e) {
-                    if (e.key === 'Enter') {
-                        sendChatMessage();
-                    }
-                });
-            }
-
-            // Add real-time username validation
-            const playerNameInput = document.getElementById('playerName');
-            if (playerNameInput) {
-                playerNameInput.addEventListener('input', function (e) {
-                    const name = e.target.value.trim();
-
-                    // Remove any existing validation styling
-                    e.target.style.borderColor = '';
-
-                    if (name.length > 20) {
-                        e.target.style.borderColor = 'red';
-                        e.target.title = 'Name must be 20 characters or less';
-                    } else if (name.length > 0 && !/^[a-zA-Z0-9\s_-]+$/.test(name)) {
-                        e.target.style.borderColor = 'orange';
-                        e.target.title = 'Only letters, numbers, spaces, underscore, and dash allowed';
-                    } else if (name.length > 0) {
-                        e.target.style.borderColor = 'green';
-                        e.target.title = 'Valid username';
-                    }
-                });
-            }
-        });
-
-        // Memory cleanup
-        setInterval(() => {
-            const gameMessages = document.getElementById('gameMessages');
-            if (gameMessages && gameMessages.children.length > 100) {
-                while (gameMessages.children.length > 50) {
-                    gameMessages.removeChild(gameMessages.firstChild);
-                }
-            }
-
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages && chatMessages.children.length > 50) {
-                while (chatMessages.children.length > 25) {
-                    chatMessages.removeChild(chatMessages.firstChild);
-                }
-            }
-        }, 30000);
-    </script>
-</body>
-
-</html>
