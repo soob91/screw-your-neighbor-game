@@ -2994,7 +2994,7 @@
             if (window.reconnectOnForeground) {
                 window.reconnectOnForeground = false;
             }
-            
+
             // 1. Disconnect socket completely
             if (socket) {
                 socket.removeAllListeners();
@@ -3408,6 +3408,9 @@
             socket.on('game-started', function (data) {
                 log('🎮 Game started!');
                 currentGame = data.game;
+
+                // Clear any reconnection data since we're starting fresh
+                localStorage.removeItem('gameReconnectData');
 
                 resetCardLooks();
                 clearAllNudges();
