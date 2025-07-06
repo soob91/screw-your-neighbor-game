@@ -2987,6 +2987,14 @@
         function completeCleanup() {
             log('🧹 Performing complete cleanup...');
 
+            // Force clear any stored reconnection data
+            localStorage.removeItem('gameReconnectData');
+
+            // Clear any mobile reconnection flags
+            if (window.reconnectOnForeground) {
+                window.reconnectOnForeground = false;
+            }
+            
             // 1. Disconnect socket completely
             if (socket) {
                 socket.removeAllListeners();
