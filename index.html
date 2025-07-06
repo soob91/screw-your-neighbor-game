@@ -2849,7 +2849,7 @@
         async function joinVideoChannel() {
             try {
                 const channelName = currentGame?.gameCode || currentGame?.id || 'test123';
-                const uid = Math.floor(Math.random() * 1000000);
+                const uid = playerId; // Use socket ID instead of random number
                 const appId = '6dc9368154fd49b3b0543e2a99dbee24'; // Add your app ID here
 
                 if (appId === 'YOUR_AGORA_APP_ID') {
