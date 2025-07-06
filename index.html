@@ -3408,6 +3408,19 @@
                 updateGameDisplay();
                 updatePersonalTable();
 
+                // Re-attach video streams after UI rebuild
+                if (isVideoJoined) {
+                    Object.keys(remoteUsers).forEach(uid => {
+                        initializeVideoForPlayer(uid);
+                    });
+
+                    // Re-attach your own video too
+                    if (localVideoTrack) {
+                        const myVideo = document.getElementById(`video-${playerId}`);
+                        if (myVideo) localVideoTrack.play(myVideo);
+                    }
+                }
+
                 setTimeout(() => {
                     initializeVideoCall();
                 }, 1000);
@@ -3422,6 +3435,23 @@
 
                 updateGameDisplay();
                 updatePersonalTable();
+
+                // Re-attach video streams after UI rebuild
+                if (isVideoJoined) {
+                    Object.keys(remoteUsers).forEach(uid => {
+                        initializeVideoForPlayer(uid);
+                    });
+
+                    // Re-attach your own video too
+                    if (localVideoTrack) {
+                        const myVideo = document.getElementById(`video-${playerId}`);
+                        if (myVideo) localVideoTrack.play(myVideo);
+                    }
+                }
+
+                setTimeout(() => {
+                    initializeVideoCall();
+                }, 1000);
             });
 
             socket.on('cards-dealt', function (data) {
