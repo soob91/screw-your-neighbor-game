@@ -2834,7 +2834,7 @@
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 log('📹 Agora client created successfully');
 
-                client.on("user-published", async (user, mediaType) => {
+                agoraClient.on("user-published", async (user, mediaType) => {
                     console.log(`📹 User ${user.uid} published ${mediaType}`);
 
                     if (mediaType === "video") {
