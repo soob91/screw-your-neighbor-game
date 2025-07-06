@@ -2834,19 +2834,6 @@
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 log('📹 Agora client created successfully');
 
-                agoraClient.on("user-published", async (user, mediaType) => {
-                    console.log(`📹 User ${user.uid} published ${mediaType}`);
-
-                    if (mediaType === "video") {
-                        await client.subscribe(user, mediaType);
-                        console.log(`📹 Subscribed to ${user.uid} video`);
-
-                        // DISPLAY THE REMOTE VIDEO
-                        user.videoTrack.play(`video-${user.uid}`);
-                        console.log(`📹 Playing video for ${user.uid}`);
-                    }
-                });
-
                 agoraClient.on("user-published", handleUserPublished);
                 agoraClient.on("user-unpublished", handleUserUnpublished);
                 agoraClient.on("user-left", handleUserLeft);
