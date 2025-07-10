@@ -61,6 +61,46 @@
             margin-bottom: 15px;
         }
 
+        /* Top center - your own video (smaller) */
+        .player-video-top {
+            grid-column: 2;
+            grid-row: 1;
+            height: 80px;
+        }
+
+        /* Center - your card (main interaction zone) */
+        .center-card-area {
+            grid-column: 2;
+            grid-row: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 100, 0, 0.1);
+            /* Subtle green felt hint */
+            border-radius: 15px;
+        }
+
+        /* Left/Right trading partners (larger videos) */
+        .left-trading-partner {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .right-trading-partner {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        /* Bottom additional players */
+        .bottom-players {
+            grid-column: 1 / 4;
+            grid-row: 3;
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+
         .focus-slot {
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.2);
@@ -1318,7 +1358,7 @@
         // Utility functions
         function log(message) {
             const timestamp = new Date().toLocaleTimeString();
-            const logMessage = `[${timestamp}] ${message}`;
+            const logMessage = '[' + timestamp + '] ' + message;
             console.log(logMessage);
             addGameMessage(message);
         }
@@ -1341,7 +1381,7 @@
             const chatMessages = document.getElementById('chatMessages');
             if (chatMessages) {
                 const messageDiv = document.createElement('div');
-                messageDiv.innerHTML = `<strong>${playerName}:</strong> ${message}`;
+                messageDiv.innerHTML = '<strong>' + playerName + ':</strong> ' + message;
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -1353,7 +1393,7 @@
 
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+            toast.className = 'toast ' + type;
             toast.textContent = message;
             document.body.appendChild(toast);
 
@@ -1407,11 +1447,11 @@
         // Enhanced Gesture Detection System
         function initializeGestureHandlers(cardElement, targetPlayerId) {
             if (!cardElement) {
-                log(`❌ No card element to initialize gestures for player ${targetPlayerId}`);
+                log('❌ No card element to initialize gestures for player ' + targetPlayerId);
                 return;
             }
 
-            log(`🎯 Initializing gesture handlers for player ${targetPlayerId}`);
+            log('🎯 Initializing gesture handlers for player ' + targetPlayerId);
 
             // Touch events for mobile
             cardElement.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -1426,14 +1466,14 @@
             // Store player ID for gesture handling
             cardElement.dataset.playerId = targetPlayerId;
 
-            log(`✅ Gesture handlers set for player ${targetPlayerId}`);
+            log('✅ Gesture handlers set for player ' + targetPlayerId);
         }
 
         function handleTouchStart(e) {
             e.preventDefault();
             const touch = e.touches[0];
             startGesture(touch.clientX, touch.clientY, e.target);
-            log(`📱 Touch start: ${touch.clientX}, ${touch.clientY}`);
+            log('📱 Touch start: ' + touch.clientX + ', ' + touch.clientY);
         }
 
         function handleTouchMove(e) {
@@ -1445,13 +1485,13 @@
 
         function handleTouchEnd(e) {
             e.preventDefault();
-            log(`📱 Touch end`);
+            log('📱 Touch end');
             endGesture();
         }
 
         function handleMouseStart(e) {
             startGesture(e.clientX, e.clientY, e.target);
-            log(`🖱️ Mouse start: ${e.clientX}, ${e.clientY}`);
+            log('🖱️ Mouse start: ' + e.clientX + ', ' + e.clientY);
         }
 
         function handleMouseMove(e) {
@@ -1460,7 +1500,7 @@
         }
 
         function handleMouseEnd(e) {
-            log(`🖱️ Mouse end`);
+            log('🖱️ Mouse end');
             endGesture();
         }
 
@@ -1470,7 +1510,7 @@
             gestureState.startTime = Date.now();
             gestureState.isTracking = true;
             gestureState.element = element;
-            log(`🎯 Gesture started at ${x}, ${y}`);
+            log('🎯 Gesture started at ' + x + ', ' + y);
         }
 
         function updateGesture(x, y) {
@@ -1484,9 +1524,9 @@
             if (distance > 20) {
                 const cardElement = gestureState.element.closest('.card-display');
                 if (cardElement && deltaX > 50) {
-                    cardElement.style.transform = `translateX(${Math.min(deltaX - 50, 30)}px) rotate(${Math.min((deltaX - 50) / 5, 10)}deg)`;
+                    cardElement.style.transform = 'translateX(' + Math.min(deltaX - 50, 30) + 'px) rotate(' + Math.min((deltaX - 50) / 5, 10) + 'deg)';
                     cardElement.style.opacity = '0.8';
-                    log(`👉 Swipe feedback: deltaX=${deltaX}`);
+                    log('👉 Swipe feedback: deltaX=' + deltaX);
                 }
             }
         }
@@ -1497,7 +1537,7 @@
             const duration = Date.now() - gestureState.startTime;
             const cardElement = gestureState.element.closest('.card-display');
 
-            log(`🎯 Gesture ended, duration: ${duration}ms`);
+            log('🎯 Gesture ended, duration: ' + duration + 'ms');
 
             if (cardElement) {
                 // Check for swipe based on transform applied during updateGesture
@@ -1510,10 +1550,10 @@
 
                 // Get the player ID from the card element's dataset
                 const targetPlayerId = cardElement.dataset.playerId;
-                log(`🎯 Target player ID: ${targetPlayerId}`);
+                log('🎯 Target player ID: ' + targetPlayerId);
 
                 if (!targetPlayerId) {
-                    log(`❌ No target player ID found in card element`);
+                    log('❌ No target player ID found in card element');
                     gestureState.isTracking = false;
                     gestureState.element = null;
                     return;
@@ -1521,24 +1561,24 @@
 
                 if (wasSwipeRight) {
                     // Swipe right detected
-                    log(`👉 Swipe right detected for player ${targetPlayerId}`);
+                    log('👉 Swipe right detected for player ' + targetPlayerId);
                     handleSwipeRight(targetPlayerId);
                 } else if (duration < 300) {
                     // Quick tap
                     if (gestureState.lastTap && Date.now() - gestureState.lastTap < 500) {
                         // Double tap - Keep card
-                        log(`👆👆 Double tap detected for player ${targetPlayerId}`);
+                        log('👆👆 Double tap detected for player ' + targetPlayerId);
                         handleDoubleTap(targetPlayerId);
                         gestureState.lastTap = 0;
                     } else {
                         // Single tap - Look at card
-                        log(`👆 Single tap detected for player ${targetPlayerId}`);
+                        log('👆 Single tap detected for player ' + targetPlayerId);
                         gestureState.lastTap = Date.now();
                         handleSingleTap(targetPlayerId);
                     }
                 }
             } else {
-                log(`❌ No card element found for gesture`);
+                log('❌ No card element found for gesture');
             }
 
             // Reset gesture state
@@ -1547,48 +1587,83 @@
         }
 
         function handleSwipeRight(targetPlayerId) {
-            log(`👉 Swipe feedback: Swipe right for player ${targetPlayerId}`);
+            log('👉 Swipe feedback: Swipe right for player ' + targetPlayerId);
             if (targetPlayerId === playerId) {
                 // Check if we can trade
                 if (canPerformTrade()) {
+                    const myPlayer = currentGame?.players?.find(p => p.id === playerId);
+                    const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
+                    const isDealerTurn = isDealer && currentGame?.currentPlayerId === playerId;
+
+                    // FIXED: If dealer, always trade with deck on swipe
+                    if (isDealerTurn) {
+                        log('🎴 Dealer swipe - trading with deck');
+                        socket.emit('dealer-trade-deck', { gameId: currentGame.id });
+                        showToast('Trading with deck...', 'info');
+                        return;
+                    }
+
+                    // Normal player trading
                     const nextPlayer = getNextTradeablePlayer();
                     if (nextPlayer) {
-                        log(`🔄 Trading with ${nextPlayer.name}`);
+                        log('🔄 Trading with ' + nextPlayer.name);
                         requestTrade(nextPlayer.id);
                     } else {
-                        log(`❌ No valid trade target found`);
+                        log('❌ No valid trade target found');
                         showToast('No valid trade target!', 'warning');
                     }
                 } else {
-                    log(`❌ Cannot trade right now`);
+                    log('❌ Cannot trade right now');
                     showToast('Cannot trade right now!', 'warning');
                 }
             }
         }
 
         function handleDoubleTap(targetPlayerId) {
-            log(`✅ Double tap: Processing for player ${targetPlayerId}`);
+            log('✅ Double tap: Processing for player ' + targetPlayerId);
             if (targetPlayerId === playerId) {
                 if (currentGame?.currentPlayerId === targetPlayerId) {
-                    log(`✅ Double tap: It's my turn, keeping card`);
-                    keepCard();
+                    const myPlayer = currentGame?.players?.find(p => p.id === playerId);
+                    const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
+                    const isDealerTurn = isDealer && currentGame?.currentPlayerId === playerId;
+
+                    if (isDealerTurn) {
+                        log('✅ Dealer double tap: Keeping card and ending round');
+                        socket.emit('dealer-skip-trade', { gameId: currentGame.id });
+                        showToast('Dealer kept card - Round ending!', 'success');
+                    } else {
+                        log('✅ Double tap: It\'s my turn, keeping card');
+                        socket.emit('skip-turn', { gameId: currentGame.id });
+                    }
                 } else {
-                    log(`❌ Double tap: Not my turn`);
+                    log('❌ Double tap: Not my turn');
                     showToast('Not your turn!', 'warning');
                 }
             }
         }
 
         function handleSingleTap(targetPlayerId) {
-            log(`👆 Single tap: Processing for player ${targetPlayerId}`);
+            log('👆 Single tap: Processing for player ' + targetPlayerId);
             if (targetPlayerId === playerId) {
                 const myPlayer = currentGame?.players?.find(p => p.id === targetPlayerId);
                 if (myPlayer && myPlayer.hasCard && !playerCardLooks[targetPlayerId]) {
-                    log(`👁️ Single tap: Flipping card for first look`);
+                    log('👁️ Single tap: Flipping card for first look');
                     flipCard();
                     markPlayerAsLooked(targetPlayerId);
+
+                    // ADDED: Check if we flipped a King and auto-advance
+                    if (myPlayer.card && isKing(myPlayer.card)) {
+                        log('👑 Flipped King - auto-advancing in 1.5 seconds');
+                        setTimeout(() => {
+                            if (currentGame?.currentPlayerId === targetPlayerId) {
+                                log('👑 Auto-skipping turn for King holder');
+                                socket.emit('skip-turn', { gameId: currentGame.id });
+                                showToast('Your King auto-advances! 👑', 'success');
+                            }
+                        }, 1500); // Give time to see the King reveal animation
+                    }
                 } else {
-                    log(`👁️ Single tap: Player already looked or no card`);
+                    log('👁️ Single tap: Player already looked or no card');
                 }
             }
         }
@@ -1610,9 +1685,9 @@
         function handleKingAutoReveal(player) {
             if (shouldAutoRevealKing(player)) {
                 // Prevent multiple auto-reveals of the same King
-                const autoRevealKey = `${player.id}-king-revealed`;
+                const autoRevealKey = player.id + '-king-revealed';
                 if (window.autoRevealedKings && window.autoRevealedKings[autoRevealKey]) {
-                    log(`👑 King already auto-revealed for ${player.name} - skipping`);
+                    log('👑 King already auto-revealed for ' + player.name + ' - skipping');
                     return;
                 }
 
@@ -1622,7 +1697,7 @@
                 }
                 window.autoRevealedKings[autoRevealKey] = true;
 
-                log(`👑 AUTO-REVEALING King for ${player.name}`);
+                log('👑 AUTO-REVEALING King for ' + player.name);
 
                 // Mark as revealed for all players to see
                 player.cardRevealed = true;
@@ -1636,7 +1711,7 @@
                 }
 
                 markPlayerAsLooked(player.id);
-                showToast(`${player.name} has a King! 👑`, 'warning');
+                showToast(player.name + ' has a King! 👑', 'warning');
 
                 // IMPROVED: Only auto-advance if it's actually their turn AND we're in trading phase
                 setTimeout(() => {
@@ -1644,7 +1719,7 @@
                         (currentGame?.turnPhase === 'trading' || currentGame?.turnPhase === 'dealer-turn')) {
                         handleKingAutoAdvance(player.id);
                     } else {
-                        log(`👑 Not auto-advancing ${player.name} - not their turn or wrong phase`);
+                        log('👑 Not auto-advancing ' + player.name + ' - not their turn or wrong phase');
                     }
                 }, 500);
             }
@@ -1655,32 +1730,32 @@
             const player = currentGame?.players?.find(p => p.id === playerId);
             if (!player || !player.card || !isKing(player.card)) return;
 
-            log(`👑 Auto-advancing ${player.name} (has King)`);
+            log('👑 Auto-advancing ' + player.name + ' (has King)');
 
             // Check if it's actually this player's turn
             if (playerId !== currentGame?.currentPlayerId) {
-                log(`👑 Not ${player.name}'s turn - skipping auto-advance`);
+                log('👑 Not ' + player.name + '\'s turn - skipping auto-advance');
                 return;
             }
 
             // Check if we're in the right phase
             if (currentGame?.turnPhase !== 'trading' && currentGame?.turnPhase !== 'dealer-turn') {
-                log(`👑 Wrong phase (${currentGame?.turnPhase}) - skipping auto-advance`);
+                log('👑 Wrong phase (' + currentGame?.turnPhase + ') - skipping auto-advance');
                 return;
             }
 
-            log(`👑 Auto-skipping ${player.name}'s turn (has King)`);
+            log('👑 Auto-skipping ' + player.name + '\'s turn (has King)');
 
             // Add visual feedback
-            showToast(`${player.name}'s King auto-advances! 👑`, 'success');
+            showToast(player.name + '\'s King auto-advances! 👑', 'success');
 
             // Auto-emit skip turn after a brief delay for visual feedback
             setTimeout(() => {
                 if (socket && currentGame && currentGame.currentPlayerId === playerId) {
-                    log(`👑 Emitting skip-turn for ${player.name}`);
+                    log('👑 Emitting skip-turn for ' + player.name);
                     socket.emit('skip-turn', { gameId: currentGame.id });
                 } else {
-                    log(`👑 Conditions changed - not emitting skip-turn`);
+                    log('👑 Conditions changed - not emitting skip-turn');
                 }
             }, 1500);
         }
@@ -1688,20 +1763,27 @@
         function canPerformTrade() {
             const isMyTurn = currentGame?.currentPlayerId === playerId;
             const gameStarted = currentGame?.state === 'playing';
-            const tradingPhase = currentGame?.turnPhase === 'trading';
+            const tradingPhase = currentGame?.turnPhase === 'trading' || currentGame?.turnPhase === 'dealer-turn';
             const myPlayer = currentGame?.players?.find(p => p.id === playerId);
 
-            log(`🔍 Trade check: myTurn=${isMyTurn}, gameStarted=${gameStarted}, tradingPhase=${tradingPhase}`);
+            log('🔍 Trade check: myTurn=' + isMyTurn + ', gameStarted=' + gameStarted + ', tradingPhase=' + tradingPhase + ', phase=' + currentGame?.turnPhase);
 
-            // Can't trade if I have a King
-            if (myPlayer?.card && isKing(myPlayer.card)) {
-                log(`👑 Cannot trade: I have a King`);
+            // Special case: Dealer can always trade with deck on their turn
+            const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
+            if (isDealer && isMyTurn && gameStarted) {
+                log('👑 Dealer can trade with deck');
+                return true;
+            }
+
+            // Can't trade if I have a King (unless I'm dealer)
+            if (myPlayer?.card && isKing(myPlayer.card) && !isDealer) {
+                log('👑 Cannot trade: I have a King');
                 showToast('Kings cannot be traded! 👑', 'warning');
                 return false;
             }
 
             const canTrade = isMyTurn && gameStarted && tradingPhase;
-            log(`🔍 Final trade result: ${canTrade}`);
+            log('🔍 Final trade result: ' + canTrade);
             return canTrade;
         }
 
@@ -1723,12 +1805,12 @@
                 if (nextPlayer.card && isKing(nextPlayer.card) && nextPlayer.cardRevealed) {
                     // Special case: If DEALER has King, trade with deck
                     if (nextPlayer.id === currentGame.dealerId) {
-                        log(`👑 DEALER ${nextPlayer.name} has King - trade with deck!`);
+                        log('👑 DEALER ' + nextPlayer.name + ' has King - trade with deck!');
                         return { id: 'TRADE_WITH_DECK', name: 'Deck', isDealer: true };
                     }
                     // Normal case: Bypass non-dealer King holders
                     else {
-                        log(`👑 Bypassing ${nextPlayer.name} (has King)`);
+                        log('👑 Bypassing ' + nextPlayer.name + ' (has King)');
                         nextIndex = (nextIndex + 1) % playerCount;
                         searchCount++;
                         continue;
@@ -1788,7 +1870,7 @@
             const canTrade = nextTradeablePlayer && player.id === nextTradeablePlayer.id;
 
             if (canTrade) {
-                log(`🔄 ${player.name} is valid trade target`);
+                log('🔄 ' + player.name + ' is valid trade target');
             }
 
             return canTrade;
@@ -1797,12 +1879,34 @@
         // Card Look Tracking
         function markPlayerAsLooked(playerId) {
             playerCardLooks[playerId] = true;
-            log(`👁️ Player ${playerId} has looked at their card`);
+            log('👁️ Player ' + playerId + ' has looked at their card');
             clearNudge(playerId);
+
+            // FIXED: Check if it's any player (removed the wrong condition)
+            if (currentGame?.players) {
+                const player = currentGame.players.find(p => p.id === playerId);
+                if (player) {
+                    player.hasLookedAtCard = true;
+                    log('👁️ Marked ' + playerId + ' as looked in game state');
+                }
+            }
         }
 
         function hasPlayerLooked(playerId) {
-            return Boolean(playerCardLooks[playerId]);
+            // Check local tracking first
+            if (playerCardLooks[playerId]) {
+                return true;
+            }
+
+            // ADDED: Fallback to game state
+            const player = currentGame?.players?.find(p => p.id === playerId);
+            if (player && player.hasLookedAtCard) {
+                // Sync local tracking
+                playerCardLooks[playerId] = true;
+                return true;
+            }
+
+            return false;
         }
 
         function resetCardLooks() {
@@ -1815,13 +1919,13 @@
         function startNudge(playerId, reason = 'Look at your card') {
             clearNudge(playerId); // Clear any existing nudge
 
-            const playerElement = document.querySelector(`[data-player-id="${playerId}"]`)?.closest('.focus-slot');
+            const playerElement = document.querySelector('[data-player-id="' + playerId + '"]')?.closest('.focus-slot');
             if (!playerElement) return;
 
             const cardElement = playerElement.querySelector('.card-display');
             if (!cardElement) return;
 
-            log(`🔔 Starting nudge for player ${playerId}: ${reason}`);
+            log('🔔 Starting nudge for player ' + playerId + ': ' + reason);
 
             // Visual nudge - shake animation
             cardElement.classList.add('nudge-shake');
@@ -1850,11 +1954,11 @@
             }, 10000);
 
             // Show toast
-            showToast(`${reason} 👆`, 'warning');
+            showToast(reason + ' 👆', 'warning');
         }
 
         function clearNudge(playerId) {
-            const playerElement = document.querySelector(`[data-player-id="${playerId}"]`)?.closest('.focus-slot');
+            const playerElement = document.querySelector('[data-player-id="' + playerId + '"]')?.closest('.focus-slot');
             if (playerElement) {
                 const cardElement = playerElement.querySelector('.card-display');
                 if (cardElement) {
@@ -1905,7 +2009,7 @@
                     p.name.toLowerCase().trim() === name.toLowerCase().trim() && p.id !== playerId
                 );
                 if (duplicate) {
-                    showToast(`Name "${name}" is already taken in this game`, 'error');
+                    showToast('Name "' + name + '" is already taken in this game', 'error');
                     return true;
                 }
             }
@@ -1927,19 +2031,19 @@
                     uniquePlayers.push(player);
                     seenIds.add(player.id);
                 } else {
-                    log(`🗑️ Removing duplicate player: ${player.name} (${player.id})`);
+                    log('🗑️ Removing duplicate player: ' + player.name + ' (' + player.id + ')');
                 }
             });
 
             if (originalCount !== uniquePlayers.length) {
-                log(`🔧 Game cleanup: ${originalCount} -> ${uniquePlayers.length} players`);
+                log('🔧 Game cleanup: ' + originalCount + ' -> ' + uniquePlayers.length + ' players');
                 currentGame.players = uniquePlayers;
 
                 // Update display after cleanup
                 updateGameDisplay();
                 updatePersonalTable();
 
-                showToast(`Cleaned up ${originalCount - uniquePlayers.length} duplicate players`, 'success');
+                showToast('Cleaned up ' + (originalCount - uniquePlayers.length) + ' duplicate players', 'success');
             }
         }
 
@@ -2015,7 +2119,7 @@
                 if (player.card && shouldShowCard) {
                     const isRed = player.card.suit === '♥' || player.card.suit === '♦';
                     miniCard.className += isRed ? ' red' : ' black';
-                    miniCard.textContent = `${player.card.value}${player.card.suit}`;
+                    miniCard.textContent = player.card.value + player.card.suit;
                 } else if (player.hasCard || player.card) {
                     miniCard.className += ' face-down';
                     miniCard.textContent = '🂠';
@@ -2031,7 +2135,7 @@
                 playersScroll.appendChild(playerDiv);
             });
 
-            log(`✅ Rendered ${addedPlayerIds.size} available players (deduplicated)`);
+            log('✅ Rendered ' + addedPlayerIds.size + ' available players (deduplicated)');
         }
 
         function addToFocus(player) {
@@ -2040,24 +2144,24 @@
             const playerCount = currentGame.players.length;
 
             if (playerCount <= 5) {
-                log(`Auto-fill mode active - cannot manually add players`);
+                log('Auto-fill mode active - cannot manually add players');
                 return;
             }
 
             if (isPlayerInFocus(player.id)) {
-                log(`Player ${player.name} already in focus`);
+                log('Player ' + player.name + ' already in focus');
                 return;
             }
 
             if (!focusedPlayers.custom1) {
                 focusedPlayers.custom1 = player;
-                log(`Added ${player.name} to custom1`);
+                log('Added ' + player.name + ' to custom1');
             } else if (!focusedPlayers.custom2) {
                 focusedPlayers.custom2 = player;
-                log(`Added ${player.name} to custom2`);
+                log('Added ' + player.name + ' to custom2');
             } else {
                 focusedPlayers.custom1 = player;
-                log(`Replaced custom1 with ${player.name}`);
+                log('Replaced custom1 with ' + player.name);
             }
 
             renderPersonalTable();
@@ -2074,16 +2178,16 @@
             const playerCount = currentGame.players.length;
 
             if (playerCount <= 5) {
-                log(`Auto-fill mode active - cannot manually remove players`);
+                log('Auto-fill mode active - cannot manually remove players');
                 return;
             }
 
             if (focusedPlayers.custom1 && focusedPlayers.custom1.id === playerId) {
                 focusedPlayers.custom1 = null;
-                log(`Removed player from custom1`);
+                log('Removed player from custom1');
             } else if (focusedPlayers.custom2 && focusedPlayers.custom2.id === playerId) {
                 focusedPlayers.custom2 = null;
-                log(`Removed player from custom2`);
+                log('Removed player from custom2');
             }
 
             renderPersonalTable();
@@ -2100,19 +2204,21 @@
             if (!currentGame || !currentGame.players || !Array.isArray(currentGame.players)) return;
             if (!focusedPlayers) initializeFocusState();
 
-            // Clean up duplicate players first
             cleanupGameState();
 
             const myPlayerIndex = currentGame.players.findIndex(p => p.id === playerId);
             if (myPlayerIndex === -1) {
-                log(`❌ Cannot find myself (${playerId}) in players list`);
+                log('❌ Cannot find myself (' + playerId + ') in players list');
                 return;
             }
 
             const playerCount = currentGame.players.length;
             if (playerCount < 2) return;
 
-            log(`🔄 Updating personal table: ${playerCount} players, I am ${currentGame.players[myPlayerIndex].name} at index ${myPlayerIndex}`);
+            log('🔄 Updating personal table: ' + playerCount + ' players, I am ' + currentGame.players[myPlayerIndex].name + ' at index ' + myPlayerIndex);
+
+            // 🎯 NEW: Check if player layout actually changed
+            const currentLayout = getCurrentLayoutSnapshot();
 
             if (playerCount <= 5) {
                 autoFillAllPlayers(myPlayerIndex, playerCount);
@@ -2122,7 +2228,17 @@
                 showAvailablePlayersSection();
             }
 
-            renderPersonalTable();
+            const newLayout = getCurrentLayoutSnapshot();
+
+            // Only rebuild DOM if layout actually changed
+            if (layoutChanged(currentLayout, newLayout)) {
+                log('🔄 Layout changed - rebuilding with video preservation...');
+                renderPersonalTable();
+            } else {
+                log('📱 Layout unchanged - updating states only...');
+                updateExistingPlayerStates();
+            }
+
             renderAvailablePlayers();
         }
 
@@ -2140,7 +2256,7 @@
                 }
             });
 
-            log(`🔧 Deduplication: ${players.length} players -> ${uniquePlayers.length} unique players`);
+            log('🔧 Deduplication: ' + players.length + ' players -> ' + uniquePlayers.length + ' unique players');
 
             // Update currentGame with deduplicated players
             currentGame.players = uniquePlayers;
@@ -2150,7 +2266,7 @@
             const cleanPlayerCount = uniquePlayers.length;
 
             if (cleanMyPlayerIndex === -1) {
-                log(`❌ Cannot find myself in clean players list`);
+                log('❌ Cannot find myself in clean players list');
                 return;
             }
 
@@ -2177,7 +2293,7 @@
                         focusedPlayers.custom1 = null;
                         focusedPlayers.custom2 = null;
 
-                        log(`🎯 2-player layout: Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${otherPlayer?.name}`);
+                        log('🎯 2-player layout: Center=' + uniquePlayers[cleanMyPlayerIndex]?.name + ', Right=' + otherPlayer?.name);
                     } else {
                         // Normal logic for 3+ players
                         const leftAliveIndex = (myAliveIndex - 1 + aliveCount) % aliveCount;
@@ -2197,7 +2313,7 @@
                         focusedPlayers.custom1 = customPlayers[0] || null;
                         focusedPlayers.custom2 = customPlayers[1] || null;
 
-                        log(`🎯 Multi-player layout: Left=${alivePlayers[leftAliveIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${alivePlayers[rightAliveIndex]?.name}`);
+                        log('🎯 Multi-player layout: Left=' + alivePlayers[leftAliveIndex]?.name + ', Center=' + uniquePlayers[cleanMyPlayerIndex]?.name + ', Right=' + alivePlayers[rightAliveIndex]?.name);
                     }
                 }
             } else {
@@ -2215,7 +2331,7 @@
                 focusedPlayers.custom2 = remainingPlayers[1] || null;
             }
 
-            log(`🎯 Clean personal view: Left=${uniquePlayers[leftNeighborIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${uniquePlayers[rightNeighborIndex]?.name}`);
+            log('🎯 Clean personal view: Left=' + uniquePlayers[leftNeighborIndex]?.name + ', Center=' + uniquePlayers[cleanMyPlayerIndex]?.name + ', Right=' + uniquePlayers[rightNeighborIndex]?.name);
         }
 
         function setupCustomFocusMode(myPlayerIndex, playerCount) {
@@ -2232,7 +2348,7 @@
                 }
             });
 
-            log(`🔧 Custom mode deduplication: ${players.length} -> ${uniquePlayers.length} unique`);
+            log('🔧 Custom mode deduplication: ' + players.length + ' -> ' + uniquePlayers.length + ' unique');
 
             // Update currentGame with deduplicated players
             currentGame.players = uniquePlayers;
@@ -2267,7 +2383,7 @@
                 }
             }
 
-            log(`🎯 Clean custom view: Left=${uniquePlayers[leftNeighborIndex]?.name}, Center=${uniquePlayers[cleanMyPlayerIndex]?.name}, Right=${uniquePlayers[rightNeighborIndex]?.name}`);
+            log('🎯 Clean custom view: Left=' + uniquePlayers[leftNeighborIndex]?.name + ', Center=' + uniquePlayers[cleanMyPlayerIndex]?.name + ', Right=' + uniquePlayers[rightNeighborIndex]?.name);
         }
 
         function hideAvailablePlayersSection() {
@@ -2287,6 +2403,22 @@
         function renderPersonalTable() {
             const focusGrid = document.getElementById('focusGrid');
             if (!focusGrid || !focusedPlayers) return;
+
+            // 🎯 CRITICAL: Store existing video streams BEFORE clearing DOM
+            const videoStreams = new Map();
+            focusGrid.querySelectorAll('.video-element').forEach(video => {
+                if (video.id) {
+                    // Check if this video has active content (not just placeholder)
+                    const hasActiveVideo = !video.querySelector('.video-placeholder') && video.children.length > 0;
+                    if (hasActiveVideo) {
+                        videoStreams.set(video.id, {
+                            element: video.cloneNode(true),
+                            hasContent: true
+                        });
+                        log('💾 Stored video stream: ' + video.id);
+                    }
+                }
+            });
 
             focusGrid.innerHTML = '';
 
@@ -2315,40 +2447,27 @@
             custom2Slot.style.gridRow = '2';
             focusGrid.appendChild(custom2Slot);
 
-            // Add dealer turn notification
-            // FIX: Clear any existing dealer notifications first
+            // 🎯 CRITICAL: Restore video streams after DOM rebuild
+            setTimeout(() => {
+                restoreVideoStreams(videoStreams);
+            }, 50);
+
+            // Dealer badge logic
             const existingNotification = document.querySelector('.dealer-notification');
             if (existingNotification) {
                 existingNotification.remove();
             }
 
-            // Add dealer turn notification ONLY when it's actually the dealer's turn
             const myPlayer = currentGame?.players?.find(p => p.id === playerId);
             const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
             const isDealerTurn = isDealer && currentGame?.currentPlayerId === playerId && currentGame?.state === 'playing';
 
-            // Replace the big banner with a small corner badge
             if (isDealerTurn) {
                 const dealerBadge = document.createElement('div');
                 dealerBadge.className = 'dealer-badge';
-                dealerBadge.style.cssText = `
-                    position: absolute;
-                    top: 8px;
-                    right: 8px;
-                    background: linear-gradient(45deg, #f39c12, #e67e22);
-                    color: white;
-                    padding: 4px 8px;
-                    border-radius: 8px;
-                    font-weight: bold;
-                    font-size: 0.6rem;
-                    box-shadow: 0 2px 6px rgba(243, 156, 18, 0.4);
-                    z-index: 10;
-                    animation: pulse 2s infinite;
-                    border: 1px solid rgba(255,255,255,0.3);
-                `;
+                dealerBadge.style.cssText = 'position: absolute; top: 8px; right: 8px; background: linear-gradient(45deg, #f39c12, #e67e22); color: white; padding: 4px 8px; border-radius: 8px; font-weight: bold; font-size: 0.6rem; box-shadow: 0 2px 6px rgba(243, 156, 18, 0.4); z-index: 10; animation: pulse 2s infinite; border: 1px solid rgba(255,255,255,0.3);';
                 dealerBadge.textContent = '🏁 FINAL';
 
-                // Add to the center slot (current player's card area)
                 const centerSlot = document.querySelector('[data-player-id="' + playerId + '"]')?.closest('.focus-slot');
                 if (centerSlot) {
                     centerSlot.style.position = 'relative';
@@ -2359,14 +2478,11 @@
 
         function createFocusSlot(type, player, removable) {
             const slot = document.createElement('div');
-            let slotClasses = `focus-slot ${type}`;
+            let slotClasses = 'focus-slot ' + type;
 
             if (!player) {
                 slot.classList.add('empty');
-                slot.innerHTML = `
-                    <div class="add-icon">+</div>
-                    <div>Tap player below</div>
-                `;
+                slot.innerHTML = '<div class="add-icon">+</div><div>Tap player below</div>';
                 return slot;
             }
 
@@ -2378,14 +2494,12 @@
                 slotClasses += ' dealer';
             }
 
-            // Check if player is eliminated
             if (player.lives <= 0) {
                 slotClasses += ' eliminated';
             }
 
             slot.className = slotClasses;
 
-            // Add eliminated indicator if player is dead
             if (player && player.lives <= 0) {
                 const eliminatedIndicator = document.createElement('div');
                 eliminatedIndicator.className = 'eliminated-indicator';
@@ -2402,7 +2516,7 @@
             const playerInfo = document.createElement('div');
             playerInfo.className = 'player-info';
             const dealerText = (player.id === currentGame?.dealerId) ? ' (Dealer)' : '';
-            playerInfo.innerHTML = `<span class="player-name">${player.name}${dealerText}</span>`;
+            playerInfo.innerHTML = '<span class="player-name">' + player.name + dealerText + '</span>';
 
             const livesDisplay = createLivesDisplay(player, false);
             playerInfo.appendChild(livesDisplay);
@@ -2410,12 +2524,7 @@
             const cardDisplay = document.createElement('div');
             cardDisplay.className = 'card-display';
 
-            // Card visibility logic - only show other players' cards during revealing phase
             const shouldShowCard = shouldPlayerCardBeVisible(player);
-
-            if (player.id === playerId) {
-                log(`🎴 My card state: hasCard=${player.hasCard}, card=${player.card ? `${player.card.value}${player.card.suit}` : 'null'}, revealed=${player.cardRevealed}, shouldShow=${shouldShowCard}`);
-            }
 
             if (player.card && shouldShowCard && player.lives > 0) {
                 const card = player.card;
@@ -2430,132 +2539,37 @@
 
                 const cardContent = document.createElement('div');
                 cardContent.className = 'card-content';
-                cardContent.innerHTML = `
-                    <div class="card-value">${card.value}</div>
-                    <div class="card-suit">${card.suit}</div>
-                `;
+                cardContent.innerHTML = '<div class="card-value">' + card.value + '</div><div class="card-suit">' + card.suit + '</div>';
                 cardDisplay.appendChild(cardContent);
             } else if ((player.hasCard || player.card) && player.lives > 0) {
                 cardDisplay.className += ' face-down';
                 cardDisplay.textContent = '🂠';
-
-                // Only add gesture handlers for my own card
-                if (player.id === playerId) {
-                    setTimeout(() => {
-                        initializeGestureHandlers(cardDisplay, player.id);
-                    }, 100);
-                }
-
-                if (player.id !== playerId && !hasPlayerLooked(player.id) && player.hasCard) {
-                    setTimeout(() => {
-                        if (!hasPlayerLooked(player.id)) {
-                            startNudge(player.id, `${player.name} should look at their card`);
-                        }
-                    }, 2000);
-                }
             } else {
                 cardDisplay.textContent = 'No Card';
             }
+
+            // SET THE PLAYER ID ON THE CARD ELEMENT
+            cardDisplay.dataset.playerId = player.id;
 
             cardSection.appendChild(playerInfo);
             cardSection.appendChild(cardDisplay);
             cardSection.setAttribute('data-player-id', player.id);
 
-            // Add action buttons for my own card
-            if (player.id === playerId) {
-                const actionContainer = document.createElement('div');
-                actionContainer.style.display = 'flex';
-                actionContainer.style.gap = '4px';
-                actionContainer.style.marginTop = '4px';
-
-                const myPlayer = currentGame?.players?.find(p => p.id === playerId);
-                const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
-                const isDealerTurn = isDealer && currentGame?.currentPlayerId === playerId;
-
-                // Keep Card button
-                const keepBtn = document.createElement('button');
-                keepBtn.className = 'action-button';
-                keepBtn.style.fontSize = '0.6rem';
-                keepBtn.style.padding = '4px 6px';
-                keepBtn.disabled = currentGame?.currentPlayerId !== playerId;
-
-                // Update button for dealer turn
-                if (isDealerTurn) {
-                    keepBtn.textContent = '✋ Keep & End';
-                    keepBtn.style.background = '#f39c12';
-                } else {
-                    keepBtn.textContent = '✋ Keep';
-                    keepBtn.style.background = '#27ae60';
-                }
-
-                keepBtn.onclick = () => {
-                    log(`✋ Card-level keep button clicked (dealer: ${isDealerTurn})`);
-                    if (isDealerTurn) {
-                        // Dealer keep = end round
-                        socket.emit('dealer-skip-trade', { gameId: currentGame.id });
-                        showToast('Dealer kept card - Round ending!', 'success');
-                    } else {
-                        keepCard();
-                    }
-                };
-                actionContainer.appendChild(keepBtn);
-
-                // Trade button
-                const tradeBtn = document.createElement('button');
-                tradeBtn.className = 'action-button trade';
-                tradeBtn.style.fontSize = '0.6rem';
-                tradeBtn.style.padding = '4px 6px';
-                tradeBtn.disabled = !canPerformTrade() && !isDealerTurn;
-
-                // Update button for dealer turn
-                if (isDealerTurn) {
-                    tradeBtn.textContent = '🎴 Deck';
-                    tradeBtn.style.background = '#e74c3c';
-                } else {
-                    tradeBtn.textContent = '🔄 Trade';
-                    tradeBtn.style.background = '#3498db';
-                }
-
-                tradeBtn.onclick = () => {
-                    log(`🔄 Card-level trade button clicked (dealer: ${isDealerTurn})`);
-                    if (isDealerTurn) {
-                        // Dealer trade with deck
-                        socket.emit('dealer-trade-deck', { gameId: currentGame.id });
-                        showToast('Trading with deck...', 'info');
-                    } else {
-                        const nextPlayer = getNextTradeablePlayer();
-                        if (nextPlayer) {
-                            requestTrade(nextPlayer.id);
-                        } else {
-                            showToast('No valid trade target!', 'warning');
-                        }
-                    }
-                };
-                actionContainer.appendChild(tradeBtn);
-
-                cardSection.appendChild(actionContainer);
+            // INITIALIZE GESTURE HANDLERS FOR MY CARD
+            if (player.id === playerId && cardDisplay) {
+                initializeGestureHandlers(cardDisplay, player.id);
             }
 
-            // Add trade button for other players I can trade with
-            if (player.id !== playerId && canTradeWith(player)) {
-                const actionBtn = document.createElement('button');
-                actionBtn.className = 'action-button trade';
-                actionBtn.textContent = 'Trade →';
-                actionBtn.onclick = () => {
-                    log(`🔄 Trading with ${player.name}`);
-                    requestTrade(player.id);
-                };
-                cardSection.appendChild(actionBtn);
-            }
-
+            // Action buttons and video section code continues...
             const videoSection = document.createElement('div');
             videoSection.className = 'video-section';
 
             const videoContainer = document.createElement('div');
             videoContainer.className = 'video-container';
+
             const videoElement = document.createElement('div');
             videoElement.className = 'video-element';
-            videoElement.id = `video-${player.id}`;
+            videoElement.id = 'video-' + player.id;
 
             const placeholder = document.createElement('div');
             placeholder.className = 'video-placeholder';
@@ -2564,11 +2578,7 @@
 
             const videoControls = document.createElement('div');
             videoControls.className = 'video-controls';
-            videoControls.innerHTML = `
-                <button class="video-control-btn" onclick="startVideoForPlayer('${player.id}')" title="Start Video">📷</button>
-                <button class="video-control-btn" onclick="toggleMuteForPlayer('${player.id}')" title="Mute">🎤</button>
-                <button class="video-control-btn" onclick="endVideoForPlayer('${player.id}')" title="End">❌</button>
-            `;
+            videoControls.innerHTML = '<button class="video-control-btn" onclick="startVideoForPlayer(\'' + player.id + '\')" title="Start Video">📷</button><button class="video-control-btn" onclick="toggleMuteForPlayer(\'' + player.id + '\')" title="Mute">🎤</button><button class="video-control-btn" onclick="endVideoForPlayer(\'' + player.id + '\')" title="End">❌</button>';
 
             videoContainer.appendChild(videoElement);
             videoContainer.appendChild(videoControls);
@@ -2578,7 +2588,6 @@
             playerContent.appendChild(videoSection);
             slot.appendChild(playerContent);
 
-            // Add remove button for removable slots
             if (removable) {
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-button';
@@ -2598,16 +2607,16 @@
             if (playerId === playerId) {
                 initializeVideoCall();
             }
-            showToast(`📹 Video starting for player`, 'info');
+            showToast('📹 Video starting for player', 'info');
         }
 
         function toggleMuteForPlayer(playerId) {
             if (playerId === playerId && localAudioTrack) {
                 const enabled = localAudioTrack.enabled;
                 localAudioTrack.setEnabled(!enabled);
-                showToast(`🎤 ${enabled ? 'Muted' : 'Unmuted'}`, 'info');
+                showToast('🎤 ' + (enabled ? 'Muted' : 'Unmuted'), 'info');
 
-                const btn = document.querySelector(`[onclick="toggleMuteForPlayer('${playerId}')"]`);
+                const btn = document.querySelector('[onclick="toggleMuteForPlayer(\'' + playerId + '\')"]');
                 if (btn) {
                     btn.className = enabled ? 'video-control-btn muted' : 'video-control-btn';
                     btn.textContent = enabled ? '🔇' : '🎤';
@@ -2619,19 +2628,19 @@
             if (playerId === playerId) {
                 leaveVideoCall();
             }
-            showToast(`📹 Video ended for player`, 'info');
+            showToast('📹 Video ended for player', 'info');
         }
 
         // Enhanced Game action handlers
         function handleFlipClick() {
-            log(`🎴 Flip Card button clicked`);
+            log('🎴 Flip Card button clicked');
             flipCard();
         }
 
         function handleKeepClick() {
-            log(`✋ Keep Card button clicked`);
+            log('✋ Keep Card button clicked');
             if (currentGame?.currentPlayerId !== playerId) {
-                log(`❌ Not my turn! Current turn: ${currentGame?.currentPlayerId}, Me: ${playerId}`);
+                log('❌ Not my turn! Current turn: ' + currentGame?.currentPlayerId + ', Me: ' + playerId);
                 showToast('Not your turn!', 'warning');
                 return;
             }
@@ -2642,9 +2651,9 @@
 
             // Handle dealer keep (should end round)
             if (isDealerTurn) {
-                log(`✋ Dealer keeping card - this should END the round`);
+                log('✋ Dealer keeping card - this should END the round');
                 if (!socket || !currentGame) {
-                    log(`❌ Dealer keep failed: no socket or game`);
+                    log('❌ Dealer keep failed: no socket or game');
                     return;
                 }
 
@@ -2659,7 +2668,7 @@
         }
 
         function handleTradeClick() {
-            log(`🔄 Trade Card button clicked`);
+            log('🔄 Trade Card button clicked');
 
             const myPlayer = currentGame?.players?.find(p => p.id === playerId);
             const isDealer = myPlayer && myPlayer.id === currentGame?.dealerId;
@@ -2667,9 +2676,9 @@
 
             // Handle dealer deck trading
             if (isDealerTurn) {
-                log(`🎴 Dealer trading with deck`);
+                log('🎴 Dealer trading with deck');
                 if (!socket || !currentGame) {
-                    log(`❌ Dealer deck trade failed: no socket or game`);
+                    log('❌ Dealer deck trade failed: no socket or game');
                     return;
                 }
 
@@ -2681,17 +2690,17 @@
 
             // Normal player trading logic
             if (!canPerformTrade()) {
-                log(`❌ Cannot trade right now`);
+                log('❌ Cannot trade right now');
                 showToast('Cannot trade right now!', 'warning');
                 return;
             }
 
             const nextPlayer = getNextTradeablePlayer();
             if (nextPlayer) {
-                log(`🔄 Trading with ${nextPlayer.name}`);
+                log('🔄 Trading with ' + nextPlayer.name);
                 requestTrade(nextPlayer.id);
             } else {
-                log(`❌ No valid trade target`);
+                log('❌ No valid trade target');
                 showToast('No valid trade target!', 'warning');
             }
         }
@@ -2719,25 +2728,26 @@
 
         function flipCard() {
             if (!socket || !currentGame) {
-                log(`❌ Flip card failed: no socket or game`);
+                log('❌ Flip card failed: no socket or game');
                 return;
             }
 
-            log(`🎴 Flipping card for player ${playerId}`);
+            log('🎴 Flipping card for player ' + playerId);
             socket.emit('flip-card', { gameId: currentGame.id });
 
+            // FIXED: Mark as looked immediately when flipping
             markPlayerAsLooked(playerId);
         }
 
         function keepCard() {
             if (!socket || !currentGame) {
-                log(`❌ Keep card failed: no socket or game`);
+                log('❌ Keep card failed: no socket or game');
                 return;
             }
 
             // Check if it's actually my turn
             if (currentGame.currentPlayerId !== playerId) {
-                log(`❌ Keep card failed: not my turn (current: ${currentGame.currentPlayerId}, me: ${playerId})`);
+                log('❌ Keep card failed: not my turn (current: ' + currentGame.currentPlayerId + ', me: ' + playerId + ')');
                 showToast('Not your turn!', 'warning');
                 return;
             }
@@ -2757,30 +2767,33 @@
             if (!socket || !currentGame) return;
 
             if (!canPerformTrade()) {
-                log(`❌ Cannot perform trade right now`);
+                log('❌ Cannot perform trade right now');
                 return;
             }
 
             if (targetPlayerId === 'TRADE_WITH_DECK') {
-                log(`🎴 Special case: Trading with deck because dealer has King`);
+                log('🎴 Special case: Trading with deck because dealer has King');
                 socket.emit('trade-with-deck-special', {
                     gameId: currentGame.id
                 });
                 return;
             }
 
-            if (!hasPlayerLooked(targetPlayerId)) {
-                const targetPlayer = currentGame.players.find(p => p.id === targetPlayerId);
-                const targetName = targetPlayer?.name || 'Player';
+            // ENHANCED: Better logging for debugging
+            const hasLooked = hasPlayerLooked(targetPlayerId);
+            const targetPlayer = currentGame.players.find(p => p.id === targetPlayerId);
+            const targetName = targetPlayer?.name || 'Player';
 
-                log(`🔔 ${targetName} must look at their card first!`);
-                showToast(`${targetName} must look at their card first! 👆`, 'warning');
+            log('🔍 Trade check for ' + targetName + ': hasLooked=' + hasLooked + ', cardLooks=' + JSON.stringify(playerCardLooks));
 
-                startNudge(targetPlayerId, `${targetName}, look at your card before trade!`);
+            if (!hasLooked) {
+                log('🔔 ' + targetName + ' must look at their card first!');
+                showToast(targetName + ' must look at their card first! 👆', 'warning');
+                startNudge(targetPlayerId, targetName + ', look at your card before trade!');
                 return;
             }
 
-            log(`🔄 Requesting trade: ${playerId} → ${targetPlayerId}`);
+            log('🔄 Requesting trade: ' + playerId + ' → ' + targetPlayerId);
 
             socket.emit('trade-request', {
                 gameId: currentGame.id,
@@ -2841,7 +2854,7 @@
 
                 joinVideoChannel();
             } catch (error) {
-                log(`❌ Error initializing video: ${error.message}`);
+                log('❌ Error initializing video: ' + error.message);
                 showToast('Video initialization failed - continuing without video', 'warning');
             }
         }
@@ -2858,7 +2871,7 @@
                     return;
                 }
 
-                log(`📹 Attempting to join channel: ${channelName}`);
+                log('📹 Attempting to join channel: ' + channelName);
 
                 await agoraClient.join(appId, channelName, null, uid);
                 log('📹 Successfully joined channel');
@@ -2868,7 +2881,7 @@
                     localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                     log('📹 Media tracks created');
 
-                    const myVideoElement = document.getElementById(`video-${playerId}`);
+                    const myVideoElement = document.getElementById('video-' + playerId);
                     if (myVideoElement && localVideoTrack) {
                         localVideoTrack.play(myVideoElement);
                         const placeholder = myVideoElement.querySelector('.video-placeholder');
@@ -2882,12 +2895,12 @@
                     log('📹 Video call started successfully');
 
                 } catch (mediaError) {
-                    log(`❌ Media error: ${mediaError.message}`);
+                    log('❌ Media error: ' + mediaError.message);
                     showToast('Camera/microphone access denied - video disabled', 'warning');
                 }
 
             } catch (error) {
-                log(`❌ Error joining video channel: ${error.message}`);
+                log('❌ Error joining video channel: ' + error.message);
                 showToast('Failed to join video call - continuing without video', 'warning');
             }
         }
@@ -2895,11 +2908,11 @@
         // FIXED: Properly defined handleUserPublished function
         async function handleUserPublished(user, mediaType) {
             try {
-                log(`📹 ${user.uid} started ${mediaType}`);
+                log('📹 ' + user.uid + ' started ' + mediaType);
                 await agoraClient.subscribe(user, mediaType);
 
                 if (mediaType === 'video') {
-                    const videoElement = document.getElementById(`video-${user.uid}`);
+                    const videoElement = document.getElementById('video-' + user.uid);
                     if (videoElement && user.videoTrack) {
                         user.videoTrack.play(videoElement);
                         const placeholder = videoElement.querySelector('.video-placeholder');
@@ -2909,15 +2922,15 @@
 
                 remoteUsers[user.uid] = user;
             } catch (error) {
-                log(`❌ Error handling user published: ${error.message}`);
+                log('❌ Error handling user published: ' + error.message);
             }
         }
 
         function handleUserUnpublished(user, mediaType) {
-            log(`📹 ${user.uid} stopped ${mediaType}`);
+            log('📹 ' + user.uid + ' stopped ' + mediaType);
 
             if (mediaType === 'video') {
-                const videoElement = document.getElementById(`video-${user.uid}`);
+                const videoElement = document.getElementById('video-' + user.uid);
                 if (videoElement) {
                     const placeholder = document.createElement('div');
                     placeholder.className = 'video-placeholder';
@@ -2929,10 +2942,10 @@
         }
 
         function handleUserLeft(user) {
-            log(`👋 ${user.uid} left video call`);
+            log('👋 ' + user.uid + ' left video call');
             delete remoteUsers[user.uid];
 
-            const videoElement = document.getElementById(`video-${user.uid}`);
+            const videoElement = document.getElementById('video-' + user.uid);
             if (videoElement) {
                 const placeholder = document.createElement('div');
                 placeholder.className = 'video-placeholder';
@@ -2945,7 +2958,7 @@
         function initializeVideoForPlayer(playerId) {
             const remoteUser = remoteUsers[playerId];
             if (remoteUser && remoteUser.videoTrack) {
-                const videoElement = document.getElementById(`video-${playerId}`);
+                const videoElement = document.getElementById('video-' + playerId);
                 if (videoElement) {
                     remoteUser.videoTrack.play(videoElement);
                     const placeholder = videoElement.querySelector('.video-placeholder');
@@ -2979,7 +2992,7 @@
                 log('📹 Left video call');
 
             } catch (error) {
-                log(`❌ Error leaving video call: ${error.message}`);
+                log('❌ Error leaving video call: ' + error.message);
             }
         }
 
@@ -3105,216 +3118,44 @@
 
             socket = io(serverUrl, {
                 transports: ['websocket', 'polling'],
-                timeout: 60000,  // 60 seconds for mobile
+                timeout: 60000,
                 reconnection: true,
-                reconnectionDelay: 3000,  // Wait 3 seconds before trying
-                reconnectionAttempts: 15,  // Try 15 times
+                reconnectionDelay: 3000,
+                reconnectionAttempts: 15,
                 maxReconnectionAttempts: 15,
-                reconnectionDelayMax: 15000,  // Max 15 second delay
+                reconnectionDelayMax: 15000,
                 randomizationFactor: 0.5,
                 forceNew: true,
-                // Mobile-optimized settings
-                pingTimeout: 90000,  // 90 seconds for ping timeout
-                pingInterval: 30000,  // Ping every 30 seconds
-                upgradeTimeout: 45000  // 45 seconds for upgrade timeout
+                pingTimeout: 90000,
+                pingInterval: 30000,
+                upgradeTimeout: 45000
             });
 
-            // Mobile background/foreground handling
-            let isAppInBackground = false;
-            let reconnectOnForeground = false;
-
-            // Detect when app goes to background/foreground
-            document.addEventListener('visibilitychange', function () {
-                if (document.hidden) {
-                    // App went to background
-                    isAppInBackground = true;
-                    log('📱 App went to background - preparing for potential disconnect');
-
-                    // Save current state
-                    if (currentGame && playerId) {
-                        localStorage.setItem('gameReconnectData', JSON.stringify({
-                            gameId: currentGame.id,
-                            playerId: playerId,
-                            playerName: playerName,
-                            timestamp: Date.now()
-                        }));
-                    }
-                } else {
-                    // App came back to foreground
-                    isAppInBackground = false;
-                    log('📱 App returned to foreground - checking connection');
-
-                    // Check if we need to reconnect
-                    if (socket && !socket.connected && currentGame) {
-                        log('📱 Socket disconnected while in background - attempting reconnect');
-                        reconnectOnForeground = true;
-                        attemptMobileReconnection();
-                    }
-                }
-            });
-
-            // Mobile heartbeat system functions
-            let heartbeatInterval = null;
-
-            function startMobileHeartbeat() {
-                if (heartbeatInterval) clearInterval(heartbeatInterval);
-
-                heartbeatInterval = setInterval(() => {
-                    if (socket && socket.connected && !isAppInBackground) {
-                        socket.emit('heartbeat', {
-                            timestamp: Date.now(),
-                            gameId: currentGame?.id,
-                            playerId: playerId
-                        });
-                    }
-                }, 30000); // Every 30 seconds
-            }
-
-            function stopMobileHeartbeat() {
-                if (heartbeatInterval) {
-                    clearInterval(heartbeatInterval);
-                    heartbeatInterval = null;
-                }
-            }
-
-            function attemptMobileReconnection() {
-                if (!currentGame || !playerId) {
-                    log('📱 No game state to reconnect to');
-                    return;
-                }
-
-                log('📱 Attempting mobile reconnection...');
-                showToast('Reconnecting...', 'info');
-
-                // Try to reconnect the socket
-                if (socket) {
-                    socket.removeAllListeners();
-                    socket.disconnect();
-                    socket = null;
-                }
-
-                // Create fresh connection
-                connectToServer();
-
-                // Set up one-time connection handler for reconnection
-                const reconnectHandler = () => {
-                    log('📱 Socket reconnected - checking for existing game');
-
-                    // Give server a moment to process connection
-                    setTimeout(() => {
-                        socket.emit('check-reconnect', {
-                            userId: playerId,
-                            gameId: currentGame.id
-                        });
-                    }, 500);
-
-                    // Remove this handler after use
-                    socket.off('connect', reconnectHandler);
-                };
-
-                if (socket) {
-                    socket.on('connect', reconnectHandler);
-
-                    // Add timeout for reconnection attempt
-                    setTimeout(() => {
-                        if (socket && !socket.connected) {
-                            log('📱 Mobile reconnection timeout - may need manual refresh');
-                            showToast('Connection timeout - tap refresh if needed', 'error');
-                        }
-                    }, 15000);
-                }
-            }
-
-            // Network change detection for mobile
-            window.addEventListener('online', function () {
-                log('📱 Network connection restored');
-                if (socket && !socket.connected && currentGame) {
-                    log('📱 Attempting reconnection after network restoration');
-                    setTimeout(() => {
-                        attemptMobileReconnection();
-                    }, 1000);
-                }
-            });
-
-            window.addEventListener('offline', function () {
-                log('📱 Network connection lost');
-                showToast('Network connection lost - will reconnect automatically', 'warning');
-            });
-
-            // Socket event handlers
+            // ===== ALL SOCKET EVENT HANDLERS INSIDE FUNCTION =====
             socket.on('connect', () => {
                 log('✅ FRESH connection established! ID: ' + socket.id);
                 document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
 
                 playerName = document.getElementById('playerName').value || 'Player';
-
-                // Start mobile heartbeat
-                startMobileHeartbeat();
-
-                // RECONNECTION: Check if we were previously in a game
                 if (playerId && currentGame) {
                     log('🔄 Checking for reconnection...');
                     socket.emit('check-reconnect', { userId: playerId });
                 } else {
                     playerId = socket.id;
                 }
-
-                // Clear reconnection flag
-                reconnectOnForeground = false;
             });
 
             socket.on('disconnect', (reason) => {
-                log(`❌ Disconnected: ${reason}`);
+                log('❌ Disconnected: ' + reason);
                 document.getElementById('connectionStatus').innerHTML = '🔴 Disconnected';
-
-                // Stop heartbeat when disconnected
-                stopMobileHeartbeat();
-
-                // Handle mobile-specific disconnect reasons
-                if (reason === 'transport close' || reason === 'ping timeout' || reason === 'transport error') {
-                    log('📱 Mobile-style disconnect detected');
-
-                    if (!isAppInBackground && currentGame) {
-                        // Immediate reconnection attempt for foreground disconnects
-                        showToast('Connection lost - reconnecting...', 'warning');
-                        setTimeout(() => {
-                            if (!socket || !socket.connected) {
-                                log('📱 Auto-reconnecting after mobile disconnect');
-                                attemptMobileReconnection();
-                            }
-                        }, 2000);
-                    } else {
-                        // Flag for reconnection when app comes back to foreground
-                        reconnectOnForeground = true;
-                        log('📱 Will reconnect when app returns to foreground');
-                    }
-                } else {
-                    // Handle other disconnect reasons
-                    log(`📱 Non-mobile disconnect: ${reason}`);
-                    if (currentGame) {
-                        showToast('Disconnected - trying to reconnect...', 'error');
-                        setTimeout(() => {
-                            if (!socket || !socket.connected) {
-                                attemptMobileReconnection();
-                            }
-                        }, 3000);
-                    }
-                }
-
                 if (isVideoJoined) {
                     leaveVideoCall().catch(console.error);
                 }
             });
 
             socket.on('connect_error', (error) => {
-                log(`❌ Connection error: ${error.message}`);
+                log('❌ Connection error: ' + error.message);
                 showToast('Connection failed. Make sure server is running on port 3001.', 'error');
-            });
-
-            // Add heartbeat response handler
-            socket.on('heartbeat-ack', (data) => {
-                // Update connection status to show healthy connection
-                document.getElementById('connectionStatus').innerHTML = '🟢 Connected';
             });
 
             // ===== GAME CREATION & JOINING EVENTS =====
@@ -3327,139 +3168,32 @@
                 showHostControls();
             });
 
-            socket.on('private-game-created', function (data) {
-                log('🎮 FRESH private game created! ID: ' + data.game.id);
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-                updatePersonalTable();
-                showHostControls();
-
-                if (data.friendCode) {
-                    showToast(`Game Code: ${data.friendCode}`, 'success');
-                }
-            });
-
-            socket.on('game-created', function (data) {
-                log('🎮 FRESH game created! ID: ' + data.game.id);
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-                updatePersonalTable();
-                showHostControls();
-
-                if (data.friendCode) {
-                    showToast(`Game Code: ${data.friendCode}`, 'success');
-                }
-            });
-
             socket.on('game-joined', function (data) {
                 log('🎮 Joined game! ID: ' + data.game.id);
                 currentGame = data.game;
                 showGameContent();
                 updateGameDisplay();
                 updatePersonalTable();
-
                 if (currentGame.hostId === playerId) {
                     showHostControls();
                 }
             });
 
-            socket.on('auto-rejoined', function (data) {
-                log('🔄 Auto-rejoined game successfully!');
-                currentGame = data.game;
-                showGameContent();
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('Reconnected to game!', 'success');
-            });
-
-            socket.on('player-reconnected', function (data) {
-                log(`🔄 ${data.playerName} reconnected to game`);
-                showToast(`${data.playerName} reconnected!`, 'success');
-                updateGameDisplay();
-                updatePersonalTable();
-            });
-
             socket.on('player-joined', function (data) {
-                log(`👋 Player joined: ${data.newPlayer?.name || 'Unknown'}`);
+                log('👋 Player joined: ' + (data.newPlayer?.name || 'Unknown'));
                 currentGame = data.game;
-
-                // Check for duplicate players and warn
-                if (currentGame.players) {
-                    const playerNames = currentGame.players.map(p => p.name);
-                    const playerIds = currentGame.players.map(p => p.id);
-                    const duplicateNames = playerNames.filter((name, index) => playerNames.indexOf(name) !== index);
-                    const duplicateIds = playerIds.filter((id, index) => playerIds.indexOf(id) !== index);
-
-                    if (duplicateNames.length > 0) {
-                        log(`⚠️ WARNING: Duplicate player names detected: ${duplicateNames.join(', ')}`);
-                    }
-                    if (duplicateIds.length > 0) {
-                        log(`⚠️ WARNING: Duplicate player IDs detected: ${duplicateIds.join(', ')}`);
-                    }
-                }
-
                 updateGameDisplay();
                 updatePersonalTable();
             });
 
-            // ===== GAME FLOW EVENTS =====
             socket.on('game-started', function (data) {
                 log('🎮 Game started!');
                 currentGame = data.game;
-
-                // Clear any reconnection data since we're starting fresh
-                localStorage.removeItem('gameReconnectData');
-
                 resetCardLooks();
                 clearAllNudges();
-
                 hideHostControls();
                 updateGameDisplay();
                 updatePersonalTable();
-
-                // Re-attach video streams after UI rebuild
-                if (isVideoJoined) {
-                    Object.keys(remoteUsers).forEach(uid => {
-                        initializeVideoForPlayer(uid);
-                    });
-
-                    // Re-attach your own video too
-                    if (localVideoTrack) {
-                        const myVideo = document.getElementById(`video-${playerId}`);
-                        if (myVideo) localVideoTrack.play(myVideo);
-                    }
-                }
-
-                setTimeout(() => {
-                    initializeVideoCall();
-                }, 1000);
-            });
-
-            socket.on('round-started', function (data) {
-                log(`🔄 New round started!`);
-                currentGame = data.game;
-
-                resetCardLooks();
-                clearAllNudges();
-
-                updateGameDisplay();
-                updatePersonalTable();
-
-                // Re-attach video streams after UI rebuild
-                if (isVideoJoined) {
-                    Object.keys(remoteUsers).forEach(uid => {
-                        initializeVideoForPlayer(uid);
-                    });
-
-                    // Re-attach your own video too
-                    if (localVideoTrack) {
-                        const myVideo = document.getElementById(`video-${playerId}`);
-                        if (myVideo) localVideoTrack.play(myVideo);
-                    }
-                }
-
                 setTimeout(() => {
                     initializeVideoCall();
                 }, 1000);
@@ -3468,293 +3202,97 @@
             socket.on('cards-dealt', function (data) {
                 log('🎴 Cards dealt!');
                 currentGame = data.game;
-
                 resetCardLooks();
                 clearAllNudges();
-
-                // Check for any Kings that should auto-reveal
-                if (currentGame.players) {
-                    currentGame.players.forEach(player => {
-                        if (shouldAutoRevealKing(player)) {
-                            setTimeout(() => handleKingAutoReveal(player), 500);
-                        }
-                    });
-                }
-
-                // ADD THIS: Check if current player has King and auto-advance
-                const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
-                if (currentPlayer && shouldAutoRevealKing(currentPlayer)) {
-                    log(`👑 Current player ${currentPlayer.name} has King after cards dealt - auto-advancing`);
-                    setTimeout(() => handleKingAutoAdvance(currentPlayer.id), 1500);
-                }
-
                 updateGameDisplay();
                 updatePersonalTable();
-
-                // Start nudging players who haven't looked at their cards
-                setTimeout(() => {
-                    if (currentGame.players) {
-                        currentGame.players.forEach(player => {
-                            if (player.hasCard && !hasPlayerLooked(player.id) && player.id !== playerId) {
-                                startNudge(player.id, `${player.name} should look at their card`);
-                            }
-                        });
-                    }
-                }, 3000);
-            });
-
-            // ===== SPECIAL KING & JACK EVENTS =====
-            socket.on('king-auto-revealed', function (data) {
-                log(`👑 King auto-revealed for player ${data.playerId}`);
-                const player = currentGame.players?.find(p => p.id === data.playerId);
-                if (player) {
-                    player.cardRevealed = true;
-                    markPlayerAsLooked(data.playerId);
-                    updateGameDisplay();
-                    updatePersonalTable();
-                    showToast(`${player.name}'s King is revealed! 👑`, 'warning');
-                }
-            });
-
-            socket.on('dealer-king-auto-end', function (data) {
-                log('🏁 Round auto-ended - dealer had revealed King');
-                currentGame = data.game;
-
-                updateGameDisplay();
-                updatePersonalTable();
-
-                showToast('Round ended - dealer has King! 👑', 'warning');
-
-                // Auto-trigger round end UI
-                setTimeout(() => {
-                    if (currentGame.turnPhase === 'revealing') {
-                        log('🎯 Triggering round end after dealer King auto-end');
-                        socket.emit('end-round', { gameId: currentGame.id });
-                    }
-                }, 1500);
-            });
-
-            // ===== GAME ACTION EVENTS =====
-            socket.on('trade-completed', function (data) {
-                const result = data.result;
-                if (result.tradedWithDeck) {
-                    log('🎴 SPECIAL RULE: Dealer had King - traded with deck instead!');
-                } else if (result.traded) {
-                    log('✅ Cards swapped successfully!');
-
-                    // Both players have now "looked" at their new cards
-                    if (result.fromPlayerId) markPlayerAsLooked(result.fromPlayerId);
-                    if (result.toPlayerId) markPlayerAsLooked(result.toPlayerId);
-
-                } else if (result.blocked) {
-                    log('🚫 Trade BLOCKED by Jack - "Screw You!"');
-
-                    // 🃏 ENHANCED JACK REVEAL LOGIC
-                    handleJackBlock(result.fromPlayerId, result.toPlayerId);
-
-                } else if (result.kingRevealed) {
-                    if (result.roundEnded) {
-                        log('👑 King revealed but Jack blocks pass-through - Round ends!');
-                    } else {
-                        log('👑 King revealed - can pass to next player!');
-                    }
-                }
-                currentGame = data.game;
-
-                // Check for new Kings that should auto-reveal
-                if (currentGame.players) {
-                    currentGame.players.forEach(player => {
-                        if (shouldAutoRevealKing(player)) {
-                            handleKingAutoReveal(player);
-                        }
-                    });
-                }
-
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('Trade completed!', 'success');
             });
 
             socket.on('turn-skipped', function (data) {
-                const action = data.result.wasKing ? 'kept their King' : 'kept their card';
-                log(`⏭️ Player ${data.playerId} ${action} and ended turn`);
+                log('⏭️ Player skipped turn');
                 currentGame = data.game;
-
-                // Check if NEW current player has King and auto-advance
-                const currentPlayer = currentGame.players?.find(p => p.id === currentGame.currentPlayerId);
-                if (currentPlayer && shouldAutoRevealKing(currentPlayer)) {
-                    log(`👑 NEW current player ${currentPlayer.name} has King - auto-advancing`);
-                    setTimeout(() => handleKingAutoAdvance(currentPlayer.id), 500);
-                }
-
-                // Check if turn went past dealer (shouldn't happen)
-                const dealer = currentGame.players?.find(p => p.id === currentGame.dealerId);
-
-                if (dealer && data.playerId === dealer.id) {
-                    log('🎯 Dealer just acted - round should end now!');
-                    setTimeout(() => {
-                        if (currentGame.turnPhase !== 'revealing') {
-                            log('🏁 Auto-ending round after dealer action');
-                            socket.emit('end-round', { gameId: currentGame.id });
-                        }
-                    }, 500);
-                } else if (dealer && currentPlayer && currentPlayer.id !== dealer.id) {
-                    // Check if we somehow skipped past the dealer
-                    const dealerIndex = currentGame.players.findIndex(p => p.id === dealer.id);
-                    const currentIndex = currentGame.players.findIndex(p => p.id === currentPlayer.id);
-
-                    if (dealerIndex !== -1 && currentIndex !== -1) {
-                        // Simple check: if current player comes after dealer in the list, we may have gone too far
-                        const playerCount = currentGame.players.length;
-                        const expectedNextAfterDealer = (dealerIndex + 1) % playerCount;
-
-                        if (currentIndex === expectedNextAfterDealer) {
-                            log('⚠️ WARNING: Turn passed dealer - forcing round end');
-                            socket.emit('end-round', { gameId: currentGame.id });
-                        }
-                    }
-                }
-
                 updateGameDisplay();
                 updatePersonalTable();
             });
 
             socket.on('card-flipped', function (data) {
-                log(`🎴 Player ${data.playerId} flipped their card`);
+                log('🎴 Player flipped card');
                 currentGame = data.game;
 
-                markPlayerAsLooked(data.playerId);
-
-                // Check if this revealed a King
-                const player = currentGame.players?.find(p => p.id === data.playerId);
-                if (player && shouldAutoRevealKing(player)) {
-                    handleKingAutoReveal(player);
+                // ADDED: Track when ANY player flips their card
+                if (data.playerId) {
+                    markPlayerAsLooked(data.playerId);
+                    log('👁️ Marked player ' + data.playerId + ' as looked via card-flipped event');
                 }
 
+                updateGameDisplay();
+                updatePersonalTable();
+            });
+
+            socket.on('trade-completed', function (data) {
+                log('✅ Trade completed!');
+                currentGame = data.game;
+                updateGameDisplay();
+                updatePersonalTable();
+                showToast('Trade completed!', 'success');
+            });
+
+            socket.on('jack-blocked-trade', function (data) {
+                log('🃏 Jack blocked trade: ' + data.toPlayerId + ' blocks ' + data.fromPlayerId);
+                currentGame = data.game;
+                handleJackBlock(data);
                 updateGameDisplay();
                 updatePersonalTable();
             });
 
             socket.on('dealer-traded-deck', function (data) {
-                log('🎴 Dealer traded with deck - Round should end!');
+                log('🎴 Dealer deck trade completed!');
                 currentGame = data.game;
                 updateGameDisplay();
                 updatePersonalTable();
-                showToast('Dealer traded with deck!', 'info');
-
-                // Force round end after dealer action
-                setTimeout(() => {
-                    if (currentGame.turnPhase !== 'revealing') {
-                        log('🏁 Forcing round end after dealer deck trade');
-                        socket.emit('end-round', { gameId: currentGame.id });
-                    }
-                }, 1000);
+                showToast('Dealer traded with deck!', 'success');
             });
 
-            socket.on('dealer-skipped-trade', function (data) {
-                log('🎴 Dealer kept their card - Round should end!');
+            socket.on('cards-revealed', function (data) {
+                log('🃏 Cards revealed for round end');
                 currentGame = data.game;
                 updateGameDisplay();
                 updatePersonalTable();
-                showToast('Dealer kept their card!', 'info');
-
-                // Force round end after dealer action
-                setTimeout(() => {
-                    if (currentGame.turnPhase !== 'revealing') {
-                        log('🏁 Forcing round end after dealer keep');
-                        socket.emit('end-round', { gameId: currentGame.id });
-                    }
-                }, 1000);
             });
 
-            // ===== ROUND & GAME ENDING EVENTS =====
             socket.on('round-ended', function (data) {
-                log(`🏁 Round ${data.result?.round || ''} ended`);
-                currentGame = data.game;
+                log('🏁 Round ended');
 
+                if (data.result && data.result.losers) {
+                    data.result.losers.forEach(loser => {
+                        log('💀 ' + loser.name + ' lost with ' + loser.card?.value + loser.card?.suit);
+                    });
+                }
+
+                currentGame = data.game;
                 resetCardLooks();
                 clearAllNudges();
-
                 updateGameDisplay();
                 updatePersonalTable();
-
-                if (data.result?.losers) {
-                    const losers = data.result.losers.map(l => l.name).join(', ');
-                    showToast(`Losers: ${losers}`, 'warning');
-                }
             });
 
             socket.on('game-finished', function (data) {
-                log(`🎉 Game finished!`);
+                log('Game finished!');
                 currentGame = data.game;
-
-                // NEW: Check for tie game first
-                if (data.tie) {
-                    // Show tie game announcement  
-                    showTieAnnouncement(data.tiedPlayers || []);
-                    showToast(`🤝 TIE GAME!`, 'warning');
-
-                    // Disable all game buttons except Leave
-                    disableAllGameButtons();
+                if (data.winner) {
+                    showToast('🏆 ' + data.winner.name + ' Wins!', 'success');
                 }
-                // Original winner logic
-                else if (data.winner) {
-                    // Show big winner announcement
-                    showWinnerAnnouncement(data.winner.name);
-                    showToast(`🏆 ${data.winner.name} Wins the Game!`, 'success');
-
-                    // Disable all game buttons except Leave
-                    disableAllGameButtons();
-                }
-
                 updateGameDisplay();
                 updatePersonalTable();
-
-                setTimeout(() => {
-                    leaveVideoCall().catch(console.error);
-                }, 10000); // Give more time to celebrate
             });
 
-            // ===== AUTO-CONTINUE EVENTS =====
-            socket.on('auto-continue-update', function (data) {
-                playersReadyForNext = new Set(data.readyPlayers);
-                updateAutoContinueDisplay();
-                log(`📊 Auto-continue update: ${data.readyPlayers.length} players ready`);
-            });
-
-            socket.on('auto-continue-game-starting', function (data) {
-                log('🚀 Auto-continue new game starting!');
-                currentGame = data.game;
-                closeWinnerAnnouncement();
-                resetCardLooks();
-                clearAllNudges();
-                updateGameDisplay();
-                updatePersonalTable();
-                showToast('🎮 New game started!', 'success');
-            });
-
-            // ===== CHAT & ERROR EVENTS =====
             socket.on('chat-message', function (data) {
                 addChatMessage(data.playerName || 'Unknown', data.message);
             });
 
             socket.on('error', function (data) {
-                log(`❌ Error: ${data.message}`);
-
-                // Handle specific duplicate username errors
-                if (data.message && data.message.toLowerCase().includes('name') && data.message.toLowerCase().includes('taken')) {
-                    showToast('Username already taken in this game! Try a different name.', 'error');
-
-                    // Suggest a random suffix
-                    const currentName = document.getElementById('playerName').value.trim();
-                    const randomSuffix = Math.floor(Math.random() * 999) + 1;
-                    const suggestedName = `${currentName}${randomSuffix}`;
-
-                    document.getElementById('playerName').value = suggestedName;
-                    showToast(`Try "${suggestedName}" instead`, 'warning');
-                } else {
-                    showToast(data.message, 'error');
-                }
+                log('❌ Error: ' + data.message);
+                showToast(data.message, 'error');
             });
         }
 
@@ -3781,12 +3319,12 @@
                 return;
             }
 
-            log(`🎮 Creating FRESH public game for ${playerName} (${socket.id})`);
+            log('🎮 Creating FRESH public game for ' + playerName + ' (' + socket.id + ')');
 
             socket.emit('quick-match', {
                 playerName: playerName,
                 userId: socket.id,
-                token: `demo_token_${socket.id}`
+                token: 'demo_token_' + socket.id
             });
         }
 
@@ -3816,7 +3354,7 @@
             socket.emit('create-private-game', {
                 playerName: playerName,
                 userId: socket.id,
-                token: `demo_token_${socket.id}`,
+                token: 'demo_token_' + socket.id,
                 settings: settings
             });
         }
@@ -3847,7 +3385,7 @@
                 friendCode: gameCode,
                 playerName: playerName,
                 userId: socket.id,
-                token: `demo_token_${socket.id}`
+                token: 'demo_token_' + socket.id
             });
         }
 
@@ -3867,8 +3405,8 @@
         function performGameDisplayUpdate() {
             if (!currentGame) return;
 
-            document.getElementById('gameCodeDisplay').innerHTML = `Game: <strong>${currentGame.gameCode || currentGame.id || 'UNKNOWN'}</strong>`;
-            document.getElementById('playerCount').innerHTML = `Players: <strong>${currentGame.players?.length || 0}/${currentGame.maxPlayers || 8}</strong>`;
+            document.getElementById('gameCodeDisplay').innerHTML = 'Game: <strong>' + (currentGame.gameCode || currentGame.id || 'UNKNOWN') + '</strong>';
+            document.getElementById('playerCount').innerHTML = 'Players: <strong>' + (currentGame.players?.length || 0) + '/' + (currentGame.maxPlayers || 8) + '</strong>';
 
             updateButtonStates();
         }
@@ -3955,7 +3493,7 @@
                 }
             });
 
-            log(`🔄 Button states updated: myTurn=${isMyTurn}, gameStarted=${gameStarted}, phase=${currentGame.turnPhase}, canTrade=${canTrade}, isDealerTurn=${isDealerTurn}`);
+            log('🔄 Button states updated: myTurn=' + isMyTurn + ', gameStarted=' + gameStarted + ', phase=' + currentGame.turnPhase + ', canTrade=' + canTrade + ', isDealerTurn=' + isDealerTurn);
         }
 
         function showHostControls() {
@@ -3969,19 +3507,27 @@
         }
 
         // Enhanced Jack block handling with auto-advance
-        function handleJackBlock(fromPlayerId, toPlayerId) {
-            if (!fromPlayerId || !toPlayerId) return;
+        function handleJackBlock(data) {
+                log('🃏 JACK BLOCKED! Data received:', JSON.stringify(data));
 
-            // Find the actual player objects from the game state
-            const fromPlayer = currentGame?.players?.find(p => p.id === fromPlayerId);
-            const toPlayer = currentGame?.players?.find(p => p.id === toPlayerId);
+                const fromPlayerId = data.fromPlayerId;
+                const toPlayerId = data.toPlayerId;
+
+                if (!fromPlayerId || !toPlayerId) {
+                    log('❌ Invalid Jack block data - missing player IDs');
+                    return;
+                }
+
+                // Find the actual player objects from the game state
+                const fromPlayer = currentGame?.players?.find(p => p.id === fromPlayerId);
+                const toPlayer = currentGame?.players?.find(p => p.id === toPlayerId);
 
             if (!fromPlayer || !toPlayer) {
-                log(`❌ Could not find players for Jack block: ${fromPlayerId} -> ${toPlayerId}`);
+                log('❌ Could not find players for Jack block: ' + fromPlayerId + ' -> ' + toPlayerId);
                 return;
             }
 
-            log(`🃏 ${toPlayer.name}'s Jack blocks ${fromPlayer.name} - SCREW YOU!`);
+            log('🃏 ' + toPlayer.name + ' Jack blocks ' + fromPlayer.name + ' - SCREW YOU!');
 
             // 1. Mark the Jack holder as having revealed their card to everyone
             toPlayer.cardRevealed = true;
@@ -3996,25 +3542,25 @@
             }, 100);
 
             // 4. Show toast notification
-            showToast(`${toPlayer.name} blocks with a Jack! 🃏`, 'warning');
+            showToast(toPlayer.name + ' blocks with a Jack! 🃏', 'warning');
 
             // 5. Auto-advance logic - monitor for Jack holder's turn
-            log(`🃏 Setting up auto-advance monitor for Jack holder ${toPlayer.name}`);
+            log('🃏 Setting up auto-advance monitor for Jack holder ' + toPlayer.name);
 
             // Set up a monitoring function that will auto-advance when it becomes the Jack holder's turn
             const jackAutoAdvanceMonitor = () => {
                 // Check if it's now the Jack holder's turn
                 if (currentGame?.currentPlayerId === toPlayer.id && currentGame?.state === 'playing') {
-                    log(`🃏 Jack holder ${toPlayer.name}'s turn detected - auto-advancing!`);
+                    log('🃏 Jack holder ' + toPlayer.name + '\'s turn detected - auto-advancing!');
 
                     // Auto-advance after animation completes
                     setTimeout(() => {
                         if (socket && currentGame && currentGame.currentPlayerId === toPlayer.id) {
-                            log(`🃏 Emitting skip-turn for Jack holder ${toPlayer.name}`);
+                            log('🃏 Emitting skip-turn for Jack holder ' + toPlayer.name);
                             socket.emit('skip-turn', { gameId: currentGame.id });
-                            showToast(`${toPlayer.name}'s Jack auto-advances! 🃏`, 'success');
+                            showToast(toPlayer.name + '\'s Jack auto-advances! 🃏', 'success');
                         } else {
-                            log(`🃏 Conditions changed - not auto-advancing Jack holder`);
+                            log('🃏 Conditions changed - not auto-advancing Jack holder');
                         }
                     }, 1000); // Shorter delay since they already saw the animation
 
@@ -4029,7 +3575,7 @@
             // Safety cleanup after 10 seconds
             setTimeout(() => {
                 clearInterval(monitorInterval);
-                log(`🃏 Jack auto-advance monitor cleanup for ${toPlayer.name}`);
+                log('🃏 Jack auto-advance monitor cleanup for ' + toPlayer.name);
             }, 10000);
         }
 
@@ -4043,7 +3589,7 @@
                 return;
             }
 
-            const jackCardElement = document.querySelector(`[data-player-id="${jackPlayer.id}"] .card-display`);
+            const jackCardElement = document.querySelector('[data-player-id="' + jackPlayer.id + '"] .card-display');
             if (!jackCardElement) {
                 // Fallback to original overlay if we can't find the card
                 showOriginalScrewYouOverlay(blockedPlayerName, jackPlayerName);
@@ -4058,28 +3604,7 @@
             // Step 3: Create the flying Jack card
             const flyingJack = document.createElement('div');
             flyingJack.className = 'flying-jack-card';
-            flyingJack.style.cssText = `
-                position: fixed;
-                left: ${startX - 40}px;
-                top: ${startY - 55}px;
-                width: 80px;
-                height: 110px;
-                background: linear-gradient(145deg, #ffffff, #f8f8f8);
-                border: 2px solid #ddd;
-                border-radius: 8px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                color: #333;
-                font-weight: bold;
-                font-family: 'Times New Roman', serif;
-                font-size: 1rem;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-                z-index: 1001;
-                pointer-events: none;
-                animation: jackFlyOut 2.5s ease-out forwards;
-            `;
+            flyingJack.style.cssText = 'position: fixed; left: ' + (startX - 40) + 'px; top: ' + (startY - 55) + 'px; width: 80px; height: 110px; background: linear-gradient(145deg, #ffffff, #f8f8f8); border: 2px solid #ddd; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-weight: bold; font-family: \'Times New Roman\', serif; font-size: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.3); z-index: 1001; pointer-events: none; animation: jackFlyOut 2.5s ease-out forwards;';
 
             // Step 4: Add the Jack card content
             const jackCard = jackPlayer.card;
@@ -4089,16 +3614,10 @@
                     flyingJack.style.color = '#d32f2f';
                 }
 
-                flyingJack.innerHTML = `
-                    <div style="font-size: 1.1rem; margin-bottom: 2px;">${jackCard.value}</div>
-                    <div style="font-size: 1.3rem;">${jackCard.suit}</div>
-                `;
+                flyingJack.innerHTML = '<div style="font-size: 1.1rem; margin-bottom: 2px;">' + jackCard.value + '</div><div style="font-size: 1.3rem;">' + jackCard.suit + '</div>';
             } else {
                 // Fallback Jack content
-                flyingJack.innerHTML = `
-                    <div style="font-size: 1.1rem; margin-bottom: 2px;">J</div>
-                    <div style="font-size: 1.3rem;">♠</div>
-                `;
+                flyingJack.innerHTML = '<div style="font-size: 1.1rem; margin-bottom: 2px;">J</div><div style="font-size: 1.3rem;">♠</div>';
             }
 
             // Step 5: Add the flying card to the page
@@ -4115,38 +3634,12 @@
             // Create big dramatic overlay
             const screwYouOverlay = document.createElement('div');
             screwYouOverlay.className = 'jack-screw-you-overlay';
-            screwYouOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-                animation: jackRevealBurst 0.6s ease-out;
-                pointer-events: none;
-            `;
+            screwYouOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: jackRevealBurst 0.6s ease-out; pointer-events: none;';
 
             const screwYouContent = document.createElement('div');
-            screwYouContent.style.cssText = `
-                background: linear-gradient(45deg, #e74c3c, #c0392b);
-                color: white;
-                padding: 30px 50px;
-                border-radius: 15px;
-                text-align: center;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                border: 4px solid #fff;
-                animation: jackBounceIn 0.8s ease-out;
-            `;
+            screwYouContent.style.cssText = 'background: linear-gradient(45deg, #e74c3c, #c0392b); color: white; padding: 30px 50px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); border: 4px solid #fff; animation: jackBounceIn 0.8s ease-out;';
 
-            screwYouContent.innerHTML = `
-                <h1 style="font-size: 3rem; margin: 0 0 15px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🃏</h1>
-                <h2 style="font-size: 2.5rem; margin: 0 0 10px 0; font-weight: bold;">SCREW YOU!</h2>
-                <p style="font-size: 1.3rem; margin: 0; opacity: 0.9;">${jackPlayerName} blocks ${blockedPlayerName}!</p>
-            `;
+            screwYouContent.innerHTML = '<h1 style="font-size: 3rem; margin: 0 0 15px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🃏</h1><h2 style="font-size: 2.5rem; margin: 0 0 10px 0; font-weight: bold;">SCREW YOU!</h2><p style="font-size: 1.3rem; margin: 0; opacity: 0.9;">' + jackPlayerName + ' blocks ' + blockedPlayerName + '!</p>';
 
             screwYouOverlay.appendChild(screwYouContent);
             document.body.appendChild(screwYouOverlay);
@@ -4164,10 +3657,10 @@
 
         // Jack card animation
         function addJackRevealAnimation(playerId) {
-            const playerCard = document.querySelector(`[data-player-id="${playerId}"] .card-display`);
+            const playerCard = document.querySelector('[data-player-id="' + playerId + '"] .card-display');
             if (!playerCard) return;
 
-            log(`🃏 Adding Jack reveal animation for player ${playerId}`);
+            log('🃏 Adding Jack reveal animation for player ' + playerId);
 
             // Add special Jack blocking animation class
             playerCard.classList.add('jack-block-reveal');
@@ -4184,28 +3677,9 @@
 
             // Create simple text overlay
             const textOverlay = document.createElement('div');
-            textOverlay.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(231, 76, 60, 0.95);
-                color: white;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                border-radius: 8px;
-                font-weight: bold;
-                text-align: center;
-                z-index: 1002;
-            `;
+            textOverlay.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(231, 76, 60, 0.95); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold; text-align: center; z-index: 1002;';
 
-            textOverlay.innerHTML = `
-                <div style="font-size: 1.4rem; margin-bottom: 5px;">💥</div>
-                <div style="font-size: 1.2rem; line-height: 1.2;">YOU GOT<br>SCREWED!</div>
-            `;
+            textOverlay.innerHTML = '<div style="font-size: 1.4rem; margin-bottom: 5px;">💥</div><div style="font-size: 1.2rem; line-height: 1.2;">YOU GOT<br>SCREWED!</div>';
 
             // Add text to card
             flyingJack.appendChild(textOverlay);
@@ -4233,75 +3707,12 @@
             // Create big winner overlay
             const winnerOverlay = document.createElement('div');
             winnerOverlay.className = 'winner-announcement';
-            winnerOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-                animation: fadeIn 0.5s ease;
-            `;
+            winnerOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.5s ease;';
 
             const winnerContent = document.createElement('div');
-            winnerContent.style.cssText = `
-                background: linear-gradient(45deg, #f39c12, #e67e22);
-                color: white;
-                padding: 40px 60px;
-                border-radius: 20px;
-                text-align: center;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                animation: bounceIn 0.6s ease;
-            `;
+            winnerContent.style.cssText = 'background: linear-gradient(45deg, #f39c12, #e67e22); color: white; padding: 40px 60px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); animation: bounceIn 0.6s ease;';
 
-            winnerContent.innerHTML = `
-                <h1 style="font-size: 3rem; margin: 0 0 20px 0;">🏆</h1>
-                <h2 style="font-size: 2rem; margin: 0 0 10px 0;">${winnerName} Wins!</h2>
-                <p style="font-size: 1.2rem; margin: 0 0 10px 0; opacity: 0.9;">Congratulations!</p>
-                
-                <!-- Auto-Continue Section -->
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin: 20px 0;">
-                    <h3 style="font-size: 1.4rem; margin: 0 0 10px 0;">🚀 Next game starting in...</h3>
-                    <div id="countdownTimer" style="font-size: 3rem; font-weight: bold; margin: 10px 0;">15</div>
-                    <div id="playersReady" style="font-size: 1.1rem; margin: 10px 0; opacity: 0.9;">
-                        3/3 players ready
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
-                    <button onclick="stayForNextGame()" style="
-                        padding: 12px 24px;
-                        background: #27ae60;
-                        border: 2px solid white;
-                        color: white;
-                        border-radius: 10px;
-                        font-size: 1.1rem;
-                        font-weight: bold;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='#2ecc71'" onmouseout="this.style.background='#27ae60'">
-                        ✅ I'm Ready!
-                    </button>
-                    
-                    <button onclick="leaveAfterGame()" style="
-                        padding: 12px 24px;
-                        background: #e74c3c;
-                        border: 2px solid white;
-                        color: white;
-                        border-radius: 10px;
-                        font-size: 1.1rem;
-                        font-weight: bold;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
-                        🚪 Leave Game
-                    </button>
-                </div>
-            `;
+            winnerContent.innerHTML = '<h1 style="font-size: 3rem; margin: 0 0 20px 0;">🏆</h1><h2 style="font-size: 2rem; margin: 0 0 10px 0;">' + winnerName + ' Wins!</h2><p style="font-size: 1.2rem; margin: 0 0 10px 0; opacity: 0.9;">Congratulations!</p><div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin: 20px 0;"><h3 style="font-size: 1.4rem; margin: 0 0 10px 0;">🚀 Next game starting in...</h3><div id="countdownTimer" style="font-size: 3rem; font-weight: bold; margin: 10px 0;">15</div><div id="playersReady" style="font-size: 1.1rem; margin: 10px 0; opacity: 0.9;">3/3 players ready</div></div><div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;"><button onclick="stayForNextGame()" style="padding: 12px 24px; background: #27ae60; border: 2px solid white; color: white; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background=\'#2ecc71\'" onmouseout="this.style.background=\'#27ae60\'">✅ I\'m Ready!</button><button onclick="leaveAfterGame()" style="padding: 12px 24px; background: #e74c3c; border: 2px solid white; color: white; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background=\'#c0392b\'" onmouseout="this.style.background=\'#e74c3c\'">🚪 Leave Game</button></div>';
 
             winnerOverlay.appendChild(winnerContent);
             document.body.appendChild(winnerOverlay);
@@ -4314,52 +3725,14 @@
         function showTieAnnouncement(tiedPlayers) {
             const tieOverlay = document.createElement('div');
             tieOverlay.className = 'tie-announcement';
-            tieOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-                animation: fadeIn 0.5s ease;
-            `;
+            tieOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.5s ease;';
 
             const tieContent = document.createElement('div');
-            tieContent.style.cssText = `
-                background: linear-gradient(45deg, #9b59b6, #8e44ad);
-                color: white;
-                padding: 40px 60px;
-                border-radius: 20px;
-                text-align: center;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                animation: bounceIn 0.6s ease;
-            `;
+            tieContent.style.cssText = 'background: linear-gradient(45deg, #9b59b6, #8e44ad); color: white; padding: 40px 60px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); animation: bounceIn 0.6s ease;';
 
             const tiedPlayerNames = tiedPlayers.map(p => p.name).join(' & ');
 
-            tieContent.innerHTML = `
-                <h1 style="font-size: 3rem; margin: 0 0 20px 0;">🤝</h1>
-                <h2 style="font-size: 2rem; margin: 0 0 10px 0;">TIE GAME!</h2>
-                <p style="font-size: 1.2rem; margin: 0 0 20px 0; opacity: 0.9;">${tiedPlayerNames} tied for the win!</p>
-                
-                <button onclick="closeWinnerAnnouncement(); leaveGame();" style="
-                    padding: 15px 30px;
-                    background: #e74c3c;
-                    border: 2px solid white;
-                    color: white;
-                    border-radius: 10px;
-                    font-size: 1.1rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
-                    🚪 Leave Game
-                </button>
-            `;
+            tieContent.innerHTML = '<h1 style="font-size: 3rem; margin: 0 0 20px 0;">🤝</h1><h2 style="font-size: 2rem; margin: 0 0 10px 0;">TIE GAME!</h2><p style="font-size: 1.2rem; margin: 0 0 20px 0; opacity: 0.9;">' + tiedPlayerNames + ' tied for the win!</p><button onclick="closeWinnerAnnouncement(); leaveGame();" style="padding: 15px 30px; background: #e74c3c; border: 2px solid white; color: white; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background=\'#c0392b\'" onmouseout="this.style.background=\'#e74c3c\'">🚪 Leave Game</button>';
 
             tieOverlay.appendChild(tieContent);
             document.body.appendChild(tieOverlay);
@@ -4417,7 +3790,7 @@
             if (readyElement && currentGame) {
                 const totalPlayers = currentGame.players.length;
                 const readyCount = playersReadyForNext.size;
-                readyElement.textContent = `${readyCount}/${totalPlayers} players ready`;
+                readyElement.textContent = readyCount + '/' + totalPlayers + ' players ready';
 
                 // Green when everyone ready
                 if (readyCount === totalPlayers) {
@@ -4547,6 +3920,185 @@
                 leaveVideoCall().catch(console.error);
             }
         });
+
+        // 🎥 VIDEO RESTORATION HELPER FUNCTIONS
+        function restoreVideoStreams(videoStreams) {
+            log('🎥 Restoring ' + videoStreams.size + ' video streams...');
+
+            videoStreams.forEach((streamData, videoId) => {
+                const newVideoElement = document.getElementById(videoId);
+                if (newVideoElement && streamData.hasContent) {
+                    // Clear placeholder
+                    newVideoElement.innerHTML = '';
+
+                    // Restore the video content
+                    Array.from(streamData.element.children).forEach(child => {
+                        newVideoElement.appendChild(child.cloneNode(true));
+                    });
+
+                    log('✅ Restored video stream: ' + videoId);
+                }
+            });
+
+            // Reconnect Agora streams
+            reconnectAgoraStreams();
+        }
+
+        function reconnectAgoraStreams() {
+            if (!isVideoJoined) return;
+
+            log('🎥 Reconnecting Agora streams...');
+
+            // Reconnect local video
+            if (localVideoTrack) {
+                const myVideoElement = document.getElementById('video-' + playerId);
+                if (myVideoElement) {
+                    try {
+                        localVideoTrack.play(myVideoElement);
+                        log('✅ Reconnected local video: video-' + playerId);
+                    } catch (error) {
+                        log('❌ Error reconnecting local video: ' + error.message);
+                    }
+                }
+            }
+
+            // Reconnect remote videos
+            Object.keys(remoteUsers).forEach(uid => {
+                const user = remoteUsers[uid];
+                if (user && user.videoTrack) {
+                    const videoElement = document.getElementById('video-' + uid);
+                    if (videoElement) {
+                        try {
+                            user.videoTrack.play(videoElement);
+                            log('✅ Reconnected remote video: video-' + uid);
+                        } catch (error) {
+                            log('❌ Error reconnecting video for ' + uid + ': ' + error.message);
+                        }
+                    }
+                }
+            });
+        }
+
+        function getCurrentLayoutSnapshot() {
+            if (!focusedPlayers) return null;
+            return {
+                leftNeighbor: focusedPlayers.leftNeighbor?.id || null,
+                currentTurn: focusedPlayers.currentTurn?.id || null,
+                rightNeighbor: focusedPlayers.rightNeighbor?.id || null,
+                custom1: focusedPlayers.custom1?.id || null,
+                custom2: focusedPlayers.custom2?.id || null
+            };
+        }
+
+        function layoutChanged(oldLayout, newLayout) {
+            if (!oldLayout || !newLayout) return true;
+
+            return oldLayout.leftNeighbor !== newLayout.leftNeighbor ||
+                oldLayout.currentTurn !== newLayout.currentTurn ||
+                oldLayout.rightNeighbor !== newLayout.rightNeighbor ||
+                oldLayout.custom1 !== newLayout.custom1 ||
+                oldLayout.custom2 !== newLayout.custom2;
+        }
+
+        function updateExistingPlayerStates() {
+            if (!focusedPlayers) return;
+
+            Object.values(focusedPlayers).forEach(player => {
+                if (player) {
+                    updateSinglePlayerState(player);
+                }
+            });
+        }
+
+        function updateSinglePlayerState(player) {
+                const playerSlot = document.querySelector('[data-player-id="' + player.id + '"]')?.closest('.focus-slot');
+                if (!playerSlot) return;
+
+                // Update slot classes properly without breaking video
+                playerSlot.classList.remove('current-turn', 'dealer', 'eliminated');
+                playerSlot.classList.add('focus-slot', 'slot'); // Ensure base classes remain
+
+                if (player.id === currentGame?.currentPlayerId) {
+                    playerSlot.classList.add('current-turn');
+                }
+                if (player.id === currentGame?.dealerId) {
+                    playerSlot.classList.add('dealer');
+                }
+                if (player.lives <= 0) {
+                    playerSlot.classList.add('eliminated');
+                }
+
+                // Update card display
+                const cardDisplay = playerSlot.querySelector('.card-display');
+                if (cardDisplay && player) {
+                    updateCardDisplayOnly(cardDisplay, player);
+                }
+
+                // Update dealer text label AND life dots
+            const existingPlayerInfo = playerSlot.querySelector('.player-info');
+            if (existingPlayerInfo) {
+                // Update dealer text first
+                const playerNameSpan = existingPlayerInfo.querySelector('.player-name');
+                if (playerNameSpan) {
+                    const dealerText = (player.id === currentGame?.dealerId) ? ' (Dealer)' : '';
+                    playerNameSpan.textContent = player.name + dealerText;
+                }
+
+                // Then update life dots
+                const existingLives = existingPlayerInfo.querySelector('.player-lives-dots');
+                if (existingLives) {
+                    existingLives.remove();
+                }
+                const newLivesDisplay = createLivesDisplay(player, false);
+                existingPlayerInfo.appendChild(newLivesDisplay);
+            }
+
+                // Update buttons
+                updatePlayerButtonStates(playerSlot, player);
+            }
+
+        function updateCardDisplayOnly(cardDisplay, player) {
+            const shouldShowCard = shouldPlayerCardBeVisible(player);
+
+            if (player.card && shouldShowCard && player.lives > 0) {
+                const card = player.card;
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                let cardClasses = 'card-display';
+                cardClasses += isRed ? ' red revealed' : ' black revealed';
+
+                if (isKing(card)) {
+                    cardClasses += ' king-auto';
+                }
+
+                cardDisplay.className = cardClasses;
+                cardDisplay.innerHTML = '<div class="card-content"><div class="card-value">' + card.value + '</div><div class="card-suit">' + card.suit + '</div></div>';
+            } else if ((player.hasCard || player.card) && player.lives > 0) {
+                cardDisplay.className = 'card-display face-down';
+                cardDisplay.textContent = '🂠';
+            } else {
+                cardDisplay.className = 'card-display';
+                cardDisplay.textContent = 'No Card';
+            }
+        }
+
+        function updatePlayerButtonStates(playerSlot, player) {
+            // Update action buttons without recreating them
+            const actionButtons = playerSlot.querySelectorAll('.action-button');
+            const isMyTurn = currentGame?.currentPlayerId === player.id;
+            const gameStarted = currentGame?.state === 'playing';
+
+            actionButtons.forEach(btn => {
+                if (btn.textContent.includes('Keep')) {
+                    btn.disabled = !isMyTurn || !gameStarted;
+                    btn.style.opacity = btn.disabled ? '0.5' : '1';
+                }
+                if (btn.textContent.includes('Trade')) {
+                    const canTrade = canPerformTrade();
+                    btn.disabled = !canTrade;
+                    btn.style.opacity = btn.disabled ? '0.5' : '1';
+                }
+            });
+        }
 
         // Initialize with clean state
         document.addEventListener('DOMContentLoaded', function () {
