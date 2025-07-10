@@ -3495,6 +3495,15 @@
 
             log('🔄 Button states updated: myTurn=' + isMyTurn + ', gameStarted=' + gameStarted + ', phase=' + currentGame.turnPhase + ', canTrade=' + canTrade + ', isDealerTurn=' + isDealerTurn);
         }
+            if (isMyTurn && gameStarted && tradingPhase && myPlayer?.card && isKing(myPlayer.card)) {
+                log('👑 Auto-advancing King holder immediately');
+                setTimeout(() => {
+                    if (socket && currentGame && currentGame.currentPlayerId === playerId) {
+                        socket.emit('skip-turn', { gameId: currentGame.id });
+                        showToast('Your King auto-advances! 👑', 'success');
+                    }
+                }, 1000);
+            }
 
         function showHostControls() {
             if (currentGame?.hostId === playerId && currentGame?.state === 'waiting') {
@@ -3691,7 +3700,7 @@
                 if (flyingJack && flyingJack.parentNode) {
                     flyingJack.remove();
                 }
-            }, 3000);
+            }, 5000);
         }
 
         // Emergency function to clear stuck cards

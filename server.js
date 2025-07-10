@@ -6,6 +6,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
+const os = require('os');
 
 const app = express();
 app.set('trust proxy', true);
@@ -25,9 +26,17 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 
-    [process.env.FRONTEND_URL] : 
-    ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000"],
+  origin: process.env.NODE_ENV === 'production' ?
+    [process.env.FRONTEND_URL] :
+    [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
+      /^http:\/\/192\.168\.\d+\.\d+:3001$/,  // Allow all 192.168.x.x:3001
+      /^http:\/\/10\.\d+\.\d+\.\d+:3001$/,   // Allow all 10.x.x.x:3001 (mobile hotspot)
+      /^http:\/\/172\.16\.\d+\.\d+:3001$/    // Allow all 172.16.x.x:3001
+    ],
   credentials: true
 }));
 
@@ -65,17 +74,26 @@ app.get('/join/:friendCode', (req, res) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' ? 
-      [process.env.FRONTEND_URL] : 
-      ["http://localhost:3000", "http://localhost:3001"],
+    origin: process.env.NODE_ENV === 'production' ?
+      [process.env.FRONTEND_URL] :
+      [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",        // ADD THIS (was missing)
+        "http://127.0.0.1:3001",
+        /^http:\/\/192\.168\.\d+\.\d+:3001$/,  // Allow all 192.168.x.x:3001
+        /^http:\/\/10\.\d+\.\d+\.\d+:3001$/,   // Allow all 10.x.x.x:3001
+        /^http:\/\/172\.16\.\d+\.\d+:3001$/    // Allow all 172.16.x.x:3001
+      ],
     methods: ["GET", "POST"]
   },
+
   // Production-optimized settings
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  upgradeTimeout: 30000,
+  pingTimeout: 90000,
+  pingInterval: 30000,
+  upgradeTimeout: 45000,
   allowEIO3: true,
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],  // Polling first for mobile
   maxHttpBufferSize: 1e6,
   httpCompression: true,
   perMessageDeflate: true
@@ -541,11 +559,27 @@ class Game {
     let deckCard = null;
     
     if (hasJack) {
-        // Jack blocks the trade - "Screw You!"
-        blocked = true;
-        toPlayer.cardRevealed = true;
-        toPlayer.stats.tradesBlocked++;
-        console.log(`🚫 ${toPlayer.name}'s Jack blocks ${fromPlayer.name}'s trade!`);
+      // Jack blocks the trade - "Screw You!"
+      blocked = true;
+      toPlayer.cardRevealed = true;
+      toPlayer.stats.tradesBlocked++;
+      console.log(`🚫 ${toPlayer.name}'s Jack blocks ${fromPlayer.name}'s trade!`);
+
+      // Mark the player who tried to trade as having acted
+      this.playersWhoActed.add(fromPlayerId);
+
+      // Advance to the next player (skip the Jack holder)
+      this.advanceToNextPlayer();
+
+      // Emit the Jack blocked event
+      io.to(this.id).emit('jack-blocked-trade', {
+        fromPlayerId: fromPlayer.id,
+        toPlayerId: toPlayer.id,
+        jackCard: toPlayer.card,
+        game: this
+      });
+      return;
+  
     } else if (hasKing && isDealerTarget) {
         // SPECIAL RULE: Dealer with King = trade with deck instead!
         if (this.deck.length === 0) {
@@ -966,6 +1000,10 @@ function sendGameUpdateToAll(gameId, eventName, data = {}) {
 
 // Socket.IO connection handling with production optimizations
 io.on('connection', (socket) => {
+  console.log('🔥 SOCKET CONNECTION ESTABLISHED!');
+  console.log('🔥 Socket ID:', socket.id);
+  console.log('🔥 IP Address:', socket.handshake.address);
+  console.log('🔥 Headers:', socket.handshake.headers['user-agent']);
   serverStats.totalConnections++;
   serverStats.activeConnections++;
   
@@ -1030,6 +1068,9 @@ io.on('connection', (socket) => {
 
   // Quick Match Handler
   socket.on('quick-match', async (data) => {
+    console.log('🎮 QUICK-MATCH REQUEST from:', socket.id);
+    console.log('🎮 Player name:', data.playerName);
+    console.log('🎮 Current public games:', gameManager.getPublicGames().length);
     try {
       const { userId, token, playerName } = data;
       
@@ -1086,8 +1127,13 @@ io.on('connection', (socket) => {
           type: 'public',           
           maxPlayers: 30
         });
+
+        console.log('🎮 GAME CREATED:', game.id);
+        console.log('🎮 Adding to public games...');
         
         gameManager.addPublicGame(game, user.name);
+
+        console.log('🎮 Public games after creation:', gameManager.getPublicGames().length);
         
         await game.addPlayer({
           id: finalUserId,
@@ -1450,7 +1496,45 @@ io.on('connection', (socket) => {
       serverStats.errors++;
       socket.emit('error', { message: error.message });
     }
-  }); 
+  });
+  
+  socket.on('dealer-skip-trade', async (data) => {
+    try {
+      console.log('🎴 DEALER SKIP TRADE - Ending round immediately');
+      const game = gameManager.getGame(socket.gameId);
+      if (!game) throw new Error('Game not found');
+
+      // Force reveal all cards first
+      const activePlayers = game.players.filter(p => p.lives > 0);
+      activePlayers.forEach(player => {
+        player.cardRevealed = true;
+      });
+
+      // Force to revealing phase and end round
+      game.turnPhase = 'revealing';
+
+      // Send revealing phase first
+      sendGameUpdateToAll(socket.gameId, 'cards-revealed', { game });
+
+      // Wait 2 seconds then end round
+      setTimeout(async () => {
+        const roundResult = await game.endRound();
+        sendGameUpdateToAll(socket.gameId, 'round-ended', { result: roundResult });
+
+        if (game.isFinished()) {
+          io.to(socket.gameId).emit('game-finished', {
+            winner: game.getWinner(),
+            finalStats: game.getFinalStats()
+          });
+        }
+      }, 2000);
+
+    } catch (error) {
+      serverStats.errors++;
+      console.error('Dealer skip trade error:', error);
+      socket.emit('error', { message: error.message });
+    }
+  });
 
   socket.on('end-round', async () => {
     try {
@@ -1587,10 +1671,30 @@ setInterval(() => {
 }, 60000);
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
+  // Get local IP addresses for mobile testing
+  const os = require('os');
+  const networkInterfaces = os.networkInterfaces();
+  const localIPs = [];
+
+  Object.keys(networkInterfaces).forEach(interfaceName => {
+    networkInterfaces[interfaceName].forEach(interface => {
+      if (interface.family === 'IPv4' && !interface.internal) {
+        localIPs.push(interface.address);
+      }
+    });
+  });
+
   console.log(`🎮 Screw Your Neighbor server running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Production mode: ${process.env.NODE_ENV === 'production'}`);
+  console.log('\n📱 MOBILE ACCESS URLS:');
+  console.log(`   Local:  http://localhost:${PORT}`);
+
+  localIPs.forEach(ip => {
+    console.log(`   Mobile: http://${ip}:${PORT}`);
+  });
+  console.log('\n');
 });
 
 // Graceful shutdown
